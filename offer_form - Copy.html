@@ -115,67 +115,6 @@
       font-size: 0.9rem;
       line-height: 1.5;
     }
-    /* Improve box model & tap targets globally */
-* { box-sizing: border-box; }
-button { min-height: 44px; }
-
-/* Mobile tweaks */
-@media (max-width: 640px) {
-  body { margin: 12px; }
-
-  header, footer {
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    text-align: center;
-  }
-  header img, footer img { height: 44px; }
-
-  form { gap: 20px; }
-
-  fieldset { padding: 14px; }
-
-  /* Stack rows vertically and let children stretch full-width */
-  .row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
-  .row > label {
-    flex: 1 1 100%;
-    min-width: 0;       /* override desktop min-width */
-    width: 100%;
-  }
-
-  /* Make all inputs/selects/textarea full-width on mobile */
-  label > input,
-  label > select,
-  label > textarea {
-    width: 100% !important;
-  }
-
-  /* Unit picker block: stack and stretch button */
-  .unit-group {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  #select_unit { width: 100%; }
-
-  /* PDF button spans width under readonly fields */
-  .pdf-button { width: 100%; }
-
-  /* Tighter boilerplate paragraph spacing for narrow screens */
-  p { line-height: 1.45; }
-
-  /* Buttons: full-width primary action at bottom */
-  button[type="submit"] { width: 100%; }
-
-  /* Reduce oversized gaps for dense sections */
-  legend { margin-bottom: 6px; }
-}
-
   </style>
 </head>
 <body>
@@ -189,7 +128,7 @@ button { min-height: 44px; }
 
   <fieldset>
     <legend>Buyer Contact Information</legend>
-    <div class="row">
+    <div class="row" style="align-items: flex-start;">
       <label style="flex: 2;">Name (As on Contract)<input type="text" name="buyer_name" maxlength="50"></label>
       <div class="unit-group" style="flex: 1;">
         <label>Unit Number<input type="number" name="unit_number" min="1" max="55"></label>
@@ -203,7 +142,7 @@ button { min-height: 44px; }
     <div class="row">
       <label>City *<input type="text" name="city" maxlength="35" required></label>
       <label>State *<input type="text" name="state" maxlength="2" required></label>
-      <label>Zip Code *<input type="text" name="zip_code" maxlength="10" required></label>
+      <label style="margin-left: -10px;">Zip Code *<input type="text" name="zip_code" maxlength="10" required></label>
     </div>
     <div class="row">
       <label>Phone Number 1<input type="tel" name="phone_number_1" maxlength="20"></label>
