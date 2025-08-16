@@ -2,7 +2,6 @@
 import { useAuth } from "react-oidc-context";
 import OfferForm from "./pages/OfferForm.jsx";
 
-
 export default function App() {
   const auth = useAuth();
 
@@ -29,22 +28,14 @@ export default function App() {
       </div>
     );
   }
-<OfferForm/>
 
-  // prefer ID token for your API
-  const jwt = auth.user?.id_token || auth.user?.access_token || "(no token)";
-  <OfferForm />
+  // ✅ Once authenticated, go straight to OfferForm
   return (
-    <div style={{ padding: 16, lineHeight: 1.6 }}>
+    <div style={{ padding: 16 }}>
       <div style={{ float: "right" }}>
         <button onClick={signOutRedirect}>Logout</button>
       </div>
-      <h2>Logged in ✅</h2>
-      <div><b>Subject:</b> {auth.user?.profile?.sub || "—"}</div>
-      <div><b>Email:</b> {auth.user?.profile?.email || "—"}</div>
-      <div style={{ wordBreak: "break-all", marginTop: 8 }}>
-        <b>JWT (id_token or access_token):</b> {jwt.slice(0, 24)}…{jwt.slice(-16)}
-      </div>
+      <OfferForm />
     </div>
   );
 }
