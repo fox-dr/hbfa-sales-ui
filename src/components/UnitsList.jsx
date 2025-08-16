@@ -1,7 +1,10 @@
 // UnitsList.jsx
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
+// const API_BASE = import.meta.env.VITE_API_BASE;
 
-const API_BASE = import.meta.env.VITE_API_BASE;
+import { useEffect, useState } from "react";
+// Call the Netlify Function (same-origin) instead of AWS directly.
+const PROXY_BASE = "/.netlify/functions/proxy-units";
 
 export default function UnitsList({token}) {
   const [projectId, setProjectId] = useState("Fusion");
@@ -29,12 +32,16 @@ export default function UnitsList({token}) {
       if (bldg.trim()) qs.set("building_id", bldg.trim());
       if (plan.trim()) qs.set("plan_type", plan.trim());     // plan_type
       if (unit.trim()) qs.set("unit_number", unit.trim());
-      const url = `${API_BASE}/projects/${encodeURIComponent(proj)}/units${qs.toString() ? `?${qs}` : ""}`;
+     //  const url = `${API_BASE}/projects/${encodeURIComponent(proj)}/units${qs.toString() ? `?${qs}` : ""}`;
+     // Tell the proxy the upstream path we want to call on the AWS API stage:
+    const upstreamPath = `/projects/${encodeURIComponent(proj)}/units`;
+    const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}${qs.toString() ? `&${qs}` : ""}`;
 
-      const r = await fetch(url, {
-    	headers: {
- 	  Authorization: `Bearer ${token}`, // << add token here
- 	},
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      const r = await fetch(url, { headers };
+    	// headers: {
+ 	  // Authorization: `Bearer ${token}`, // << add token here
+ 	//},
       });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = await r.json();
