@@ -29,7 +29,7 @@ export default function OfferForm() {
       (obj.building_id ? `Building ${obj.building_id}, Unit ${obj.unit_number ?? ""}` : "") ||
       "";
     const p = obj.plan_info || obj.plan_type || "";
-    const a = obj.address || obj.address_line || obj.addr || "";
+    const a = obj.address || "";
 
     setBuildingInfo(b);
     setPlanInfo(p);
