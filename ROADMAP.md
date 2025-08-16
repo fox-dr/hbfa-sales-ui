@@ -1,7 +1,3 @@
-Excellent — here’s a **`ROADMAP.md`** draft that complements your changelog. Together they give you a **past/present/future package**:
-
----
-
 # ROADMAP
 
 This roadmap outlines **future milestones, priorities, and enhancements** for the Compass Contract Data Entry system.
@@ -82,8 +78,3 @@ It is structured by **phases** to reflect upcoming focus areas.
 * Roadmap items are **subject to reprioritization** as business needs evolve.
 * Each milestone should result in a working increment that can be demoed internally.
 
----
-
-A pro team usually keeps `CHANGELOG.md` and `ROADMAP.md` side by side at the repo root, so devs and execs can see **history** and **future** in one glance.
-
-Do you want me to also prepare a **timeline diagram** (visual roadmap) so you can drop it into presentations? That way your stakeholders see progress and priorities at a glance, not just in text.
