@@ -1,5 +1,7 @@
 // src/App.jsx
 import { useAuth } from "react-oidc-context";
+import OfferForm from "./pages/OfferForm.jsx";
+
 
 export default function App() {
   const auth = useAuth();
@@ -27,6 +29,7 @@ export default function App() {
       </div>
     );
   }
+<OfferForm/>
 
   // prefer ID token for your API
   const jwt = auth.user?.id_token || auth.user?.access_token || "(no token)";
