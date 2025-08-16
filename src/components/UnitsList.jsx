@@ -1,12 +1,10 @@
 // UnitsList.jsx
-// import { useEffect, useState } from "react";
-// const API_BASE = import.meta.env.VITE_API_BASE;
-
 import { useEffect, useState } from "react";
+
 // Call the Netlify Function (same-origin) instead of AWS directly.
 const PROXY_BASE = "/.netlify/functions/proxy-units";
 
-export default function UnitsList({token}) {
+export default function UnitsList({ token }) {
   const [projectId, setProjectId] = useState("Fusion");
   const [buildingId, setBuildingId] = useState("");
   const [planType, setPlanType] = useState("");       // plan_type
@@ -23,36 +21,38 @@ export default function UnitsList({token}) {
     const plan = overrides.planType ?? planType;      // plan_type
     const unit = overrides.unitNumber ?? unitNumber;
 
-    console.log("load() with", { proj, bldg, plan, unit });
-
     setLoading(true);
     setErr("");
     try {
+      // Build the query string
       const qs = new URLSearchParams();
       if (bldg.trim()) qs.set("building_id", bldg.trim());
-      if (plan.trim()) qs.set("plan_type", plan.trim());     // plan_type
+      if (plan.trim()) qs.set("plan_type", plan.trim());
       if (unit.trim()) qs.set("unit_number", unit.trim());
-     //  const url = `${API_BASE}/projects/${encodeURIComponent(proj)}/units${qs.toString() ? `?${qs}` : ""}`;
-     // Tell the proxy the upstream path we want to call on the AWS API stage:
-    const upstreamPath = `/projects/${encodeURIComponent(proj)}/units`;
-    const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}${qs.toString() ? `&${qs}` : ""}`;
 
+      // Upstream path to AWS API
+      const upstreamPath = `/projects/${encodeURIComponent(proj)}/units`;
+      const url =
+        `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}` +
+        (qs.toString() ? `&${qs.toString()}` : "");
+
+      // Only send Authorization header if we have a token
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-      const r = await fetch(url, { headers };
-    	// headers: {
- 	  // Authorization: `Bearer ${token}`, // << add token here
- 	//},
-      });
+      const r = await fetch(url, { headers });
+
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = await r.json();
       setRows(data.items || []);
-      setSelected((data.items && data.items[0]) || null);    // auto-select first result
+      setSelected((data.items && data.items[0]) || null); // auto-select first result
     } catch (e) {
       setErr(String(e.message || e));
     } finally {
       setLoading(false);
     }
   }
+
+  // ...keep the rest of your component exactly as-is (onKeyDown, clearFilters, useEffect, render, etc.)
+
 
   function onKeyDown(e) {
     if (e.key === "Enter") {
