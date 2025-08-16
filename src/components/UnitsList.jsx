@@ -1,10 +1,13 @@
 // UnitsList.jsx
 import { useEffect, useState } from "react";
+import { useAuth } from "react-oidc-context";
 
 // Call the Netlify Function (same-origin) instead of AWS directly.
 const PROXY_BASE = "/.netlify/functions/proxy-units";
 
 export default function UnitsList({ token }) {
+  const auth = useAuth();
+
   const [projectId, setProjectId] = useState("Fusion");
   const [buildingId, setBuildingId] = useState("");
   const [planType, setPlanType] = useState("");       // plan_type
@@ -18,37 +21,41 @@ export default function UnitsList({ token }) {
   async function load(overrides = {}) {
     const proj = overrides.projectId ?? projectId;
     const bldg = overrides.buildingId ?? buildingId;
-    const plan = overrides.planType ?? planType;      // plan_type
+    const plan = overrides.planType ?? planType;
     const unit = overrides.unitNumber ?? unitNumber;
 
     setLoading(true);
     setErr("");
+
     try {
-      // Build the query string
+      // Build query string
       const qs = new URLSearchParams();
       if (bldg.trim()) qs.set("building_id", bldg.trim());
       if (plan.trim()) qs.set("plan_type", plan.trim());
       if (unit.trim()) qs.set("unit_number", unit.trim());
 
-      // Upstream path to AWS API
+      // Upstream path to AWS API (via Netlify proxy)
       const upstreamPath = `/projects/${encodeURIComponent(proj)}/units`;
       const url =
         `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}` +
         (qs.toString() ? `&${qs.toString()}` : "");
 
-      // Only send Authorization header if we have a token
-      // before building headers for fetch:
-      const jwt = token /* from props */ || auth?.user?.id_token || auth?.user?.access_token;
-      // then:
+      // Prefer ID token for API Gateway authorizer; fall back to prop token/access token
+      const jwt =
+        auth?.user?.id_token ||
+        token ||
+        auth?.user?.access_token ||
+        null;
+
       const headers = jwt ? { Authorization: `Bearer ${jwt}` } : undefined;
 
-      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-      const r = await fetch(url, { headers });
-
+      const r = await fetch(url, { headers, cache: "no-store" });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
       const data = await r.json();
-      setRows(data.items || []);
-      setSelected((data.items && data.items[0]) || null); // auto-select first result
+      const items = Array.isArray(data.items) ? data.items : [];
+      setRows(items);
+      setSelected(items[0] || null); // auto-select first
     } catch (e) {
       setErr(String(e.message || e));
     } finally {
@@ -57,6 +64,8 @@ export default function UnitsList({ token }) {
   }
 
   // ...keep the rest of your component exactly as-is (onKeyDown, clearFilters, useEffect, render, etc.)
+
+
 
 
   function onKeyDown(e) {
