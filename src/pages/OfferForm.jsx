@@ -319,3 +319,7 @@ const styles = {
   inputRO: { padding: "10px", border: "1px solid #eee", borderRadius: 6, fontSize: "1rem", background: "#f5f5f5" },
   textarea: { padding: "10px", border: "1px solid #ccc", borderRadius: 6, fontSize: "1rem", resize: "vertical" },
 };
+// src/pages/OfferForm.jsx
+export default function OfferForm() {
+  return <div style={{ padding: 16 }}>Offer Form loaded ✅</div>;
+}
