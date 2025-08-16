@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "amazon-cognito-identity-js": "^6.3.15",
+   
     "oidc-client-ts": "^3.3.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
