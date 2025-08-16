@@ -1,24 +1,21 @@
-// main.jsx
+// src/main.jsx
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
-import App from "./App.jsx";
 import { AuthProvider } from "react-oidc-context";
+import App from "./App.jsx";
 
-const redirectUri = window.location.origin; // ✅ Netlify origin in prod
-
+const redirectUri = window.location.origin;
 
 const cognitoAuthConfig = {
   authority: `https://cognito-idp.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${import.meta.env.VITE_COGNITO_USER_POOL_ID}`,
   client_id: import.meta.env.VITE_COGNITO_CLIENT_ID,
-  // redirect_uri: "http://localhost:5173", // must match your Cognito callback URL
-  redirect_uri: redirectUri,           // ⬅️ use the dynamic origin, not localhost
+  redirect_uri: redirectUri,
   response_type: "code",
-  scope: "openid email phone",
+  scope: "openid email phone"
 };
 
-// Optional: after Cognito returns, strip the code/state from the URL
 const onSigninCallback = () => {
+  // strip ?code=...&state=... from the URL
   window.history.replaceState({}, document.title, window.location.pathname);
 };
 
@@ -29,4 +26,3 @@ createRoot(document.getElementById("root")).render(
     </AuthProvider>
   </StrictMode>
 );
-
