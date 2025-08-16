@@ -1,13 +1,10 @@
-// UnitsList.jsx
+// src/components/UnitsList.jsx
 import { useEffect, useState } from "react";
-import { useAuth } from "react-oidc-context";
 
 // Call the Netlify Function (same-origin) instead of AWS directly.
 const PROXY_BASE = "/.netlify/functions/proxy-units";
 
 export default function UnitsList({ token }) {
-  const auth = useAuth();
-
   const [projectId, setProjectId] = useState("Fusion");
   const [buildingId, setBuildingId] = useState("");
   const [planType, setPlanType] = useState("");       // plan_type
@@ -40,17 +37,16 @@ export default function UnitsList({ token }) {
         `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}` +
         (qs.toString() ? `&${qs.toString()}` : "");
 
-      // Prefer ID token for API Gateway authorizer; fall back to prop token/access token
-      const jwt =
-        auth?.user?.id_token ||
-        token ||
-        auth?.user?.access_token ||
-        null;
-
-      const headers = jwt ? { Authorization: `Bearer ${jwt}` } : undefined;
+      if (!token) {
+        throw new Error("Missing token; please sign in again.");
+      }
+      const headers = { Authorization: `Bearer ${token}` };
 
       const r = await fetch(url, { headers, cache: "no-store" });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      if (!r.ok) {
+        const text = await r.text();
+        throw new Error(`${r.status} ${text}`);
+      }
 
       const data = await r.json();
       const items = Array.isArray(data.items) ? data.items : [];
@@ -62,11 +58,6 @@ export default function UnitsList({ token }) {
       setLoading(false);
     }
   }
-
-  // ...keep the rest of your component exactly as-is (onKeyDown, clearFilters, useEffect, render, etc.)
-
-
-
 
   function onKeyDown(e) {
     if (e.key === "Enter") {
@@ -208,10 +199,8 @@ export default function UnitsList({ token }) {
             <input value={selected.building_id || ""} readOnly />
             <label>Unit</label>
             <input value={selected.unit_number || ""} readOnly />
-            
             <label>Plan Type</label>
             <input value={selected.plan_type || ""} readOnly />
-         
             <label>Floor plan</label>
             {selected.floorplan_url ? (
               <a href={selected.floorplan_url} target="_blank" rel="noreferrer">Open floor plan (PDF)</a>
