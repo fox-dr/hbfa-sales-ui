@@ -45,52 +45,55 @@ export default function OfferForm() {
     }
   }
 
-  async function handleSelectUnit() {
-    setMsg("");
-    const n = unitNumber.trim();
-    if (!n) {
-      setMsg("Enter a unit number.");
-      return;
-    }
+async function handleSelectUnit() {
+  setMsg("");
+  const n = unitNumber.trim();
+  if (!n) {
+    setMsg("Enter a unit number.");
+    return;
+  }
 
-    // 1) Try v2 single lookup (ok if it 404s; we’ll fall back)
-    try {
-      const v2 = await fetch(
-        `${PROXY_BASE}?path=${encodeURIComponent("/unit_info_v2")}&unit_number=${encodeURIComponent(
-          n
-        )}`,
-        { headers, cache: "no-store" }
-      );
-      if (v2.ok) {
-        const data = await v2.json();
-        const record = Array.isArray(data) ? data[0] : data;
-        if (record) {
-          setFields(record);
-          return;
-        }
-      }
-    } catch {
-      /* ignore and fall back */
+  // Try v2 single lookup first
+  try {
+    const v2 = await fetch(
+      `${PROXY_BASE}?path=${encodeURIComponent("/unit_info_v2")}&unit_number=${encodeURIComponent(n)}`,
+      { headers, cache: "no-store" }
+    );
+    if (v2.ok) {
+      const data = await v2.json();
+      const record = Array.isArray(data) ? data[0] : data;
+      if (record) { setFields(record); return; }
     }
+  } catch {}
 
-    // 2) Fallback: fetch the whole list (no query to avoid backend 400), then filter client-side
-    try {
-      const upstreamPath = `/projects/${encodeURIComponent(PROJECT_ID)}/units`;
-      const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`; // no qs
-      const res = await fetch(url, { headers, cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  // Fallback #1: list for project, filter client-side
+  try {
+    const upstreamPath = `/projects/${encodeURIComponent(PROJECT_ID)}/units`;
+    const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`; // no qs
+    const res = await fetch(url, { headers, cache: "no-store" });
+    if (res.ok) {
       const data = await res.json();
       const items = Array.isArray(data.items) ? data.items : [];
       const found = items.find((u) => String(u.unit_number) === String(n));
-      if (found) {
-        setFields(found);
-      } else {
-        setMsg(`Unit ${n} not found.`);
-      }
-    } catch (e) {
-      setMsg(`Error fetching unit: ${e.message}`);
+      if (found) { setFields(found); return; }
     }
-  }
+  } catch {}
+
+  // Fallback #2: legacy /units endpoint, filter client-side
+  try {
+    const res2 = await fetch(`${PROXY_BASE}?path=${encodeURIComponent("/units")}`, { headers, cache: "no-store" });
+    if (res2.ok) {
+      const data2 = await res2.json();
+      const items2 = Array.isArray(data2) ? data2 : (data2.items || []);
+      const found2 = items2.find((u) => String(u.unit_number) === String(n));
+      if (found2) { setFields(found2); return; }
+    }
+  } catch {}
+
+  setMsg(`Error fetching unit: could not locate unit ${n}. Check logs for details.`);
+}
+
+
 
   async function handleSubmit(e) {
     e.preventDefault();
