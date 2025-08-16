@@ -2,6 +2,15 @@
 import { useRef, useState } from "react";
 import { useAuth } from "react-oidc-context";
 
+// near the top of OfferForm()
+const auth = useAuth();
+const jwt = auth?.user?.id_token ?? auth?.user?.access_token;
+
+const headers = jwt
+  ? { Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" }
+  : { "Content-Type": "application/json" };
+
+
 const PROXY_BASE = "/.netlify/functions/proxy-units";
 const PROJECT_ID = "Fusion"; // change later if needed
 
@@ -48,49 +57,32 @@ export default function OfferForm() {
 async function handleSelectUnit() {
   setMsg("");
   const n = unitNumber.trim();
-  if (!n) {
-    setMsg("Enter a unit number.");
-    return;
-  }
+  if (!n) { setMsg("Enter a unit number."); return; }
+  if (!jwt) { setMsg("Please sign in again to fetch units."); return; }
 
-  // Try v2 single lookup first
   try {
-    const v2 = await fetch(
-      `${PROXY_BASE}?path=${encodeURIComponent("/unit_info_v2")}&unit_number=${encodeURIComponent(n)}`,
-      { headers, cache: "no-store" }
-    );
-    if (v2.ok) {
-      const data = await v2.json();
-      const record = Array.isArray(data) ? data[0] : data;
-      if (record) { setFields(record); return; }
-    }
-  } catch {}
-
-  // Fallback #1: list for project, filter client-side
-  try {
-    const upstreamPath = `/projects/${encodeURIComponent(PROJECT_ID)}/units`;
-    const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`; // no qs
+    // fetch full list and filter client-side (avoids backend query quirks)
+    const upstreamPath = `/projects/${encodeURIComponent("Fusion")}/units`;
+    const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`;
     const res = await fetch(url, { headers, cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json();
-      const items = Array.isArray(data.items) ? data.items : [];
-      const found = items.find((u) => String(u.unit_number) === String(n));
-      if (found) { setFields(found); return; }
-    }
-  } catch {}
 
-  // Fallback #2: legacy /units endpoint, filter client-side
-  try {
-    const res2 = await fetch(`${PROXY_BASE}?path=${encodeURIComponent("/units")}`, { headers, cache: "no-store" });
-    if (res2.ok) {
-      const data2 = await res2.json();
-      const items2 = Array.isArray(data2) ? data2 : (data2.items || []);
-      const found2 = items2.find((u) => String(u.unit_number) === String(n));
-      if (found2) { setFields(found2); return; }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`${res.status} ${text}`);
     }
-  } catch {}
 
-  setMsg(`Error fetching unit: could not locate unit ${n}. Check logs for details.`);
+    const data = await res.json();
+    const items = Array.isArray(data.items) ? data.items : [];
+    const found = items.find(u => String(u.unit_number) === String(n));
+
+    if (found) {
+      setFields(found);
+    } else {
+      setMsg(`Unit ${n} not found.`);
+    }
+  } catch (e) {
+    setMsg(`Error fetching unit: ${e.message}`);
+  }
 }
 
 

@@ -37,6 +37,11 @@ export default function UnitsList({ token }) {
         (qs.toString() ? `&${qs.toString()}` : "");
 
       // Only send Authorization header if we have a token
+      // before building headers for fetch:
+      const jwt = token /* from props */ || auth?.user?.id_token || auth?.user?.access_token;
+      // then:
+      const headers = jwt ? { Authorization: `Bearer ${jwt}` } : undefined;
+
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
       const r = await fetch(url, { headers });
 
