@@ -14,14 +14,29 @@ export async function handler(event) {
     const API_BASE = process.env.API_BASE; // e.g., https://.../prod
     if (!API_BASE) return json(500, { error: "API_BASE not configured" });
 
-    const urlParams = new URLSearchParams(event.rawQueryString || "");
-    const rawPath = urlParams.get("path");
+    // ---- robust query parsing (works across Netlify runtimes)
+    const params = new URLSearchParams();
+    // 1) Prefer parsed params
+    if (event.queryStringParameters) {
+      for (const [k, v] of Object.entries(event.queryStringParameters)) {
+        if (v != null) params.set(k, String(v));
+      }
+    }
+    // 2) Also merge rawQueryString if present
+    if (event.rawQueryString) {
+      const raw = new URLSearchParams(event.rawQueryString);
+      for (const [k, v] of raw.entries()) {
+        if (!params.has(k)) params.set(k, v);
+      }
+    }
+
+    const rawPath = params.get("path");
     if (!rawPath) return json(400, { error: "Missing 'path' query parameter" });
-    urlParams.delete("path");
+    params.delete("path");
 
     const base = API_BASE.replace(/\/+$/, "");
     const path = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
-    const qs = urlParams.toString();
+    const qs = params.toString();
     const upstreamUrl = `${base}${path}${qs ? `?${qs}` : ""}`;
 
     const headers = {};
@@ -38,11 +53,9 @@ export async function handler(event) {
     const contentType = upstream.headers.get("content-type") || "application/json";
     const bodyText = await upstream.text();
 
-    // Helpful logging (shows in Netlify deploy logs)
-    console.log("proxy-units upstream:", options.method, upstreamUrl, "→", upstream.status);
+    console.log("proxy-units:", options.method, upstreamUrl, "→", upstream.status);
 
     if (!upstream.ok) {
-      // Return structured error so you can read it in the browser Network tab
       return {
         statusCode: upstream.status,
         headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "no-store" },
