@@ -52,6 +52,7 @@ export default function OfferForm() {
         pdfBtnRef.current.onclick = null;
       }
     }
+     return <div style={{padding:16}}>Offer Form loaded ✅</div>;
   }
 
 async function handleSelectUnit() {
