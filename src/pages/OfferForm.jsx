@@ -1,6 +1,7 @@
 // src/pages/OfferForm.jsx
 import { useRef, useState } from "react";
 import { useAuth } from "react-oidc-context";
+import { useEffect } from "react";
 
 const PROXY_BASE = "/.netlify/functions/proxy-units";
 const PROJECT_ID = "Fusion";
@@ -102,11 +103,25 @@ export default function OfferForm() {
     }
   }
 
+  // good spot: just before return, top-level in the component
+  useEffect(() => {
+    const href = "/assets/hbfa.ico";
+    let link = document.querySelector('link[rel="icon"]');
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.type = "image/x-icon";
+    link.href = href;
+  }, []);
+
+
   return (
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <h1 style={{ margin: 0 }}>Create Offer</h1>
+        <h2 style={{ margin: 0 }}>Preliminary Offer</h2>
         <img src="/assets/fusion_logo.png" alt="Fusion Logo" style={{ height: 48 }} />
       </div>
 
@@ -274,9 +289,12 @@ export default function OfferForm() {
 
         {/* Disclaimer */}
         <section style={styles.section}>
-          <h3 style={styles.legend}>Disclaimer</h3>
+          <h4 style={styles.legend}>Disclaimer</h4>
           <p style={{ margin: 0, color: "#444" }}>
-            THIS IS NOT A CONTRACT. THE TERMS OF THIS PRELIMINARY OFFER ARE NON-BINDING...
+            THIS IS NOT A CONTRACT. THE TERMS OF THIS PRELIMINARY OFFER ARE NON-BINDING. 
+            APPROVAL OF THIS PRELIMINARY OFFER BY SELLER SHALL ESTABLISH NO AGREEMENT BETWEEN THE PROSPECTIVE 
+            BUYER AND SELLER AND SHALL NOT CREATE ANY OBLIGATION ON THE PART OF SELLER TO SELL THE UNIT TO 
+            PROSPECTIVE BUYER. THE UNIT MAY BE WITHDRAWN FROM THE MARKET AT ANY TIME.
           </p>
         </section>
 
@@ -291,6 +309,16 @@ export default function OfferForm() {
           </div>
         )}
       </form>
+      <footer style={styles.footer} aria-hidden="true">
+        <img
+          src="/assets/hfba-logo.png"
+          alt=""                 // decorative; leave empty
+          height={48}           // give intrinsic size to avoid layout shift
+          style={styles.footerLogo}
+          loading="lazy"
+          decoding="async"
+        />
+      </footer>
     </div>
   );
 }
