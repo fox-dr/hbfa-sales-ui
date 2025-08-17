@@ -127,6 +127,22 @@ function OfferForm() {
     }
   }
 
+const [justLoggedOut, setJustLoggedOut] = useState(false);
+
+useEffect(() => {
+  const qs = new URLSearchParams(window.location.search);
+  if (qs.get("logged_out") === "1") {
+    setJustLoggedOut(true);
+    // strip the query so refresh doesn’t keep showing the banner
+    window.history.replaceState({}, document.title, window.location.pathname);
+    // brief pause, then go to site home
+    setTimeout(() => {
+      window.location.assign(window.location.origin);
+    }, 1500);
+  }
+}, []);
+
+
   // good spot: just before return, top-level in the component
   useEffect(() => {
     const href = "/assets/hbfa.ico";
@@ -336,6 +352,22 @@ function OfferForm() {
           </div>
         )}
       </form>
+
+    return (
+      <div id="offer" style={styles.container}>
+        <div style={styles.header}>
+          <h2 style={{ margin: 0 }}>Preliminary Offer</h2>
+          <img src="/assets/fusion_logo.png" alt="Fusion Logo" style={{ height: 48 }} />
+        </div>
+
+        {justLoggedOut ? (
+          <div style={styles.notice}>User logged out. Redirecting to home…</div>
+        ) : (
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* …the rest of your form exactly as-is… */}
+          </form>
+        )}
+
       <footer style={styles.footer} aria-hidden="true">
         <img
           src="/assets/hbfa-logo.png"
@@ -360,4 +392,6 @@ const styles = {
   input: { padding: "10px", border: "1px solid #ccc", borderRadius: 6, fontSize: "1rem" },
   inputRO: { padding: "10px", border: "1px solid #eee", borderRadius: 6, fontSize: "1rem", background: "#f5f5f5" },
   textarea: { padding: "10px", border: "1px solid #ccc", borderRadius: 6, fontSize: "1rem", resize: "vertical" },
+  notice: { padding: 16, background: "#fffbe6", border: "1px solid #ffe58f", borderRadius: 8, marginTop: 16 },
+
 };
