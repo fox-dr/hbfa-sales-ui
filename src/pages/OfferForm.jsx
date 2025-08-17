@@ -311,7 +311,7 @@ export default function OfferForm() {
       </form>
       <footer style={styles.footer} aria-hidden="true">
         <img
-          src="/assets/hfba-logo.png"
+          src="/assets/hbfa-logo.png"
           alt=""                 // decorative; leave empty
           height={48}           // give intrinsic size to avoid layout shift
           style={styles.footerLogo}
