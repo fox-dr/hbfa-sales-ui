@@ -1,4 +1,4 @@
-// src/pages/OfferForm.jsx
+// src/pages/OfferForm.jsx rev for mobile
 import { useRef, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import { useEffect } from "react";
@@ -149,7 +149,11 @@ export default function OfferForm() {
               />
             </label>
 
-           
+            
+            <div style={{ display: "flex", alignItems: "end", gap: 8 }}>
+              <button type="button" onClick={handleSelectUnit}>Select Unit</button>
+              
+            </div>
             
           </div>
 
