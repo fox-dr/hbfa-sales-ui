@@ -114,9 +114,6 @@ export default function OfferForm() {
     }
   }
 
- 
-  const [justLoggedOut, setJustLoggedOut] = useState(false);
-
 
   // favicon
   useEffect(() => {
