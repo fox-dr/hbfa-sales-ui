@@ -14,7 +14,7 @@ const cognitoAuthConfig = {
   response_type: "code",
   scope: "openid email phone",
   // Seed Cognito Hosted UI endpoints for logout (discovery often omits end_session)
-  metadataSeed: { end_session_endpoint: `${import.meta.env.VITE_COGNITO_DOMAIN}/logout` },
+ 
 };
 
 

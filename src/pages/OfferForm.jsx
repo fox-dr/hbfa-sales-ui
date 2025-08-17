@@ -48,38 +48,6 @@ export default function OfferForm() {
     }
   }
 
-  // OPTIONAL: logout handler (kept here; call from a button if you want)
-  const handleLogout = () => {
-  // Build the return URL with a flag we detect on load
-  const u = new URL(window.location.origin);
-  u.searchParams.set("logged_out", "1");
-  const returnTo = u.toString();
-    // const returnTo = `{window.location.origin}?logged_out=1`;  // <-- add the flag
-    // Clear cached user right away so the UI reflects "signed out"
- 
-  // Hard redirect to Cognito Hosted UI logout
-  const domain = import.meta.env.VITE_COGNITO_DOMAIN;      // e.g. https://us-east-2...amazoncognito.com
-  const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID; // e.g. 3kp9ag...
-  
-  console.log("[logout] domain:", domain);
-  console.log("[logout] clientId:", clientId);
-  console.log("[logout] returnTo:", returnTo);
-  
-    if (!domain || !clientId) {
-    alert("Logout not configured. Missing VITE_COGNITO_DOMAIN or VITE_COGNITO_CLIENT_ID.");
-    return;
-  }
-
-  // Clear cached OIDC user immediately so UI flips to signed-out
-  auth.removeUser().catch(() => {});
-  const url = `${domain}/logout?client_id=${encodeURIComponent(clientId)}&logout_uri=${encodeURIComponent(returnTo)}`;
-  console.log("[logout] redirecting to:", url);
-
-  window.location.href = url;
-
-  // window.location.href =
-  //   `${domain}/logout?client_id=${encodeURIComponent(clientId)}&logout_uri=${encodeURIComponent(returnTo)}`;
-};
     
     // auth
       // .signoutRedirect({ post_logout_redirect_uri: returnTo })
@@ -146,17 +114,6 @@ export default function OfferForm() {
     }
   }
 
-  // show "logged out" banner if redirected with ?logged_out=1
-  const [justLoggedOut, setJustLoggedOut] = useState(false);
-  useEffect(() => {
-    const qs = new URLSearchParams(window.location.search);
-    if (qs.get("logged_out") === "1") {
-      auth.removeUser().catch(() => {}); // ensure local cache is gone
-      setJustLoggedOut(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
-      setTimeout(() => window.location.assign(window.location.origin), 1500);
-    }
-  }, [auth]);
 
   // favicon
   useEffect(() => {
@@ -177,16 +134,10 @@ export default function OfferForm() {
       <div style={styles.header}>
         <h2 style={{ margin: 0 }}>Preliminary Offer</h2>
         <img src="/assets/fusion_logo.png" alt="Fusion Logo" style={{ height: 48 }} />
-        {/* Example logout button if you want to show it:
-        {auth?.isAuthenticated && (
-          <button type="button" onClick={handleLogout}>Log out</button>
-        )} */}
       </div>
 
       {/* Notice OR Form */}
-      {justLoggedOut ? (
-        <div style={styles.notice}>User logged out. Redirecting to home…</div>
-      ) : (
+      
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Buyer Contact Information */}
           <section style={styles.section}>
@@ -370,7 +321,7 @@ export default function OfferForm() {
             </div>
           )}
         </form>
-      )}
+      )
 
       <footer style={styles.footer} aria-hidden="true">
         <img
