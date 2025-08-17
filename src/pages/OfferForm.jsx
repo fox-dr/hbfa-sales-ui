@@ -49,6 +49,27 @@ export default function OfferForm() {
     }
   }
 
+
+function OfferForm() {
+  const auth = useAuth();
+
+  const handleLogout = () => {
+    const returnTo = window.location.origin;
+    auth
+      .signoutRedirect({ post_logout_redirect_uri: returnTo })
+      .catch(() => {
+        const domain = import.meta.env.VITE_COGNITO_DOMAIN;
+        const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
+        window.location.href =
+          `${domain}/logout?client_id=${encodeURIComponent(clientId)}&logout_uri=${encodeURIComponent(returnTo)}`;
+      });
+  };
+
+  // put this button in your header (only when signed in)
+  // {auth?.isAuthenticated && <button type="button" onClick={handleLogout}>Log out</button>}
+}
+
+
   async function handleSelectUnit() {
     setMsg("");
     const n = unitNumber.trim();
@@ -79,6 +100,8 @@ export default function OfferForm() {
       setMsg(`Error fetching unit: ${String(e.message || e)}`);
     }
   }
+
+
 
   async function handleSubmit(e) {
     e.preventDefault();
