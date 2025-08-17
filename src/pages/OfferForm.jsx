@@ -32,7 +32,6 @@ export default function OfferForm() {
   const [planInfo, setPlanInfo] = useState("");
   const [addressInfo, setAddressInfo] = useState("");
   const pdfBtnRef = useRef(null);
-  const [pricePreview, setPricePreview] = useState("");
   const formRef = useRef(null);
 
   const headers = jwt
@@ -336,7 +335,7 @@ function handlePrintPDF() {
 
   useEffect(() => {
   const node = formRef.current?.elements?.price; // name="price"
-  if (node?.value) setPricePreview(formatUSD(node.value));
+  
   }, []);
 
   
@@ -476,9 +475,10 @@ function handlePrintPDF() {
               <label style={styles.col}>
                 Price
                 <input type="number" step="0.01" name="price" style={styles.input}
-                onInput={(e) => setPricePreview(formatUSD(e.target.value))}
+               
+                inputMode="decimal"
                 />
-                <small style={styles.hint}>{pricePreview}</small>
+                
               </label>
 
               <label style={styles.col}>
@@ -568,6 +568,6 @@ const styles = {
   textarea: { padding: "10px", border: "1px solid #ccc", borderRadius: 6, fontSize: "1rem", resize: "vertical" },
   notice: { padding: 16, background: "#fffbe6", border: "1px solid #ffe58f", borderRadius: 8, marginTop: 16 },
   footer: { marginTop: 24, display: "flex", justifyContent: "center" },
-  footerLogo: { width: "auto" },
-  hint: { marginTop: 2, fontSize: "0.85rem", color: "#555", fontStyle: "italic" },
+  footerLogo: { width: "auto" }
+
 };
