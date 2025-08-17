@@ -16,7 +16,7 @@ function formatUSD(val) {
     maximumFractionDigits: 2,
   });
 }
-const [pricePreview, setPricePreview] = useState("");
+
 
 
 export default function OfferForm() {
@@ -32,7 +32,7 @@ export default function OfferForm() {
   const [planInfo, setPlanInfo] = useState("");
   const [addressInfo, setAddressInfo] = useState("");
   const pdfBtnRef = useRef(null);
-
+  const [pricePreview, setPricePreview] = useState("");
   const formRef = useRef(null);
 
   const headers = jwt
