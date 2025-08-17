@@ -48,38 +48,6 @@ export default function OfferForm() {
     }
   }
 
-  // OPTIONAL: logout handler (kept here; call from a button if you want)
-  const handleLogout = () => {
-  // Build the return URL with a flag we detect on load
-  const u = new URL(window.location.origin);
-  u.searchParams.set("logged_out", "1");
-  const returnTo = u.toString();
-    // const returnTo = `{window.location.origin}?logged_out=1`;  // <-- add the flag
-    // Clear cached user right away so the UI reflects "signed out"
- 
-  // Hard redirect to Cognito Hosted UI logout
-  const domain = import.meta.env.VITE_COGNITO_DOMAIN;      // e.g. https://us-east-2...amazoncognito.com
-  const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID; // e.g. 3kp9ag...
-  
-  console.log("[logout] domain:", domain);
-  console.log("[logout] clientId:", clientId);
-  console.log("[logout] returnTo:", returnTo);
-  
-    if (!domain || !clientId) {
-    alert("Logout not configured. Missing VITE_COGNITO_DOMAIN or VITE_COGNITO_CLIENT_ID.");
-    return;
-  }
-
-  // Clear cached OIDC user immediately so UI flips to signed-out
-  auth.removeUser().catch(() => {});
-  const url = `${domain}/logout?client_id=${encodeURIComponent(clientId)}&logout_uri=${encodeURIComponent(returnTo)}`;
-  console.log("[logout] redirecting to:", url);
-
-  window.location.href = url;
-
-  // window.location.href =
-  //   `${domain}/logout?client_id=${encodeURIComponent(clientId)}&logout_uri=${encodeURIComponent(returnTo)}`;
-};
     
     // auth
       // .signoutRedirect({ post_logout_redirect_uri: returnTo })
