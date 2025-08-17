@@ -116,15 +116,7 @@ export default function OfferForm() {
 
   // show "logged out" banner if redirected with ?logged_out=1
   const [justLoggedOut, setJustLoggedOut] = useState(false);
-  useEffect(() => {
-    const qs = new URLSearchParams(window.location.search);
-    if (qs.get("logged_out") === "1") {
-      auth.removeUser().catch(() => {}); // ensure local cache is gone
-      setJustLoggedOut(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
-      setTimeout(() => window.location.assign(window.location.origin), 1500);
-    }
-  }, [auth]);
+
 
   // favicon
   useEffect(() => {
