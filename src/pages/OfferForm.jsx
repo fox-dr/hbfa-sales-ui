@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import { useEffect } from "react";
+import './offer-form.css';
 
 const PROXY_BASE = "/.netlify/functions/proxy-units";
 const PROJECT_ID = "Fusion";
@@ -118,7 +119,7 @@ export default function OfferForm() {
 
 
   return (
-    <div style={styles.container}>
+    <div id="offer" style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
         <h2 style={{ margin: 0 }}>Preliminary Offer</h2>
