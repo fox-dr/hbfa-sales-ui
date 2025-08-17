@@ -1,8 +1,7 @@
 // src/pages/OfferForm.jsx rev for mobile
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
-import { useEffect } from "react";
-import './offer-form.css';
+import "./offer-form.css";
 
 const PROXY_BASE = "/.netlify/functions/proxy-units";
 const PROJECT_ID = "Fusion";
@@ -49,10 +48,7 @@ export default function OfferForm() {
     }
   }
 
-
-function OfferForm() {
-  const auth = useAuth();
-
+  // OPTIONAL: logout handler (kept here; call from a button if you want)
   const handleLogout = () => {
     const returnTo = window.location.origin;
     auth
@@ -60,15 +56,11 @@ function OfferForm() {
       .catch(() => {
         const domain = import.meta.env.VITE_COGNITO_DOMAIN;
         const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
-        window.location.href =
-          `${domain}/logout?client_id=${encodeURIComponent(clientId)}&logout_uri=${encodeURIComponent(returnTo)}`;
+        window.location.href = `${domain}/logout?client_id=${encodeURIComponent(
+          clientId
+        )}&logout_uri=${encodeURIComponent(returnTo)}`;
       });
   };
-
-  // put this button in your header (only when signed in)
-  // {auth?.isAuthenticated && <button type="button" onClick={handleLogout}>Log out</button>}
-}
-
 
   async function handleSelectUnit() {
     setMsg("");
@@ -77,7 +69,6 @@ function OfferForm() {
     if (!jwt) return setMsg("Please sign in again (missing token).");
 
     try {
-      // Fetch the full list for the project (avoids backend query quirks) and filter client-side
       const upstreamPath = `/projects/${encodeURIComponent(PROJECT_ID)}/units`;
       const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`;
 
@@ -100,8 +91,6 @@ function OfferForm() {
       setMsg(`Error fetching unit: ${String(e.message || e)}`);
     }
   }
-
-
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -127,23 +116,18 @@ function OfferForm() {
     }
   }
 
-const [justLoggedOut, setJustLoggedOut] = useState(false);
+  // show "logged out" banner if redirected with ?logged_out=1
+  const [justLoggedOut, setJustLoggedOut] = useState(false);
+  useEffect(() => {
+    const qs = new URLSearchParams(window.location.search);
+    if (qs.get("logged_out") === "1") {
+      setJustLoggedOut(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setTimeout(() => window.location.assign(window.location.origin), 1500);
+    }
+  }, []);
 
-useEffect(() => {
-  const qs = new URLSearchParams(window.location.search);
-  if (qs.get("logged_out") === "1") {
-    setJustLoggedOut(true);
-    // strip the query so refresh doesn’t keep showing the banner
-    window.history.replaceState({}, document.title, window.location.pathname);
-    // brief pause, then go to site home
-    setTimeout(() => {
-      window.location.assign(window.location.origin);
-    }, 1500);
-  }
-}, []);
-
-
-  // good spot: just before return, top-level in the component
+  // favicon
   useEffect(() => {
     const href = "/assets/hbfa.ico";
     let link = document.querySelector('link[rel="icon"]');
@@ -156,223 +140,212 @@ useEffect(() => {
     link.href = href;
   }, []);
 
-
   return (
-    <div id="offer"
-     style={styles.container}>
+    <div id="offer" style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
         <h2 style={{ margin: 0 }}>Preliminary Offer</h2>
         <img src="/assets/fusion_logo.png" alt="Fusion Logo" style={{ height: 48 }} />
+        {/* Example logout button if you want to show it:
+        {auth?.isAuthenticated && (
+          <button type="button" onClick={handleLogout}>Log out</button>
+        )} */}
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {/* Buyer Contact Information */}
-        <section style={styles.section}>
-          <h3 style={styles.legend}>Buyer Contact Information</h3>
+      {/* Notice OR Form */}
+      {justLoggedOut ? (
+        <div style={styles.notice}>User logged out. Redirecting to home…</div>
+      ) : (
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Buyer Contact Information */}
+          <section style={styles.section}>
+            <h3 style={styles.legend}>Buyer Contact Information</h3>
 
-          {/* Name + Unit */}
-          <div style={{ ...styles.row, gridTemplateColumns: "2fr 140px 140px" }}>
-            <label style={styles.col}>
-              Name (As on Contract)
-              <input name="buyer_name" maxLength={50} style={styles.input} />
-            </label>
+            {/* Name + Unit */}
+            <div style={{ ...styles.row, gridTemplateColumns: "2fr 140px 140px" }}>
+              <label style={styles.col}>
+                Name (As on Contract)
+                <input name="buyer_name" maxLength={50} style={styles.input} />
+              </label>
 
-            <label style={styles.col}>
-              Unit #
-              <input
-                type="number"
-                value={unitNumber}
-                onChange={(e) => setUnitNumber(e.target.value)}
-                style={{ ...styles.input, width: 120 }}
-              />
-            </label>
+              <label style={styles.col}>
+                Unit #
+                <input
+                  type="number"
+                  value={unitNumber}
+                  onChange={(e) => setUnitNumber(e.target.value)}
+                  style={{ ...styles.input, width: 120 }}
+                />
+              </label>
 
-            
-            <div style={{ display: "flex", alignItems: "end", gap: 8 }}>
-              <button type="button" onClick={handleSelectUnit}>Select Unit</button>
-              
+              <div style={{ display: "flex", alignItems: "end", gap: 8 }}>
+                <button type="button" onClick={handleSelectUnit}>Select Unit</button>
+              </div>
             </div>
-            
-          </div>
 
-          {/* Address 1 */}
-          <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
-            <label style={styles.col}>
-              Current Street Address *
-              <input name="address_1" required style={styles.input} />
-            </label>
-          </div>
-
-          {/* Address 2 */}
-          <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
-            <label style={styles.col}>
-              (Suite / Apt / PO Box)
-              <input name="address_2" style={styles.input} />
-            </label>
-          </div>
-
-          {/* City / State / Zip */}
-          <div style={{ ...styles.row, gridTemplateColumns: "1fr 90px 140px" }}>
-            <label style={styles.col}>
-              City *
-              <input name="city" maxLength={55} required style={styles.input} />
-            </label>
-            <label style={styles.col}>
-              State *
-              <input name="state" maxLength={2} required style={{ ...styles.input, width: 70 }} />
-            </label>
-            <label style={styles.col}>
-              Zip Code *
-              <input name="zip_code" maxLength={15} required style={{ ...styles.input, width: 120 }} />
-            </label>
-          </div>
-
-          {/* Phones */}
-          <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr" }}>
-            <label style={styles.col}>
-              Phone Number 1
-              <input name="phone_number_1" maxLength={20} style={styles.input} />
-            </label>
-            <label style={styles.col}>
-              Phone Number 2
-              <input name="phone_number_2" maxLength={20} style={styles.input} />
-            </label>
-            <label style={styles.col}>
-              Phone Number 3
-              <input name="phone_number_3" maxLength={20} style={styles.input} />
-            </label>
-          </div>
-
-          {/* Emails */}
-          <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr" }}>
-            <label style={styles.col}>
-              Email 1
-              <input type="email" name="email_1" maxLength={40} style={styles.input} />
-            </label>
-            <label style={styles.col}>
-              Email 2
-              <input type="email" name="email_2" maxLength={40} style={styles.input} />
-            </label>
-            <label style={styles.col}>
-              Email 3
-              <input type="email" name="email_3" maxLength={40} style={styles.input} />
-            </label>
-          </div>
-
-          {/* Buyer notes */}
-          <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
-            <label style={styles.col}>
-              Buyer Notes
-              <textarea name="buyer_notes" rows={4} maxLength={512} style={styles.textarea} />
-            </label>
-          </div>
-        </section>
-
-        {/* Offer Information */}
-        <section style={styles.section}>
-          <h3 style={styles.legend}>Offer Information</h3>
-
-          <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
-            <label style={styles.col}>Lender Institution<input name="lender" style={styles.input} /></label>
-            <label style={styles.col}>Loan Officer<input name="loan_officer" style={styles.input} /></label>
-            <label style={styles.col}>Loan Officer Email<input type="email" name="l_o_contact_email" maxLength={40} style={styles.input} /></label>
-            <label style={styles.col}>Loan Officer Phone<input type="tel" name="l_o_phone" maxLength={20} style={styles.input} /></label>
-          </div>
-
-          <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
-            <label style={styles.col}>Broker Name<input name="broker_name" style={styles.input} /></label>
-            <label style={styles.col}>Brokerage<input name="brokerage" style={styles.input} /></label>
-            <label style={styles.col}>Broker Email<input type="email" name="broker_email" maxLength={40} style={styles.input} /></label>
-            <label style={styles.col}>Broker Phone<input type="tel" name="broker_phone" maxLength={20} style={styles.input} /></label>
-          </div>
-
-          <div style={{ ...styles.row, gridTemplateColumns: "auto 1fr 1fr" }}>
-            <label style={{ ...styles.col, alignItems: "center", flexDirection: "row", gap: 8 }}>
-              <input type="checkbox" name="cash_purchase" />
-              Cash Purchase?
-            </label>
-            <label style={styles.col}>Price<input type="number" step="0.01" name="price" style={styles.input} /></label>
-            <label style={styles.col}>
-              Purchase Type
-              <select name="purchase_type" style={styles.input}>
-                <option value="">Select...</option>
-                <option value="personal_residence">Personal Residence</option>
-                <option value="investment_property">Investment Property</option>
-              </select>
-            </label>
-          </div>
-
-          <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
-            <label style={styles.col}>
-              Qualification/Lender Notes
-              <textarea name="offer_notes_1" rows={3} maxLength={512} style={styles.textarea} />
-            </label>
-          </div>
-        </section>
-
-        {/* Home Details */}
-        <section style={styles.section}>
-          <h3 style={styles.legend}>Home Details (From Fusion)</h3>
-          <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr auto" }}>
-            <label style={styles.col}>Building Info<input value={buildingInfo} readOnly style={styles.inputRO} /></label>
-            <label style={styles.col}>Plan Info<input value={planInfo} readOnly style={styles.inputRO} /></label>
-            <label style={styles.col}>Address<input value={addressInfo} readOnly style={styles.inputRO} /></label>
-            <div style={{ display: "flex", alignItems: "end" }}>
-              <button type="button" ref={pdfBtnRef} disabled>Open PDF</button>
+            {/* Address 1 */}
+            <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
+              <label style={styles.col}>
+                Current Street Address *
+                <input name="address_1" required style={styles.input} />
+              </label>
             </div>
+
+            {/* Address 2 */}
+            <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
+              <label style={styles.col}>
+                (Suite / Apt / PO Box)
+                <input name="address_2" style={styles.input} />
+              </label>
+            </div>
+
+            {/* City / State / Zip */}
+            <div style={{ ...styles.row, gridTemplateColumns: "1fr 90px 140px" }}>
+              <label style={styles.col}>
+                City *
+                <input name="city" maxLength={55} required style={styles.input} />
+              </label>
+              <label style={styles.col}>
+                State *
+                <input name="state" maxLength={2} required style={{ ...styles.input, width: 70 }} />
+              </label>
+              <label style={styles.col}>
+                Zip Code *
+                <input name="zip_code" maxLength={15} required style={{ ...styles.input, width: 120 }} />
+              </label>
+            </div>
+
+            {/* Phones */}
+            <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr" }}>
+              <label style={styles.col}>
+                Phone Number 1
+                <input name="phone_number_1" maxLength={20} style={styles.input} />
+              </label>
+              <label style={styles.col}>
+                Phone Number 2
+                <input name="phone_number_2" maxLength={20} style={styles.input} />
+              </label>
+              <label style={styles.col}>
+                Phone Number 3
+                <input name="phone_number_3" maxLength={20} style={styles.input} />
+              </label>
+            </div>
+
+            {/* Emails */}
+            <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr" }}>
+              <label style={styles.col}>
+                Email 1
+                <input type="email" name="email_1" maxLength={40} style={styles.input} />
+              </label>
+              <label style={styles.col}>
+                Email 2
+                <input type="email" name="email_2" maxLength={40} style={styles.input} />
+              </label>
+              <label style={styles.col}>
+                Email 3
+                <input type="email" name="email_3" maxLength={40} style={styles.input} />
+              </label>
+            </div>
+
+            {/* Buyer notes */}
+            <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
+              <label style={styles.col}>
+                Buyer Notes
+                <textarea name="buyer_notes" rows={4} maxLength={512} style={styles.textarea} />
+              </label>
+            </div>
+          </section>
+
+          {/* Offer Information */}
+          <section style={styles.section}>
+            <h3 style={styles.legend}>Offer Information</h3>
+
+            <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
+              <label style={styles.col}>Lender Institution<input name="lender" style={styles.input} /></label>
+              <label style={styles.col}>Loan Officer<input name="loan_officer" style={styles.input} /></label>
+              <label style={styles.col}>Loan Officer Email<input type="email" name="l_o_contact_email" maxLength={40} style={styles.input} /></label>
+              <label style={styles.col}>Loan Officer Phone<input type="tel" name="l_o_phone" maxLength={20} style={styles.input} /></label>
+            </div>
+
+            <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
+              <label style={styles.col}>Broker Name<input name="broker_name" style={styles.input} /></label>
+              <label style={styles.col}>Brokerage<input name="brokerage" style={styles.input} /></label>
+              <label style={styles.col}>Broker Email<input type="email" name="broker_email" maxLength={40} style={styles.input} /></label>
+              <label style={styles.col}>Broker Phone<input type="tel" name="broker_phone" maxLength={20} style={styles.input} /></label>
+            </div>
+
+            <div style={{ ...styles.row, gridTemplateColumns: "auto 1fr 1fr" }}>
+              <label style={{ ...styles.col, alignItems: "center", flexDirection: "row", gap: 8 }}>
+                <input type="checkbox" name="cash_purchase" />
+                Cash Purchase?
+              </label>
+              <label style={styles.col}>Price<input type="number" step="0.01" name="price" style={styles.input} /></label>
+              <label style={styles.col}>
+                Purchase Type
+                <select name="purchase_type" style={styles.input}>
+                  <option value="">Select...</option>
+                  <option value="personal_residence">Personal Residence</option>
+                  <option value="investment_property">Investment Property</option>
+                </select>
+              </label>
+            </div>
+
+            <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
+              <label style={styles.col}>
+                Qualification/Lender Notes
+                <textarea name="offer_notes_1" rows={3} maxLength={512} style={styles.textarea} />
+              </label>
+            </div>
+          </section>
+
+          {/* Home Details */}
+          <section style={styles.section}>
+            <h3 style={styles.legend}>Home Details (From Fusion)</h3>
+            <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr auto" }}>
+              <label style={styles.col}>Building Info<input value={buildingInfo} readOnly style={styles.inputRO} /></label>
+              <label style={styles.col}>Plan Info<input value={planInfo} readOnly style={styles.inputRO} /></label>
+              <label style={styles.col}>Address<input value={addressInfo} readOnly style={styles.inputRO} /></label>
+              <div style={{ display: "flex", alignItems: "end" }}>
+                <button type="button" ref={pdfBtnRef} disabled>Open PDF</button>
+              </div>
+            </div>
+          </section>
+
+          {/* Additional Notes */}
+          <section style={styles.section}>
+            <h3 style={styles.legend}>Additional Notes</h3>
+            <textarea name="add_notes" rows={5} style={{ ...styles.textarea, width: "100%" }} />
+          </section>
+
+          {/* Disclaimer */}
+          <section style={styles.section}>
+            <h4 style={styles.legend}>Disclaimer</h4>
+            <p style={{ margin: 0, color: "#444" }}>
+              THIS IS NOT A CONTRACT. THE TERMS OF THIS PRELIMINARY OFFER ARE NON-BINDING. 
+              APPROVAL OF THIS PRELIMINARY OFFER BY SELLER SHALL ESTABLISH NO AGREEMENT BETWEEN THE PROSPECTIVE 
+              BUYER AND SELLER AND SHALL NOT CREATE ANY OBLIGATION ON THE PART OF SELLER TO SELL THE UNIT TO 
+              PROSPECTIVE BUYER. THE UNIT MAY BE WITHDRAWN FROM THE MARKET AT ANY TIME.
+            </p>
+          </section>
+
+          {/* Submit */}
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button type="submit">Submit Offer</button>
           </div>
-        </section>
 
-        {/* Additional Notes */}
-        <section style={styles.section}>
-          <h3 style={styles.legend}>Additional Notes</h3>
-          <textarea name="add_notes" rows={5} style={{ ...styles.textarea, width: "100%" }} />
-        </section>
-
-        {/* Disclaimer */}
-        <section style={styles.section}>
-          <h4 style={styles.legend}>Disclaimer</h4>
-          <p style={{ margin: 0, color: "#444" }}>
-            THIS IS NOT A CONTRACT. THE TERMS OF THIS PRELIMINARY OFFER ARE NON-BINDING. 
-            APPROVAL OF THIS PRELIMINARY OFFER BY SELLER SHALL ESTABLISH NO AGREEMENT BETWEEN THE PROSPECTIVE 
-            BUYER AND SELLER AND SHALL NOT CREATE ANY OBLIGATION ON THE PART OF SELLER TO SELL THE UNIT TO 
-            PROSPECTIVE BUYER. THE UNIT MAY BE WITHDRAWN FROM THE MARKET AT ANY TIME.
-          </p>
-        </section>
-
-        {/* Submit */}
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <button type="submit">Submit Offer</button>
-        </div>
-
-        {msg && (
-          <div style={{ marginTop: 10, color: msg.toLowerCase().includes("error") ? "crimson" : "green" }}>
-            {msg}
-          </div>
-        )}
-      </form>
-
-    return (
-      <div id="offer" style={styles.container}>
-        <div style={styles.header}>
-          <h2 style={{ margin: 0 }}>Preliminary Offer</h2>
-          <img src="/assets/fusion_logo.png" alt="Fusion Logo" style={{ height: 48 }} />
-        </div>
-
-        {justLoggedOut ? (
-          <div style={styles.notice}>User logged out. Redirecting to home…</div>
-        ) : (
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* …the rest of your form exactly as-is… */}
-          </form>
-        )}
+          {msg && (
+            <div style={{ marginTop: 10, color: msg.toLowerCase().includes("error") ? "crimson" : "green" }}>
+              {msg}
+            </div>
+          )}
+        </form>
+      )}
 
       <footer style={styles.footer} aria-hidden="true">
         <img
           src="/assets/hbfa-logo.png"
-          alt=""                 // decorative; leave empty
-          height={48}           // give intrinsic size to avoid layout shift
+          alt=""
+          height={48}
           style={styles.footerLogo}
           loading="lazy"
           decoding="async"
@@ -393,5 +366,6 @@ const styles = {
   inputRO: { padding: "10px", border: "1px solid #eee", borderRadius: 6, fontSize: "1rem", background: "#f5f5f5" },
   textarea: { padding: "10px", border: "1px solid #ccc", borderRadius: 6, fontSize: "1rem", resize: "vertical" },
   notice: { padding: 16, background: "#fffbe6", border: "1px solid #ffe58f", borderRadius: 8, marginTop: 16 },
-
+  footer: { marginTop: 24, display: "flex", justifyContent: "center" },
+  footerLogo: { width: "auto" },
 };
