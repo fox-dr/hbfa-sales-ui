@@ -119,7 +119,8 @@ export default function OfferForm() {
 
 
   return (
-    <div id="offer" style={styles.container}>
+    <div id="offer"
+     style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
         <h2 style={{ margin: 0 }}>Preliminary Offer</h2>
@@ -148,10 +149,12 @@ export default function OfferForm() {
               />
             </label>
 
+            {/* rem this button
             <div style={{ display: "flex", alignItems: "end", gap: 8 }}>
               <button type="button" onClick={handleSelectUnit}>Select Unit</button>
               <button type="button" ref={pdfBtnRef} disabled>Open PDF</button>
             </div>
+            */}
           </div>
 
           {/* Address 1 */}
