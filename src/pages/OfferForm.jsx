@@ -124,56 +124,91 @@ function handlePrintPDF() {
 
   // Normalize checkbox value (present => "on")
   const cash = v.cash_purchase ? "Yes" : "No";
+  
+  const ORIGIN = window.location.origin;
 
   const html = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
+<base href="${ORIGIN}/">
 <title>Offer (Print Preview)</title>
 <style>
+  /* Page */
   @page { size: Letter portrait; margin: 0.75in; }
+
+  /* Base */
   body { font-family: Lato, Arial, sans-serif; color:#111; }
   h2 { margin: 0 0 12px; }
-  .section { border:1px solid #ddd; border-radius:8px; padding:14px; margin:12px 0; }
-  .legend { margin:0 0 8px; font-size:1.05rem; font-weight:700; }
-  .kv { list-style:none; padding:0; margin:0; display:grid; grid-template-columns: 1fr 1fr; gap:8px 20px; }
-  .kv li { break-inside: avoid; }
-  .kv { gap: 6px 16px; } /* (row gap) (column gap) */
+
+  /* Title + logos */
+  .titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 12px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .titlebar h2 { margin: 0; }
+  .titlebar img { height: 36px; width: auto; display: block; }
+  .logos { display: flex; align-items: center; gap: 10px; }
+
+  /* Sections */
+  .section { border: 1px solid #ddd; border-radius: 8px; padding: 14px; margin: 12px 0; }
+  .legend  { margin: 0 0 8px; font-size: 1.05rem; font-weight: 700; }
+
+  /* Key/Value grid */
+  .kv {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 16px; /* row gap, column gap */
+  }
+  .kv li {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 8px;
+    align-items: baseline;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .kv .label { font-size: 0.9rem; font-weight: 600; color: #555; white-space: nowrap; }
+  .kv .value { font-size: 1rem; font-weight: 400; }
+
+  /* Misc */
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   .notes { white-space: pre-wrap; }
-  .sig { margin-top: 6px; }
-  .sig-row { display:flex; align-items:flex-end; gap:10px; margin-top:24px; }
-  .sig-row .label { white-space:nowrap; }
-  .sig-row .line { border-bottom:1px solid #000; height:18px; flex:1; }
+  .sig   { margin-top: 6px; }
+  .sig-row { display: flex; align-items: flex-end; gap: 10px; margin-top: 24px; }
+  .sig-row .label { white-space: nowrap; }
+  .sig-row .line { border-bottom: 1px solid #000; height: 18px; flex: 1; }
   .sig-row .line.short { flex: 0 0 170px; }
-  .footer { margin-top: 10px; text-align:center; }
-  .small { font-size: 0.9rem; color:#444; }
-  .disclaimer { font-size:0.9rem; color:#444; }
-  /* make single-column if the printer squeezes width */
+  .footer { margin-top: 10px; text-align: center; }
+  .small { font-size: 0.9rem; color: #444; }
+  .disclaimer { font-size: 0.9rem; color: #444; }
+
+  /* Print */
   @media print {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+
     .kv { grid-template-columns: 1fr 1fr; }
+    .section { break-inside: avoid; page-break-inside: avoid; }
+
+    /* If you want to avoid Lato when printing, uncomment:
+    body { font-family: Arial, Helvetica, sans-serif; } */
   }
+
+  /* Narrow viewport (if someone previews on-screen) */
   @media (max-width: 700px) {
     .kv { grid-template-columns: 1fr; }
   }
-  .kv li { 
-  display: grid; 
-  grid-template-columns: auto 1fr; 
-  column-gap: 8px; 
-  align-items: baseline; 
-  }
-  .kv .label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #555;
-    white-space: nowrap;
-  }
-  .kv .value {
-    font-size: 1rem;
-    font-weight: 400;
-}
-  
 </style>
+
 </head>
 <body>
   <div class="titlebar">
