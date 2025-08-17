@@ -50,7 +50,8 @@ export default function OfferForm() {
 
   // OPTIONAL: logout handler (kept here; call from a button if you want)
   const handleLogout = () => {
-    const returnTo = window.location.origin;
+    const returnTo = `{window.location.origin}?logged_out=1`;  // <-- add the flag
+    
     auth
       .signoutRedirect({ post_logout_redirect_uri: returnTo })
       .catch(() => {
