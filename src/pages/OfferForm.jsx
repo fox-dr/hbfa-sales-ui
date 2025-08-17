@@ -6,6 +6,17 @@ import "./offer-form.css";
 const PROXY_BASE = "/.netlify/functions/proxy-units";
 const PROJECT_ID = "Fusion";
 
+function formatUSD(val) {
+  const n = Number(val);
+  if (!Number.isFinite(n)) return "";
+  return n.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+const [pricePreview, setPricePreview] = useState("");
 
 
 export default function OfferForm() {
@@ -190,7 +201,7 @@ function handlePrintPDF() {
   .footer { margin-top: 10px; text-align: center; }
   .small { font-size: 0.9rem; color: #444; }
   .disclaimer { font-size: 0.9rem; color: #444; }
-
+  
   /* Print */
   @media print {
     -webkit-print-color-adjust: exact;
@@ -323,6 +334,10 @@ function handlePrintPDF() {
     link.href = href;
   }, []);
 
+  useEffect(() => {
+  const node = formRef.current?.elements?.price; // name="price"
+  if (node?.value) setPricePreview(formatUSD(node.value));
+  }, []);
 
   
   return (
@@ -458,7 +473,14 @@ function handlePrintPDF() {
                 <input type="checkbox" name="cash_purchase" />
                 Cash Purchase?
               </label>
-              <label style={styles.col}>Price<input type="number" step="0.01" name="price" style={styles.input} /></label>
+              <label style={styles.col}>
+                Price
+                <input type="number" step="0.01" name="price" style={styles.input}
+                onInput={(e) => setPricePreview(formatUSD(e.target.value))}
+                />
+                <small style={styles.hint}>{pricePreview}</small>
+              </label>
+
               <label style={styles.col}>
                 Purchase Type
                 <select name="purchase_type" style={styles.input}>
@@ -547,4 +569,5 @@ const styles = {
   notice: { padding: 16, background: "#fffbe6", border: "1px solid #ffe58f", borderRadius: 8, marginTop: 16 },
   footer: { marginTop: 24, display: "flex", justifyContent: "center" },
   footerLogo: { width: "auto" },
+  hint: { marginTop: 2, fontSize: "0.85rem", color: "#555", fontStyle: "italic" },
 };
