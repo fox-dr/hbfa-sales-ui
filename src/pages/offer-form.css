@@ -1,0 +1,45 @@
+/* offer-form.css
+   Mobile-only tweaks scoped to OfferForm.jsx.
+   Requires: <div id="offer"> ... in your component wrapper.
+*/
+
+@media (max-width: 640px) {
+  /* Keep sizing sane on small screens */
+  #offer *, #offer *::before, #offer *::after { box-sizing: border-box; }
+
+  /* Tighter section padding on phones */
+  #offer section { padding: 14px !important; }
+
+  /* Stack each row inside sections.
+     (Assumes your rows are the direct DIVs under each <section>.) */
+  #offer section > div {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  /* Make fields full-width on phones */
+  #offer label { width: 100% !important; min-width: 0 !important; }
+  #offer label > input,
+  #offer label > select,
+  #offer label > textarea {
+    width: 100% !important;
+  }
+
+  /* Unit picker block: stack and stretch button */
+  #offer .unit-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+  }
+  #offer #select_unit { width: 100% !important; min-height: 44px; }
+
+  /* Submit button: full-width, tap-friendly */
+  #offer button[type="submit"] { width: 100%; min-height: 44px; }
+
+  /* Optional footer logo centering (if present) */
+  #offer footer { display: flex; justify-content: center; margin-top: 24px; }
+  #offer footer img { height: 48px; width: auto; }
+}
