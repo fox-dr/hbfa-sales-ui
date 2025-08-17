@@ -474,8 +474,6 @@ function handlePrintPDF() {
             </div>
           )}
         </form>
-      
-
       <footer style={styles.footer} aria-hidden="true">
         <img
           src="/assets/hbfa-logo.png"
