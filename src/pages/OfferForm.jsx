@@ -137,9 +137,7 @@ export default function OfferForm() {
       </div>
 
       {/* Notice OR Form */}
-      {justLoggedOut ? (
-        <div style={styles.notice}>User logged out. Redirecting to home…</div>
-      ) : (
+      
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Buyer Contact Information */}
           <section style={styles.section}>
@@ -323,7 +321,7 @@ export default function OfferForm() {
             </div>
           )}
         </form>
-      )}
+      )
 
       <footer style={styles.footer} aria-hidden="true">
         <img
