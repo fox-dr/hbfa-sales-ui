@@ -177,10 +177,6 @@ export default function OfferForm() {
       <div style={styles.header}>
         <h2 style={{ margin: 0 }}>Preliminary Offer</h2>
         <img src="/assets/fusion_logo.png" alt="Fusion Logo" style={{ height: 48 }} />
-        {/* Example logout button if you want to show it:
-        {auth?.isAuthenticated && (
-          <button type="button" onClick={handleLogout}>Log out</button>
-        )} */}
       </div>
 
       {/* Notice OR Form */}
