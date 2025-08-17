@@ -149,12 +149,8 @@ export default function OfferForm() {
               />
             </label>
 
-            {/* rem this button
-            <div style={{ display: "flex", alignItems: "end", gap: 8 }}>
-              <button type="button" onClick={handleSelectUnit}>Select Unit</button>
-              <button type="button" ref={pdfBtnRef} disabled>Open PDF</button>
-            </div>
-            */}
+           
+            
           </div>
 
           {/* Address 1 */}
