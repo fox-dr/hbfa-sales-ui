@@ -114,7 +114,7 @@ export default function OfferForm() {
     }
   }
 
-  // show "logged out" banner if redirected with ?logged_out=1
+ 
   const [justLoggedOut, setJustLoggedOut] = useState(false);
 
 
