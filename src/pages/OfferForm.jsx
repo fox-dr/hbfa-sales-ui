@@ -56,7 +56,7 @@ export default function OfferForm() {
   const returnTo = u.toString();
     // const returnTo = `{window.location.origin}?logged_out=1`;  // <-- add the flag
     // Clear cached user right away so the UI reflects "signed out"
-  auth.removeUser().catch(() => {});
+ 
 
   // Hard redirect to Cognito Hosted UI logout
   const domain = import.meta.env.VITE_COGNITO_DOMAIN;      // e.g. https://us-east-2...amazoncognito.com
@@ -64,6 +64,7 @@ export default function OfferForm() {
   window.location.href =
     `${domain}/logout?client_id=${encodeURIComponent(clientId)}&logout_uri=${encodeURIComponent(returnTo)}`;
 };
+    auth.removeUser().catch(() => {});
     // auth
       // .signoutRedirect({ post_logout_redirect_uri: returnTo })
       // .catch(() => {
