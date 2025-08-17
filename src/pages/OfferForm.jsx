@@ -50,18 +50,30 @@ export default function OfferForm() {
 
   // OPTIONAL: logout handler (kept here; call from a button if you want)
   const handleLogout = () => {
-    const returnTo = `{window.location.origin}?logged_out=1`;  // <-- add the flag
-    
-    auth
-      .signoutRedirect({ post_logout_redirect_uri: returnTo })
-      .catch(() => {
-        const domain = import.meta.env.VITE_COGNITO_DOMAIN;
-        const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
-        window.location.href = `${domain}/logout?client_id=${encodeURIComponent(
-          clientId
-        )}&logout_uri=${encodeURIComponent(returnTo)}`;
-      });
-  };
+  // Build the return URL with a flag we detect on load
+  const u = new URL(window.location.origin);
+  u.searchParams.set("logged_out", "1");
+  const returnTo = u.toString();
+    // const returnTo = `{window.location.origin}?logged_out=1`;  // <-- add the flag
+    // Clear cached user right away so the UI reflects "signed out"
+  auth.removeUser().catch(() => {});
+
+  // Hard redirect to Cognito Hosted UI logout
+  const domain = import.meta.env.VITE_COGNITO_DOMAIN;      // e.g. https://us-east-2...amazoncognito.com
+  const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID; // e.g. 3kp9ag...
+  window.location.href =
+    `${domain}/logout?client_id=${encodeURIComponent(clientId)}&logout_uri=${encodeURIComponent(returnTo)}`;
+};
+    // auth
+      // .signoutRedirect({ post_logout_redirect_uri: returnTo })
+      // .catch(() => {
+      //   const domain = import.meta.env.VITE_COGNITO_DOMAIN;
+      //   const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
+      //   window.location.href = `${domain}/logout?client_id=${encodeURIComponent(
+      //     clientId
+      //   )}&logout_uri=${encodeURIComponent(returnTo)}`;
+      // });
+  // };
 
   async function handleSelectUnit() {
     setMsg("");
@@ -122,11 +134,12 @@ export default function OfferForm() {
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
     if (qs.get("logged_out") === "1") {
+      auth.removeUser().catch(() => {}); // ensure local cache is gone
       setJustLoggedOut(true);
       window.history.replaceState({}, document.title, window.location.pathname);
       setTimeout(() => window.location.assign(window.location.origin), 1500);
     }
-  }, []);
+  }, [auth]);
 
   // favicon
   useEffect(() => {
