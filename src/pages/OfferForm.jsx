@@ -138,6 +138,7 @@ function handlePrintPDF() {
   .legend { margin:0 0 8px; font-size:1.05rem; font-weight:700; }
   .kv { list-style:none; padding:0; margin:0; display:grid; grid-template-columns: 1fr 1fr; gap:8px 20px; }
   .kv li { break-inside: avoid; }
+  .kv { gap: 6px 16px; } /* (row gap) (column gap) */
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   .notes { white-space: pre-wrap; }
   .sig { margin-top: 6px; }
@@ -155,27 +156,51 @@ function handlePrintPDF() {
   @media (max-width: 700px) {
     .kv { grid-template-columns: 1fr; }
   }
+  .kv li { 
+  display: grid; 
+  grid-template-columns: auto 1fr; 
+  column-gap: 8px; 
+  align-items: baseline; 
+  }
+  .kv .label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #555;
+    white-space: nowrap;
+  }
+  .kv .value {
+    font-size: 1rem;
+    font-weight: 400;
+}
+  
 </style>
 </head>
 <body>
+  <div class="titlebar">
   <h2>Preliminary Offer Summary</h2>
+  <div class="logos">
+    <img src="/assets/fusion_logo.png" alt="Fusion" />
+    <img src="/assets/hbfa-logo.png" alt="HBFA" />
+  </div>
+</div>
+
 
   <div class="section">
     <div class="legend">Buyer Contact Information</div>
     <ul class="kv">
-      <li><strong>Name:</strong> ${esc(v.buyer_name)}</li>
-      <li><strong>Unit #:</strong> ${esc(String(unitNumber))}</li>
-      <li><strong>Street:</strong> ${esc(v.address_1)}</li>
-      <li><strong>Suite/Apt/PO Box:</strong> ${esc(v.address_2)}</li>
-      <li><strong>City:</strong> ${esc(v.city)}</li>
-      <li><strong>State:</strong> ${esc(v.state)}</li>
-      <li><strong>Zip:</strong> ${esc(v.zip_code)}</li>
-      <li><strong>Phone 1:</strong> ${esc(v.phone_number_1)}</li>
-      <li><strong>Phone 2:</strong> ${esc(v.phone_number_2)}</li>
-      <li><strong>Phone 3:</strong> ${esc(v.phone_number_3)}</li>
-      <li><strong>Email 1:</strong> ${esc(v.email_1)}</li>
-      <li><strong>Email 2:</strong> ${esc(v.email_2)}</li>
-      <li><strong>Email 3:</strong> ${esc(v.email_3)}</li>
+      <li><span class="label">Name:</span> <span class="value"> ${esc(v.buyer_name)}</span></li>
+      <li><span class="label">Unit #:</span> <span class="value"> ${esc(String(unitNumber))}</span></li>
+      <li><span class="label">Street:</span> <span class="value"> ${esc(v.address_1)}</span></li>
+      <li><span class="label">Suite/Apt/PO Box:</span> <span class="value"> ${esc(v.address_2)}</span></li>
+      <li><span class="label">City:</span> <span class="value"> ${esc(v.city)}</span></li>
+      <li><span class="label">State:</span> <span class="value"> ${esc(v.state)}</span></li>
+      <li><span class="label">Zip:</span> <span class="value">  ${esc(v.zip_code)}</span></li>
+      <li><span class="label">Phone 1:</span> <span class="value"> ${esc(v.phone_number_1)}</span></li>
+      <li><span class="label">Phone 2:</span> <span class="value"> ${esc(v.phone_number_2)}</span></li>
+      <li><span class="label">Phone 3:</span> <span class="value"> ${esc(v.phone_number_3)}</span></li>
+      <li><span class="label">Email 1:</span> <span class="value"> ${esc(v.email_1)}</span></li>
+      <li><span class="label">Email 2:</span> <span class="value"> ${esc(v.email_2)}</span></li>
+      <li><span class="label">Email 3:</span> <span class="value"> ${esc(v.email_3)}</span></li>
     </ul>
     <div class="notes"><strong>Buyer Notes:</strong><br>${esc(v.buyer_notes)}</div>
   </div>
@@ -183,17 +208,17 @@ function handlePrintPDF() {
   <div class="section">
     <div class="legend">Offer Information</div>
     <ul class="kv">
-      <li><strong>Lender:</strong> ${esc(v.lender)}</li>
-      <li><strong>Loan Officer:</strong> ${esc(v.loan_officer)}</li>
-      <li><strong>Loan Officer Email:</strong> ${esc(v.l_o_contact_email)}</li>
-      <li><strong>Loan Officer Phone:</strong> ${esc(v.l_o_phone)}</li>
-      <li><strong>Broker Name:</strong> ${esc(v.broker_name)}</li>
-      <li><strong>Brokerage:</strong> ${esc(v.brokerage)}</li>
-      <li><strong>Broker Email:</strong> ${esc(v.broker_email)}</li>
-      <li><strong>Broker Phone:</strong> ${esc(v.broker_phone)}</li>
-      <li><strong>Cash Purchase?</strong> ${cash}</li>
-      <li><strong>Price:</strong> ${esc(v.price)}</li>
-      <li><strong>Purchase Type:</strong> ${esc(v.purchase_type)}</li>
+      <li><span class="label">Lender:</span> <span class="value"> ${esc(v.lender)}</span></li>
+      <li><span class="label">Loan Officer:</span> <span class="value"> ${esc(v.loan_officer)}</span></li>
+      <li><span class="label">Loan Officer Email:</span> <span class="value"> ${esc(v.l_o_contact_email)}</span></li>
+      <li><span class="label">Loan Officer Phone:</span> <span class="value"> ${esc(v.l_o_phone)}</span></li>
+      <li><span class="label">Broker Name:</span> <span class="value"> ${esc(v.broker_name)}</span></li>
+      <li><span class="label">Brokerage:</span> <span class="value"> ${esc(v.brokerage)}</span></li>
+      <li><span class="label">Broker Email:</span> <span class="value"> ${esc(v.broker_email)}</span></li>
+      <li><span class="label">Broker Phone:</span> <span class="value"> ${esc(v.broker_phone)}</span></li>
+      <li><span class="label">Cash Purchase?</span> <span class="value"> ${cash}</span></li>
+      <li><span class="label">Price:</span> <span class="value"> ${esc(v.price)}</span></li>
+      <li><span class="label">Purchase Type:</span> <span class="value"> ${esc(v.purchase_type)}</span></li>
     </ul>
     <div class="notes"><strong>Qualification/Lender Notes:</strong><br>${esc(v.offer_notes_1)}</div>
   </div>
@@ -201,8 +226,8 @@ function handlePrintPDF() {
   <div class="section">
     <div class="legend">Home Details (From Fusion)</div>
     <ul class="kv">
-      <li><strong>Building Info:</strong> ${esc(bldg)}</li>
-      <li><strong>Plan Info:</strong> ${esc(plan)}</li>
+      <li><span class="label">Building Info:</span> <span class="value"> ${esc(bldg)}</span></li>
+      <li><span class="label">Plan Info:</span> <span class="value"> ${esc(plan)}</span></li>
       <li style="grid-column: 1 / -1;"><strong>Address:</strong> ${esc(addr)}</li>
     </ul>
   </div>
@@ -246,21 +271,7 @@ function handlePrintPDF() {
   // clean up the blob URL after the new window has loaded
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 
-  // // insert the actual unit number from state (safer than string templating inside the big HTML)
-  // const withUnit = html.replace(
-  //   "${esc(${/* unitNumber is state */''} String(${JSON.stringify('')}))}",
-  //   esc(${/* insert JS to escape unitNumber safely */''} String(${JSON.stringify('')}))
-  // );
 
-  // const w = window.open("", "_blank");
-  // if (!w) {
-  //   alert("Pop-up blocked. Allow pop-ups to print the PDF.");
-  //   return;
-  // }
-  // w.document.open();
-  // // w.document.write(withUnit);
-  // w.document.write(html);
-  // w.document.close();
 }
 
 
