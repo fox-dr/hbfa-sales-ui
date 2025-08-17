@@ -6,6 +6,8 @@ import "./offer-form.css";
 const PROXY_BASE = "/.netlify/functions/proxy-units";
 const PROJECT_ID = "Fusion";
 
+
+
 export default function OfferForm() {
   const auth = useAuth();
   const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
@@ -19,6 +21,8 @@ export default function OfferForm() {
   const [planInfo, setPlanInfo] = useState("");
   const [addressInfo, setAddressInfo] = useState("");
   const pdfBtnRef = useRef(null);
+
+  const formRef = useRef(null);
 
   const headers = jwt
     ? { Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" }
@@ -47,18 +51,6 @@ export default function OfferForm() {
       }
     }
   }
-
-    
-    // auth
-      // .signoutRedirect({ post_logout_redirect_uri: returnTo })
-      // .catch(() => {
-      //   const domain = import.meta.env.VITE_COGNITO_DOMAIN;
-      //   const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
-      //   window.location.href = `${domain}/logout?client_id=${encodeURIComponent(
-      //     clientId
-      //   )}&logout_uri=${encodeURIComponent(returnTo)}`;
-      // });
-  // };
 
   async function handleSelectUnit() {
     setMsg("");
@@ -114,6 +106,163 @@ export default function OfferForm() {
     }
   }
 
+function handlePrintPDF() {
+  if (!formRef.current) return;
+
+  const fd = new FormData(formRef.current);
+  const v = Object.fromEntries(fd.entries());
+
+  // grab readonly “Home Details” from state
+  const bldg = buildingInfo;
+  const plan = planInfo;
+  const addr = addressInfo;
+
+  const esc = (s = "") =>
+    String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const yesNo = (val) => (val ? "Yes" : "No");
+
+  // Normalize checkbox value (present => "on")
+  const cash = v.cash_purchase ? "Yes" : "No";
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Offer (Print Preview)</title>
+<style>
+  @page { size: Letter portrait; margin: 0.75in; }
+  body { font-family: Lato, Arial, sans-serif; color:#111; }
+  h2 { margin: 0 0 12px; }
+  .section { border:1px solid #ddd; border-radius:8px; padding:14px; margin:12px 0; }
+  .legend { margin:0 0 8px; font-size:1.05rem; font-weight:700; }
+  .kv { list-style:none; padding:0; margin:0; display:grid; grid-template-columns: 1fr 1fr; gap:8px 20px; }
+  .kv li { break-inside: avoid; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .notes { white-space: pre-wrap; }
+  .sig { margin-top: 6px; }
+  .sig-row { display:flex; align-items:flex-end; gap:10px; margin-top:24px; }
+  .sig-row .label { white-space:nowrap; }
+  .sig-row .line { border-bottom:1px solid #000; height:18px; flex:1; }
+  .sig-row .line.short { flex: 0 0 170px; }
+  .footer { margin-top: 10px; text-align:center; }
+  .small { font-size: 0.9rem; color:#444; }
+  .disclaimer { font-size:0.9rem; color:#444; }
+  /* make single-column if the printer squeezes width */
+  @media print {
+    .kv { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 700px) {
+    .kv { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <h2>Preliminary Offer Summary</h2>
+
+  <div class="section">
+    <div class="legend">Buyer Contact Information</div>
+    <ul class="kv">
+      <li><strong>Name:</strong> ${esc(v.buyer_name)}</li>
+      <li><strong>Unit #:</strong> ${esc(String(unitNumber))}</li>
+      <li><strong>Street:</strong> ${esc(v.address_1)}</li>
+      <li><strong>Suite/Apt/PO Box:</strong> ${esc(v.address_2)}</li>
+      <li><strong>City:</strong> ${esc(v.city)}</li>
+      <li><strong>State:</strong> ${esc(v.state)}</li>
+      <li><strong>Zip:</strong> ${esc(v.zip_code)}</li>
+      <li><strong>Phone 1:</strong> ${esc(v.phone_number_1)}</li>
+      <li><strong>Phone 2:</strong> ${esc(v.phone_number_2)}</li>
+      <li><strong>Phone 3:</strong> ${esc(v.phone_number_3)}</li>
+      <li><strong>Email 1:</strong> ${esc(v.email_1)}</li>
+      <li><strong>Email 2:</strong> ${esc(v.email_2)}</li>
+      <li><strong>Email 3:</strong> ${esc(v.email_3)}</li>
+    </ul>
+    <div class="notes"><strong>Buyer Notes:</strong><br>${esc(v.buyer_notes)}</div>
+  </div>
+
+  <div class="section">
+    <div class="legend">Offer Information</div>
+    <ul class="kv">
+      <li><strong>Lender:</strong> ${esc(v.lender)}</li>
+      <li><strong>Loan Officer:</strong> ${esc(v.loan_officer)}</li>
+      <li><strong>Loan Officer Email:</strong> ${esc(v.l_o_contact_email)}</li>
+      <li><strong>Loan Officer Phone:</strong> ${esc(v.l_o_phone)}</li>
+      <li><strong>Broker Name:</strong> ${esc(v.broker_name)}</li>
+      <li><strong>Brokerage:</strong> ${esc(v.brokerage)}</li>
+      <li><strong>Broker Email:</strong> ${esc(v.broker_email)}</li>
+      <li><strong>Broker Phone:</strong> ${esc(v.broker_phone)}</li>
+      <li><strong>Cash Purchase?</strong> ${cash}</li>
+      <li><strong>Price:</strong> ${esc(v.price)}</li>
+      <li><strong>Purchase Type:</strong> ${esc(v.purchase_type)}</li>
+    </ul>
+    <div class="notes"><strong>Qualification/Lender Notes:</strong><br>${esc(v.offer_notes_1)}</div>
+  </div>
+
+  <div class="section">
+    <div class="legend">Home Details (From Fusion)</div>
+    <ul class="kv">
+      <li><strong>Building Info:</strong> ${esc(bldg)}</li>
+      <li><strong>Plan Info:</strong> ${esc(plan)}</li>
+      <li style="grid-column: 1 / -1;"><strong>Address:</strong> ${esc(addr)}</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="legend">Additional Notes</div>
+    <div class="notes">${esc(v.add_notes)}</div>
+  </div>
+
+  <div class="section">
+    <div class="legend">Disclaimer</div>
+    <div class="disclaimer">
+      THIS IS NOT A CONTRACT. THE TERMS OF THIS PRELIMINARY OFFER ARE NON-BINDING. APPROVAL OF THIS PRELIMINARY OFFER BY SELLER SHALL ESTABLISH NO AGREEMENT BETWEEN THE PROSPECTIVE BUYER AND SELLER AND SHALL NOT CREATE ANY OBLIGATION ON THE PART OF SELLER TO SELL THE UNIT TO PROSPECTIVE BUYER. THE UNIT MAY BE WITHDRAWN FROM THE MARKET AT ANY TIME.
+    </div>
+  </div>
+
+  <div class="section sig">
+    <div class="sig-row">
+      <span class="label">Signature</span><span class="line"></span>
+      <span class="label">Date:</span><span class="line short"></span>
+    </div>
+    <div class="sig-row">
+      <span class="label">Signature</span><span class="line"></span>
+      <span class="label">Date:</span><span class="line short"></span>
+    </div>
+  </div>
+
+  <div class="footer small">Generated from Offer Form</div>
+  <script>window.onload = function(){ window.print(); setTimeout(function(){ window.close(); }, 250); };</script>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, "_blank");
+  if (!w) {
+    URL.revokeObjectURL(url);
+    alert("Pop-up blocked. Allow pop-ups to print the PDF.");
+    return;
+  }
+  // clean up the blob URL after the new window has loaded
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+  // // insert the actual unit number from state (safer than string templating inside the big HTML)
+  // const withUnit = html.replace(
+  //   "${esc(${/* unitNumber is state */''} String(${JSON.stringify('')}))}",
+  //   esc(${/* insert JS to escape unitNumber safely */''} String(${JSON.stringify('')}))
+  // );
+
+  // const w = window.open("", "_blank");
+  // if (!w) {
+  //   alert("Pop-up blocked. Allow pop-ups to print the PDF.");
+  //   return;
+  // }
+  // w.document.open();
+  // // w.document.write(withUnit);
+  // w.document.write(html);
+  // w.document.close();
+}
+
 
   // favicon
   useEffect(() => {
@@ -128,6 +277,8 @@ export default function OfferForm() {
     link.href = href;
   }, []);
 
+
+  
   return (
     <div id="offer" style={styles.container}>
       {/* Header */}
@@ -138,7 +289,7 @@ export default function OfferForm() {
 
       {/* Notice OR Form */}
       
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <form ref={formRef} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Buyer Contact Information */}
           <section style={styles.section}>
             <h3 style={styles.legend}>Buyer Contact Information</h3>
@@ -310,10 +461,12 @@ export default function OfferForm() {
             </p>
           </section>
 
-          {/* Submit */}
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          {/* PDF & Submit */}
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" onClick={handlePrintPDF}>Print PDF (with signature)</button>
             <button type="submit">Submit Offer</button>
           </div>
+
 
           {msg && (
             <div style={{ marginTop: 10, color: msg.toLowerCase().includes("error") ? "crimson" : "green" }}>
@@ -321,7 +474,7 @@ export default function OfferForm() {
             </div>
           )}
         </form>
-      )
+      
 
       <footer style={styles.footer} aria-hidden="true">
         <img
