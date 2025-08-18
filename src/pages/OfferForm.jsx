@@ -137,8 +137,8 @@ const pRaw = (price !== undefined && price !== "")
   : (v.price ?? "") || (priceInput?.value ?? "");
 const priceFmt = formatUSD(pRaw);
 
-// optional one-time debug
-console.log("PDF price debug:", { statePrice: price, formPrice: v.price, domPrice: priceInput?.value, pRaw, priceFmt });
+// optional one-time debug leave as battle scar
+// console.log("PDF price debug:", { statePrice: price, formPrice: v.price, domPrice: priceInput?.value, pRaw, priceFmt });
 
 
 
@@ -162,7 +162,7 @@ console.log("PDF price debug:", { statePrice: price, formPrice: v.price, domPric
 <head>
 <meta charset="utf-8">
 <base href="${ORIGIN}/">
-<title>Offer (Print Preview)</title>
+<title>Preliminary Offer Form HBFA Fusion Rev.1</title>
 <style>
   /* Page */
   @page { size: Letter portrait; margin: 0.75in; }
