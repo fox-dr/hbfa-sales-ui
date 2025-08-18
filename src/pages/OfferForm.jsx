@@ -6,6 +6,10 @@ import "./offer-form.css";
 const PROXY_BASE = "/.netlify/functions/proxy-units";
 const PROJECT_ID = "Fusion";
 
+function unformatUSD(val) {
+  const s = String(val ?? "").replace(/[^\d.-]/g, "");
+  return s === "" || s === "-" || s === "." || s === "-." ? "" : s;
+}
 function formatUSD(val) {
   const n = Number(val);
   if (!Number.isFinite(n)) return "";
@@ -33,6 +37,8 @@ export default function OfferForm() {
   const [addressInfo, setAddressInfo] = useState("");
   const pdfBtnRef = useRef(null);
   const formRef = useRef(null);
+  // price bits
+  const [price, setPrice] = useState("");
 
   const headers = jwt
     ? { Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" }
@@ -99,6 +105,7 @@ export default function OfferForm() {
     try {
       const formData = new FormData(e.currentTarget);
       const body = Object.fromEntries(formData.entries());
+      body.price = unformatUSD(price || body.price);
 
       const res = await fetch(`${PROXY_BASE}?path=${encodeURIComponent("/offers")}`, {
         method: "POST",
@@ -121,6 +128,11 @@ function handlePrintPDF() {
 
   const fd = new FormData(formRef.current);
   const v = Object.fromEntries(fd.entries());
+
+  // prefer current state value if user hasn’t submitted yet
+  const pRaw = (typeof price !== "undefined" && price !== "") ? price : v.price;
+  const priceFmt = formatUSD(pRaw);
+
 
   // grab readonly “Home Details” from state
   const bldg = buildingInfo;
@@ -262,7 +274,7 @@ function handlePrintPDF() {
       <li><span class="label">Broker Email:</span> <span class="value"> ${esc(v.broker_email)}</span></li>
       <li><span class="label">Broker Phone:</span> <span class="value"> ${esc(v.broker_phone)}</span></li>
       <li><span class="label">Cash Purchase?</span> <span class="value"> ${cash}</span></li>
-      <li><span class="label">Price:</span> <span class="value"> ${esc(v.price)}</span></li>
+      <li><span class="label">Price:</span> <span class="value"> ${esc(priceFmt)}</span></li>
       <li><span class="label">Purchase Type:</span> <span class="value"> ${esc(v.purchase_type)}</span></li>
     </ul>
     <div class="notes"><strong>Qualification/Lender Notes:</strong><br>${esc(v.offer_notes_1)}</div>
@@ -474,11 +486,17 @@ function handlePrintPDF() {
               </label>
               <label style={styles.col}>
                 Price
-                <input type="number" step="0.01" name="price" style={styles.input}
-               
-                inputMode="decimal"
+                <input
+                  type="text"                 // show $1,234.56 in-field
+                  name="price"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}              // let them type
+                  onFocus={(e) => setPrice(e.target.value.replace(/[^\d.-]/g, ""))} // raw while editing
+                  onBlur={(e) => setPrice(formatUSD(e.target.value))}     // format on blur
+                  inputMode="decimal"
+                  placeholder="$0.00"
+                  style={styles.input}
                 />
-                
               </label>
 
               <label style={styles.col}>
