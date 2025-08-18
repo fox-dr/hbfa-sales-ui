@@ -132,6 +132,7 @@ function handlePrintPDF() {
   // prefer current state value if user hasn’t submitted yet
   const pRaw = (typeof price !== "undefined" && price !== "") ? price : v.price;
   const priceFmt = formatUSD(pRaw);
+  console.log("PDF price debug:", { statePrice: price, formPrice: v.price, priceFmt });
 
 
   // grab readonly “Home Details” from state
@@ -278,7 +279,7 @@ function handlePrintPDF() {
       <li><span class="label">Purchase Type:</span> <span class="value"> ${esc(v.purchase_type)}</span></li>
     </ul>
     <div class="notes"><strong>Qualification/Lender Notes:</strong><br>${esc(v.offer_notes_1)}</div>
-  </div>
+  </div
 
   <div class="section">
     <div class="legend">Home Details (From Fusion)</div>
