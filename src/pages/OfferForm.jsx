@@ -107,6 +107,11 @@ export default function OfferForm() {
     try {
       const formData = new FormData(e.currentTarget);
       const body = Object.fromEntries(formData.entries());
+      
+      // make sure project_id goes up with the offer
+      body.project_id = PROJECT_ID;
+
+
       body.price = unformatUSD(price || body.price);
 
       const res = await fetch(`${PROXY_BASE}?path=${encodeURIComponent("/offers")}`, {
@@ -384,6 +389,7 @@ const priceFmt = formatUSD(pRaw);
               <label style={styles.col}>
                 Unit #
                 <input
+                  name="unit_number"
                   type="number"
                   value={unitNumber}
                   onChange={(e) => setUnitNumber(e.target.value)}
