@@ -128,11 +128,16 @@ function handlePrintPDF() {
 
   const fd = new FormData(formRef.current);
   const v = Object.fromEntries(fd.entries());
+// Prefer state, then FormData, then live DOM (handles “still focused” edge cases)
+const priceInput = formRef.current?.elements?.price;
+const pRaw = (price !== undefined && price !== "")
+  ? price
+  : (v.price ?? "") || (priceInput?.value ?? "");
+const priceFmt = formatUSD(pRaw);
 
-  // prefer current state value if user hasn’t submitted yet
-  const pRaw = (typeof price !== "undefined" && price !== "") ? price : v.price;
-  const priceFmt = formatUSD(pRaw);
-  console.log("PDF price debug:", { statePrice: price, formPrice: v.price, priceFmt });
+// optional one-time debug
+console.log("PDF price debug:", { statePrice: price, formPrice: v.price, domPrice: priceInput?.value, pRaw, priceFmt });
+
 
 
   // grab readonly “Home Details” from state
