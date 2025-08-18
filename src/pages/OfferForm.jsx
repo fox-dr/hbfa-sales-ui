@@ -11,7 +11,9 @@ function unformatUSD(val) {
   return s === "" || s === "-" || s === "." || s === "-." ? "" : s;
 }
 function formatUSD(val) {
-  const n = Number(val);
+  const raw = unformatUSD(val);     // <-- normalize "$10,000.00" -> "10000.00"
+  if (raw === "") return "";
+  const n = parseFloat(raw);
   if (!Number.isFinite(n)) return "";
   return n.toLocaleString("en-US", {
     style: "currency",
