@@ -100,69 +100,35 @@ export default function OfferForm() {
     }
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setMsg("");
+  async function handleSendForSignature(e) {
+  e.preventDefault();
+  setMsg("");
 
-    try {
-      const formData = new FormData(e.currentTarget);
-      const body = Object.fromEntries(formData.entries());
-      
-      // make sure project_id goes up with the offer
-      body.project_id = PROJECT_ID;
+  try {
+    const formData = new FormData(e.currentTarget);
+    const v = Object.fromEntries(formData.entries());
+    v.project_id = PROJECT_ID;
+    v.price = unformatUSD(price || v.price);
 
+    // --- PDF HTML generation (copied from handlePrintPDF) ---
+    const priceInput = formRef.current?.elements?.price;
+    const pRaw = (price !== undefined && price !== "")
+      ? price
+      : (v.price ?? "") || (priceInput?.value ?? "");
+    const priceFmt = formatUSD(pRaw);
 
-      body.price = unformatUSD(price || body.price);
+    const bldg = buildingInfo;
+    const plan = planInfo;
+    const addr = addressInfo;
 
-      const res = await fetch(`${PROXY_BASE}?path=${encodeURIComponent("/offers")}`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
+    const esc = (s = "") =>
+      String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-      const text = await res.text();
-      if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
+    const yesNo = (val) => (val ? "Yes" : "No");
+    const cash = v.cash_purchase ? "Yes" : "No";
+    const ORIGIN = window.location.origin;
 
-      setMsg("Offer submitted successfully.");
-      // e.currentTarget.reset(); // optional
-    } catch (err) {
-      setMsg(`Submit error: ${String(err.message || err)}`);
-    }
-  }
-
-function handlePrintPDF() {
-  if (!formRef.current) return;
-
-  const fd = new FormData(formRef.current);
-  const v = Object.fromEntries(fd.entries());
-// Prefer state, then FormData, then live DOM (handles “still focused” edge cases)
-const priceInput = formRef.current?.elements?.price;
-const pRaw = (price !== undefined && price !== "")
-  ? price
-  : (v.price ?? "") || (priceInput?.value ?? "");
-const priceFmt = formatUSD(pRaw);
-
-// optional one-time debug leave as battle scar
-// console.log("PDF price debug:", { statePrice: price, formPrice: v.price, domPrice: priceInput?.value, pRaw, priceFmt });
-
-
-
-  // grab readonly “Home Details” from state
-  const bldg = buildingInfo;
-  const plan = planInfo;
-  const addr = addressInfo;
-
-  const esc = (s = "") =>
-    String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-
-  const yesNo = (val) => (val ? "Yes" : "No");
-
-  // Normalize checkbox value (present => "on")
-  const cash = v.cash_purchase ? "Yes" : "No";
-  
-  const ORIGIN = window.location.origin;
-
-  const html = `<!DOCTYPE html>
+    const pdfHtml = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -291,7 +257,7 @@ const priceFmt = formatUSD(pRaw);
       <li><span class="label">Purchase Type:</span> <span class="value"> ${esc(v.purchase_type)}</span></li>
     </ul>
     <div class="notes"><strong>Qualification/Lender Notes:</strong><br>${esc(v.offer_notes_1)}</div>
-  </div
+  </div>
 
   <div class="section">
     <div class="legend">Home Details (From Fusion)</div>
@@ -317,11 +283,15 @@ const priceFmt = formatUSD(pRaw);
   <div class="section sig">
     <div class="sig-row">
       <span class="label">Signature</span><span class="line"></span>
+      <span style="font-size:0; color:#fff;">/sig1/</span>
       <span class="label">Date:</span><span class="line short"></span>
+      <span style="font-size:0; color:#fff;">/date1/</span>
     </div>
     <div class="sig-row">
       <span class="label">Signature</span><span class="line"></span>
+      <span style="font-size:0; color:#fff;">/sig2/</span>
       <span class="label">Date:</span><span class="line short"></span>
+      <span style="font-size:0; color:#fff;">/date2/</span>
     </div>
   </div>
 
@@ -330,18 +300,22 @@ const priceFmt = formatUSD(pRaw);
 </body>
 </html>`;
 
-  const blob = new Blob([html], { type: "text/html" });
-  const url = URL.createObjectURL(blob);
-  const w = window.open(url, "_blank");
-  if (!w) {
-    URL.revokeObjectURL(url);
-    alert("Pop-up blocked. Allow pop-ups to print the PDF.");
-    return;
+    // --- End PDF HTML generation ---  
+        // --- Send offer data and PDF HTML to backend ---
+    const res = await fetch(`${PROXY_BASE}?path=${encodeURIComponent("/send-for-signature")}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ offer: v, pdfHtml }),
+    });
+
+    const text = await res.text();
+    if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
+
+    setMsg("Offer submitted and sent for signature successfully.");
+    // formRef.current.reset(); // optional
+  } catch (err) {
+    setMsg(`Submit error: ${String(err.message || err)}`);
   }
-  // clean up the blob URL after the new window has loaded
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
-
-
 }
 
 
@@ -374,7 +348,7 @@ const priceFmt = formatUSD(pRaw);
 
       {/* Notice OR Form */}
       
-        <form ref={formRef} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <form ref={formRef} onSubmit={handleSendForSignature} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Buyer Contact Information */}
           <section style={styles.section}>
             <h3 style={styles.legend}>Buyer Contact Information</h3>
@@ -561,12 +535,12 @@ const priceFmt = formatUSD(pRaw);
             </p>
           </section>
 
-          {/* PDF & Submit */}
+          // Replace PDF & Submit buttons with a single button:
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
-            <button type="button" onClick={handlePrintPDF}>Print PDF (with signature)</button>
-            <button type="submit">Submit Offer</button>
+            <button type="submit">
+              Send for Signature
+            </button>
           </div>
-
 
           {msg && (
             <div style={{ marginTop: 10, color: msg.toLowerCase().includes("error") ? "crimson" : "green" }}>
