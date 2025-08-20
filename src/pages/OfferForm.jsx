@@ -313,7 +313,7 @@ export default function OfferForm() {
       v.price = unformatUSD(price || v.price);
 
       // Call the API route that saves the offer
-      const res = await fetch(`${PROXY_BASE}?path=${encodeURIComponent("/offer")}`, {
+      const res = await fetch(`${PROXY_BASE}?path=${encodeURIComponent("/offers")}`, {
         method: "POST",
         headers,
         body: JSON.stringify(v),
