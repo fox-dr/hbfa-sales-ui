@@ -546,7 +546,7 @@ export default function OfferForm() {
             </p>
           </section>
 
-          // Replace PDF & Submit buttons with a single button:
+          {/* Replace PDF & Submit buttons with a single button: */}
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
             <button type="submit">
               Send for Signature
