@@ -232,10 +232,10 @@ export default function OfferForm() {
               </label>
 
               <div style={{ display: "flex", alignItems: "end", gap: 8 }}>
-                {/* <button type="button" onClick={handleSelectUnit}>Select Unit</button> */}
-                <button type="button" onClick={() => alert("Clicked!")}>
+                <button type="button" onClick={handleSelectUnit}>Select Unit</button>
+                { /* <button type="button" onClick={() => alert("Clicked!")}>
                   Select Unit
-                </button>
+                </button> */}
               </div>
               {msg && (
                 <div style={{ alignSelf: "end", marginLeft: 8, color: msg.toLowerCase().includes("error") ? "crimson" : "green" }}>
