@@ -138,14 +138,12 @@ export default function OfferForm() {
     v.sa_name  = auth?.user?.profile?.name  || "";
 
     // 1.send-fro-signature POST to backend (send-for-signature Lambda)
-    const sigRes = await fetch(
-      `${PROXY_BASE}?path=${encodeURIComponent("/send-for-signature")}`,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify(v),
-      }
-    );
+    const sigRes = await fetch("/.netlify/functions/send-for-signature", {
+     method: "POST",
+     headers,
+    body: JSON.stringify(v),
+    });
+    
     if (!sigRes.ok) {
       const errText = await sigRes.text();
       throw new Error(`Signature send failed: ${errText}`);
