@@ -4,7 +4,7 @@ import FormField from "./FormField";
 const projectFields = [
   { name: "id", type: "long" },
   { name: "project_name", type: "txt" },
-  { name: "unit_number", type: "long" },
+  { name: "unit_number", type: "unit" },
   { name: "unit_name", type: "txt" },
   { name: "plan_type", type: "txt" },
   { name: "lot_number", type: "txt" },

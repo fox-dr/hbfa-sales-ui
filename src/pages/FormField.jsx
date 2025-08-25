@@ -2,6 +2,7 @@ import React from "react";
 
 export default function FormField({ field, value, onChange, type }) {
   const label = field.replace(/_/g, " ");
+  
 
   switch (type) {
     case "da": // Date picker
@@ -67,6 +68,22 @@ export default function FormField({ field, value, onChange, type }) {
           />
         </label>
       );
+
+      case "unit":
+        return (
+          <label className="block mb-2">
+            {label}
+            <select
+              value={value || ""}
+              onChange={(e) => onChange(field, e.target.value)}
+              className="w-full border px-2 py-1"
+            >
+              <option value="">Select a unit</option>
+              <option value="Unit1">Unit 1</option>
+              <option value="Unit2">Unit 2</option>
+            </select>
+          </label>
+        );
 
     default: // txt, long, FK, auto → plain text
       return (

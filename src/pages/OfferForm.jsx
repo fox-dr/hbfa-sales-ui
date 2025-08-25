@@ -1,3 +1,4 @@
+console.log("OfferForm mounted")
 // src/pages/OfferForm.jsx rev for mobile
 import { useRef, useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
@@ -36,6 +37,7 @@ function formatUSD(val) {
 
 
 export default function OfferForm() {
+  const [unitNumber, setUnitNumber] = useState("");
   const auth = useAuth();
   const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
   const claims = jwt ? parseJwt(jwt) : {};
@@ -43,8 +45,9 @@ export default function OfferForm() {
 
 
   // form bits
-  const [unitNumber, setUnitNumber] = useState("");
+  // const [unitNumber, setUnitNumber] = useState("");
   const [msg, setMsg] = useState("");
+
 
   // home details
   const [buildingInfo, setBuildingInfo] = useState("");
@@ -84,14 +87,19 @@ export default function OfferForm() {
   }
 
   async function handleSelectUnit() {
+    console.log("handleSelectUnit fired");
     setMsg("");
-    const n = unitNumber.trim();
+    const n = String(unitNumber || "").trim();
+
     if (!n) return setMsg("Enter a unit number.");
     if (!jwt) return setMsg("Please sign in again (missing token).");
 
     try {
       const upstreamPath = `/projects/${encodeURIComponent(PROJECT_ID)}/units`;
       const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`;
+
+      console.log("DEBUG: about to fetch", url, headers);
+
 
       const res = await fetch(url, { headers, cache: "no-store" });
       if (!res.ok) {
@@ -219,13 +227,21 @@ export default function OfferForm() {
                   type="number"
                   value={unitNumber}
                   onChange={(e) => setUnitNumber(e.target.value)}
-                  style={{ ...styles.input, width: 120 }}
+                  style={{ ...styles.input, width: 80 }}
                 />
               </label>
 
               <div style={{ display: "flex", alignItems: "end", gap: 8 }}>
-                <button type="button" onClick={handleSelectUnit}>Select Unit</button>
+                {/* <button type="button" onClick={handleSelectUnit}>Select Unit</button> */}
+                <button type="button" onClick={() => alert("Clicked!")}>
+                  Select Unit
+                </button>
               </div>
+              {msg && (
+                <div style={{ alignSelf: "end", marginLeft: 8, color: msg.toLowerCase().includes("error") ? "crimson" : "green" }}>
+                  {msg}
+                </div>
+              )}
             </div>
 
             {/* Address 1 */}
