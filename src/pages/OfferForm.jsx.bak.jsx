@@ -4,14 +4,7 @@ import { useAuth } from "react-oidc-context";
 import "./offer-form.css";
 import { v4 as uuidv4 } from "uuid";
 
-// --- Helper to parse JWT ---
-function parseJwt(token) {
-  try {
-    return JSON.parse(atob(token.split(".")[1]));
-  } catch {
-    return {};
-  }
-}
+
 
 const PROXY_BASE = "/.netlify/functions/proxy-units";
 const PROJECT_ID = "Fusion";
@@ -38,9 +31,6 @@ function formatUSD(val) {
 export default function OfferForm() {
   const auth = useAuth();
   const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
-  const claims = jwt ? parseJwt(jwt) : {};
-  const saEmail = claims.email || "";  // <-- logged-in Sales Agent email
-
 
   // form bits
   const [unitNumber, setUnitNumber] = useState("");
@@ -113,7 +103,7 @@ export default function OfferForm() {
     }
   }
 
- // async function handleSubmit(e) {
+ // async function handleSendForSignature(e) {
  async function handleSubmit(e) {
   e.preventDefault();
   setMsg("");
@@ -124,48 +114,218 @@ export default function OfferForm() {
     v.project_id = PROJECT_ID;
     v.price = unformatUSD(price || v.price);
     v.offer_id = uuidv4(); // add a unique offer ID
-    
-    // add SA sender email from auth
-    v.sa_email = saEmail;
-    v.sa_name  = auth?.user?.profile?.name  || "";
 
-    // 1.send-fro-signature POST to backend (send-for-signature Lambda)
-    const sigRes = await fetch(
-      `${PROXY_BASE}?path=${encodeURIComponent("/send-for-signature")}`,
-      {
+//     // --- PDF HTML generation (copied from handlePrintPDF) ---
+//     const priceInput = formRef.current?.elements?.price;
+//     const pRaw = (price !== undefined && price !== "")
+//       ? price
+//       : (v.price ?? "") || (priceInput?.value ?? "");
+//     const priceFmt = formatUSD(pRaw);
+
+//     const bldg = buildingInfo;
+//     const plan = planInfo;
+//     const addr = addressInfo;
+
+//     const esc = (s = "") =>
+//       String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+//     const yesNo = (val) => (val ? "Yes" : "No");
+//     const cash = v.cash_purchase ? "Yes" : "No";
+//     const ORIGIN = window.location.origin;
+
+//     const pdfHtml = `<!DOCTYPE html>
+// <html>
+// <head>
+// <meta charset="utf-8">
+// <base href="${ORIGIN}/">
+// <title>Preliminary Offer Form HBFA Fusion Rev.1</title>
+// <style>
+//   /* Page */
+//   @page { size: Letter portrait; margin: 0.75in; }
+
+//   /* Base */
+//   body { font-family: Lato, Arial, sans-serif; color:#111; }
+//   h2 { margin: 0 0 12px; }
+
+//   /* Title + logos */
+//   .titlebar {
+//     display: flex;
+//     align-items: center;
+//     justify-content: space-between;
+//     gap: 12px;
+//     margin: 0 0 12px;
+//     break-inside: avoid;
+//     page-break-inside: avoid;
+//   }
+//   .titlebar h2 { margin: 0; }
+//   .titlebar img { height: 36px; width: auto; display: block; }
+//   .logos { display: flex; align-items: center; gap: 10px; }
+
+//   /* Sections */
+//   .section { border: 1px solid #ddd; border-radius: 8px; padding: 14px; margin: 12px 0; }
+//   .legend  { margin: 0 0 8px; font-size: 1.05rem; font-weight: 700; }
+
+//   /* Key/Value grid */
+//   .kv {
+//     list-style: none;
+//     padding: 0;
+//     margin: 0;
+//     display: grid;
+//     grid-template-columns: 1fr 1fr;
+//     gap: 6px 16px; /* row gap, column gap */
+//   }
+//   .kv li {
+//     display: grid;
+//     grid-template-columns: max-content 1fr;
+//     column-gap: 8px;
+//     align-items: baseline;
+//     break-inside: avoid;
+//     page-break-inside: avoid;
+//   }
+//   .kv .label { font-size: 0.9rem; font-weight: 600; color: #555; white-space: nowrap; }
+//   .kv .value { font-size: 1rem; font-weight: 400; }
+
+//   /* Misc */
+//   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+//   .notes { white-space: pre-wrap; }
+//   .sig   { margin-top: 6px; }
+//   .sig-row { display: flex; align-items: flex-end; gap: 10px; margin-top: 24px; }
+//   .sig-row .label { white-space: nowrap; }
+//   .sig-row .line { border-bottom: 1px solid #000; height: 18px; flex: 1; }
+//   .sig-row .line.short { flex: 0 0 170px; }
+//   .footer { margin-top: 10px; text-align: center; }
+//   .small { font-size: 0.9rem; color: #444; }
+//   .disclaimer { font-size: 0.9rem; color: #444; }
+  
+//   /* Print */
+//   @media print {
+//     -webkit-print-color-adjust: exact;
+//     print-color-adjust: exact;
+
+//     .kv { grid-template-columns: 1fr 1fr; }
+//     .section { break-inside: avoid; page-break-inside: avoid; }
+
+//     /* If you want to avoid Lato when printing, uncomment:
+//     body { font-family: Arial, Helvetica, sans-serif; } */
+//   }
+
+//   /* Narrow viewport (if someone previews on-screen) */
+//   @media (max-width: 700px) {
+//     .kv { grid-template-columns: 1fr; }
+//   }
+// </style>
+
+// </head>
+// <body>
+//   <div class="titlebar">
+//   <h2>Preliminary Offer Summary</h2>
+//   <div class="logos">
+//     <img src="/assets/fusion_logo.png" alt="Fusion" />
+//     <img src="/assets/hbfa-logo.png" alt="HBFA" />
+//   </div>
+// </div>
+
+
+//   <div class="section">
+//     <div class="legend">Buyer Contact Information</div>
+//     <ul class="kv">
+//       <li><span class="label">Name:</span> <span class="value"> ${esc(v.buyer_name)}</span></li>
+//       <li><span class="label">Unit #:</span> <span class="value"> ${esc(String(unitNumber))}</span></li>
+//       <li><span class="label">Street:</span> <span class="value"> ${esc(v.address_1)}</span></li>
+//       <li><span class="label">Suite/Apt/PO Box:</span> <span class="value"> ${esc(v.address_2)}</span></li>
+//       <li><span class="label">City:</span> <span class="value"> ${esc(v.city)}</span></li>
+//       <li><span class="label">State:</span> <span class="value"> ${esc(v.state)}</span></li>
+//       <li><span class="label">Zip:</span> <span class="value">  ${esc(v.zip_code)}</span></li>
+//       <li><span class="label">Phone 1:</span> <span class="value"> ${esc(v.phone_number_1)}</span></li>
+//       <li><span class="label">Phone 2:</span> <span class="value"> ${esc(v.phone_number_2)}</span></li>
+//       <li><span class="label">Phone 3:</span> <span class="value"> ${esc(v.phone_number_3)}</span></li>
+//       <li><span class="label">Email 1:</span> <span class="value"> ${esc(v.email_1)}</span></li>
+//       <li><span class="label">Email 2:</span> <span class="value"> ${esc(v.email_2)}</span></li>
+//       <li><span class="label">Email 3:</span> <span class="value"> ${esc(v.email_3)}</span></li>
+//     </ul>
+//     <div class="notes"><strong>Buyer Notes:</strong><br>${esc(v.buyer_notes)}</div>
+//   </div>
+
+//   <div class="section">
+//     <div class="legend">Offer Information</div>
+//     <ul class="kv">
+//       <li><span class="label">Lender:</span> <span class="value"> ${esc(v.lender)}</span></li>
+//       <li><span class="label">Loan Officer:</span> <span class="value"> ${esc(v.loan_officer)}</span></li>
+//       <li><span class="label">Loan Officer Email:</span> <span class="value"> ${esc(v.l_o_contact_email)}</span></li>
+//       <li><span class="label">Loan Officer Phone:</span> <span class="value"> ${esc(v.l_o_phone)}</span></li>
+//       <li><span class="label">Broker Name:</span> <span class="value"> ${esc(v.broker_name)}</span></li>
+//       <li><span class="label">Brokerage:</span> <span class="value"> ${esc(v.brokerage)}</span></li>
+//       <li><span class="label">Broker Email:</span> <span class="value"> ${esc(v.broker_email)}</span></li>
+//       <li><span class="label">Broker Phone:</span> <span class="value"> ${esc(v.broker_phone)}</span></li>
+//       <li><span class="label">Cash Purchase?</span> <span class="value"> ${cash}</span></li>
+//       <li><span class="label">Price:</span> <span class="value"> ${esc(priceFmt)}</span></li>
+//       <li><span class="label">Purchase Type:</span> <span class="value"> ${esc(v.purchase_type)}</span></li>
+//     </ul>
+//     <div class="notes"><strong>Qualification/Lender Notes:</strong><br>${esc(v.offer_notes_1)}</div>
+//   </div>
+
+//   <div class="section">
+//     <div class="legend">Home Details (From Fusion)</div>
+//     <ul class="kv">
+//       <li><span class="label">Building Info:</span> <span class="value"> ${esc(bldg)}</span></li>
+//       <li><span class="label">Plan Info:</span> <span class="value"> ${esc(plan)}</span></li>
+//       <li style="grid-column: 1 / -1;"><strong>Address:</strong> ${esc(addr)}</li>
+//     </ul>
+//   </div>
+
+//   <div class="section">
+//     <div class="legend">Additional Notes</div>
+//     <div class="notes">${esc(v.add_notes)}</div>
+//   </div>
+
+//   <div class="section">
+//     <div class="legend">Disclaimer</div>
+//     <div class="disclaimer">
+//       THIS IS NOT A CONTRACT. THE TERMS OF THIS PRELIMINARY OFFER ARE NON-BINDING. APPROVAL OF THIS PRELIMINARY OFFER BY SELLER SHALL ESTABLISH NO AGREEMENT BETWEEN THE PROSPECTIVE BUYER AND SELLER AND SHALL NOT CREATE ANY OBLIGATION ON THE PART OF SELLER TO SELL THE UNIT TO PROSPECTIVE BUYER. THE UNIT MAY BE WITHDRAWN FROM THE MARKET AT ANY TIME.
+//     </div>
+//   </div>
+
+//   <div class="section sig">
+//     <div class="sig-row">
+//       <span class="label">Signature</span><span class="line"></span>
+//       <span style="font-size:0; color:#fff;">/sig1/</span>
+//       <span class="label">Date:</span><span class="line short"></span>
+//       <span style="font-size:0; color:#fff;">/date1/</span>
+//     </div>
+//     <div class="sig-row">
+//       <span class="label">Signature</span><span class="line"></span>
+//       <span style="font-size:0; color:#fff;">/sig2/</span>
+//       <span class="label">Date:</span><span class="line short"></span>
+//       <span style="font-size:0; color:#fff;">/date2/</span>
+//     </div>
+//   </div>
+
+//   <div class="footer small">Generated from Offer Form</div>
+//   <script>window.onload = function(){ window.print(); setTimeout(function(){ window.close(); }, 250); };</script>
+// </body>
+// </html>`;
+
+//     // --- End PDF HTML generation ---  
+    // POST to backend (send-for-signature Lambda)
+    const res = await fetch(`${PROXY_BASE}?path=${encodeURIComponent("/send-for-signature")}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(v) // ({ offer: v, pdfHtml }),
+    });
+      
+      // Call the API route that saves the offer
+      const res = await fetch(`${PROXY_BASE}?path=${encodeURIComponent("/offers")}`, {
         method: "POST",
         headers,
         body: JSON.stringify(v),
-      }
-    );
-    if (!sigRes.ok) {
-      const errText = await sigRes.text();
-      throw new Error(`Signature send failed: ${errText}`);
-    }
+      });
 
-    const sigText = await sigRes.text();
-    if (!sigRes.ok) throw new Error(`Signature send failed: ${sigText}`);
+    const text = await res.text();
+    if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
 
-    // Parse envelopeId from the Lambda response
-    const sigJson = JSON.parse(sigText);
-    const envelopeId = sigJson.envelopeId;
-    v.docusign_envelope_id = envelopeId;   // <-- carry forward into save
-
-    
-    // 2. Save offer record
-    const saveRes = await fetch(
-      `${PROXY_BASE}?path=${encodeURIComponent("/offers")}`,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify(v),
-      }
-    );
-
-    const text = await saveRes.text();
-    if (!saveRes.ok) throw new Error(text || `HTTP ${saveRes.status}`);
-
-    setMsg("Offer submitted and sent for signature successfully.");
+     setMsg("Offer submitted and sent for signature successfully.");
+   // setMsg("Offer saved successfully.");
+    // formRef.current.reset(); // optional
   } catch (err) {
     setMsg(`Submit error: ${String(err.message || err)}`);
   }
