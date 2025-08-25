@@ -1,5 +1,5 @@
 // netlify/functions/send-for-signature.js
-import fetch from "node-fetch";
+// import fetch from "node-fetch";
 import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 // inside send-for-signature.js renderTemplate function
 import fs from "fs";
