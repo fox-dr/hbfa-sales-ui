@@ -28,25 +28,34 @@ const ROUTING_CONFIG = {
 
 
 // ---- Helper: get fresh JWT token from DocuSign
-async function getAccessToken() {
+export async function getAccessToken() {
   const now = Math.floor(Date.now() / 1000);
-
-  // Load private key from file
   const keyPath = path.resolve("./netlify/keys/docusign_private.pem");
-  const privateKey = fs.readFileSync(keyPath, "utf8");
+
+  let privateKey;
+  try {
+    privateKey = fs.readFileSync(keyPath, "utf8");
+  } catch (e) {
+    throw new Error(`PEM file read error: ${e.message}, path tried: ${keyPath}`);
+  }
+
+  if (!privateKey) {
+    throw new Error(`PEM file is empty at path: ${keyPath}`);
+  }
+
+  console.log("PEM length:", privateKey.length);
+  console.log("PEM starts with:", privateKey.slice(0, 40));
 
   const payload = {
     iss: process.env.DOCUSIGN_INTEGRATION_KEY,
     sub: process.env.DOCUSIGN_USER_ID,
-    aud: "account-d.docusign.com", // change to "account.docusign.com" for prod
+    aud: "account-d.docusign.com", // change to account.docusign.com for prod
     iat: now,
     exp: now + 60 * 5,
     scope: "signature impersonation",
   };
 
-  const assertion = jwt.sign(payload, process.env.DOCUSIGN_PRIVATE_KEY, {
-    algorithm: "RS256",
-  });
+  const assertion = jwt.sign(payload, privateKey, { algorithm: "RS256" });
 
   const resp = await fetch("https://account-d.docusign.com/oauth/token", {
     method: "POST",
@@ -61,6 +70,7 @@ async function getAccessToken() {
   if (!resp.ok) throw new Error(JSON.stringify(data));
   return data.access_token;
 }
+
 
 export async function handler(event) {
   try {
