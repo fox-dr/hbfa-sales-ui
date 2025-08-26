@@ -26,9 +26,14 @@ const ROUTING_CONFIG = {
   ],
 };
 
+
 // ---- Helper: get fresh JWT token from DocuSign
 async function getAccessToken() {
   const now = Math.floor(Date.now() / 1000);
+
+  // Load private key from file
+  const keyPath = path.resolve("./netlify/keys/docusign_private.pem");
+  const privateKey = fs.readFileSync(keyPath, "utf8");
 
   const payload = {
     iss: process.env.DOCUSIGN_INTEGRATION_KEY,
