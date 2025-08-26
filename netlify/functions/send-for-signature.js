@@ -16,7 +16,16 @@ function renderOfferTemplate(offer) {
   return html;
 }
 
-const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-west-1" });
+const ddb = new DynamoDBClient({
+  region: process.env.DDB_REGION || "us-east-2",
+  credentials: {
+    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY,
+  },
+});
+
+
+// const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-west-1" });
 
 // Example routing config (hard-coded for now)
 const ROUTING_CONFIG = {
