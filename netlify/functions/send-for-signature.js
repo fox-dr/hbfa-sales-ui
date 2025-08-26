@@ -190,7 +190,7 @@ export async function handler(event) {
       const TABLE = process.env.OFFERS_TABLE || "offers";
       const updateCmd = new UpdateItemCommand({
         TableName: TABLE,
-        Key: { offer_id: { S: offer.offer_id } },
+        Key: { offerId: { S: offer.offer_id } },
         UpdateExpression:
           "SET docusign_envelope_id = :e, offer_status = :s, sa_email = :se, sa_name = :sn, sent_at = :t",
         ExpressionAttributeValues: {
