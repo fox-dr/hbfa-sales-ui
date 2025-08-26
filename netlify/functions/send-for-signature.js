@@ -86,13 +86,13 @@ export async function handler(event) {
     const pdfHtml = renderOfferTemplate(offer);
     const pdfBase64 = Buffer.from(pdfHtml).toString("base64");
 
-    // Build recipients
+    // Buyers = signers
     const buyers = [offer.email_1, offer.email_2, offer.email_3]
       .filter(Boolean)
       .map((email, idx) => ({
         email,
         name: `Buyer ${idx + 1}`,
-        recipientId: `${idx + 1}`,
+        recipientId: `${idx + 1}`,   // valid int
         routingOrder: "1",
         tabs: {
           signHereTabs: [
@@ -106,25 +106,27 @@ export async function handler(event) {
         },
       }));
 
-    const approver = ROUTING_CONFIG.approval_path.find((r) => r.role === "approver");
-    const ccList = ROUTING_CONFIG.approval_path.filter((r) => r.role === "cc");
-
+    // Approver
+    const approver = ROUTING_CONFIG.approval_path.find(r => r.role === "approver");
     const approverRecipient = approver
       ? {
           email: approver.email,
           name: "Approver",
-          recipientId: "99",
+          recipientId: "99",             // valid int
           routingOrder: `${approver.order}`,
         }
       : null;
 
+    // CC list
+    const ccList = ROUTING_CONFIG.approval_path.filter(r => r.role === "cc");
     const ccRecipients = ccList.map((entry, idx) => ({
       email: entry.email,
       name: "CC Copy",
-      recipientId: `cc${idx}`,
+      recipientId: `${200 + idx}`,      // valid int
       routingOrder: `${entry.order}`,
     }));
 
+    // Final signers
     const signers = approverRecipient ? [...buyers, approverRecipient] : buyers;
     const { sa_email, sa_name } = offer;
 
