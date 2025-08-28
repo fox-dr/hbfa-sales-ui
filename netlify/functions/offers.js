@@ -1,183 +1,95 @@
-// netlify/functions/offers.js
-import {
-  DynamoDBClient,
-  PutItemCommand,
-  GetItemCommand,
-  ScanCommand,
-} from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand, GetItemCommand, ScanCommand, UpdateItemCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb";
+import { v4 as uuidv4 } from "uuid";
 
-const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2",
-  credentials: {
-    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY,
-  }
-});
-
-const TABLE = process.env.OFFERS_TABLE || "fusion_offers"; //enforce fusion_offers
+const client = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
+const TABLE = process.env.OFFERS_TABLE || "fusion_offers";
 
 export async function handler(event) {
-  const method = event.httpMethod;
-
   try {
-    // -----------------------------
-    // CREATE or UPDATE OFFER (POST)
-    // -----------------------------
+    const method = event.httpMethod;
+    const body = event.body ? JSON.parse(event.body) : {};
+
     if (method === "POST") {
-      const body = JSON.parse(event.body || "{}");
-      const {
-        offer_id,
-        project_id,
-        buyer_name,
-        unit_number,
-        price,
-        sa_email,
-        sa_name,
-        docusign_envelope_id,
-      } = body;
-
-      if (!offer_id) {
-        return { statusCode: 400, body: "Missing offer_id" };
-      }
-      if (!project_id) {
-        return { statusCode: 400, body: "Missing project_id" }; // 👈 enforce
-      }
-
-      const now = new Date().toISOString();
+      // Always set or replace offerId
+      const offerId = body.offerId || uuidv4();
 
       const item = {
-        offer_id: { S: offer_id },
-        project_id: { S: project_id || "unknown" },
-        buyer_name: { S: buyer_name || "" },
-        buyer_name_lower: { S: (buyer_name || "").toLowerCase() }, // case-insensitive search key
-        price: { S: String(price || "") },
-        sa_email: { S: sa_email || "" },
-        sa_name: { S: sa_name || "" },
-        created_at: { S: now },
-        updated_at: { S: now },
+        offerId: { S: offerId },
+        ...Object.fromEntries(
+          Object.entries(body).map(([k, v]) => [k, { S: String(v) }])
+        ),
       };
 
-      if (unit_number) {
-        item.unit_number = { S: unit_number };
-        item.unit_number_lower = { S: unit_number.toLowerCase() }; // case-insensitive search key
-      }
+      await client.send(new PutItemCommand({ TableName: TABLE, Item: item }));
+      return resp(200, { offerId });
 
-      if (docusign_envelope_id) {
-        item.docusign_envelope_id = { S: docusign_envelope_id };
-        item.offer_status = { S: "sent" };
+    } else if (method === "GET") {
+      if (event.queryStringParameters?.offerId) {
+        const { Item } = await client.send(
+          new GetItemCommand({
+            TableName: TABLE,
+            Key: { offerId: { S: event.queryStringParameters.offerId } },
+          })
+        );
+        return resp(200, Item ? unmarshall(Item) : {});
       } else {
-        item.offer_status = { S: "draft" };
+        const { Items } = await client.send(new ScanCommand({ TableName: TABLE }));
+        return resp(200, Items.map(unmarshall));
       }
 
-      const cmd = new PutItemCommand({ TableName: TABLE, Item: item });
-      await ddb.send(cmd);
+    } else if (method === "PUT") {
+      if (!body.offerId) return resp(400, { error: "offerId is required" });
 
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ message: "Offer saved", offer_id, project_id }),
-      };
+      const updates = Object.entries(body)
+        .filter(([k]) => k !== "offerId")
+        .reduce(
+          (acc, [k, v]) => {
+            acc.ExpressionAttributeNames[`#${k}`] = k;
+            acc.ExpressionAttributeValues[`:${k}`] = { S: String(v) };
+            acc.UpdateExpression.push(`#${k} = :${k}`);
+            return acc;
+          },
+          { UpdateExpression: [], ExpressionAttributeNames: {}, ExpressionAttributeValues: {} }
+        );
+
+      await client.send(
+        new UpdateItemCommand({
+          TableName: TABLE,
+          Key: { offerId: { S: body.offerId } },
+          UpdateExpression: "SET " + updates.UpdateExpression.join(", "),
+          ExpressionAttributeNames: updates.ExpressionAttributeNames,
+          ExpressionAttributeValues: updates.ExpressionAttributeValues,
+        })
+      );
+
+      return resp(200, { offerId: body.offerId });
+
+    } else if (method === "DELETE") {
+      if (!body.offerId) return resp(400, { error: "offerId is required" });
+      await client.send(
+        new DeleteItemCommand({
+          TableName: TABLE,
+          Key: { offerId: { S: body.offerId } },
+        })
+      );
+      return resp(200, { offerId: body.offerId });
     }
 
-    // -----------------------------
-    // FETCH ONE OFFER BY ID
-    // -----------------------------
-    if (method === "GET" && event.queryStringParameters?.offer_id) {
-      const offerId = event.queryStringParameters.offer_id;
-
-      const cmd = new GetItemCommand({
-        TableName: TABLE,
-        Key: { offer_id: { S: offerId } },
-      });
-
-      const resp = await ddb.send(cmd);
-      if (!resp.Item) {
-        return { statusCode: 404, body: "Offer not found" };
-      }
-
-      const obj = {};
-      for (const [k, v] of Object.entries(resp.Item)) {
-        obj[k] = Object.values(v)[0]; // unwrap { S: "val" }
-      }
-
-      return { statusCode: 200, body: JSON.stringify(obj) };
-    }
-    // -----------------------------
-    // SEARCH OFFERS BY PROJECT ID
-    // -----------------------------
-    if (method === "GET" && event.queryStringParameters?.project_id) {
-      const projectId = event.queryStringParameters.project_id;
-
-      const cmd = new ScanCommand({
-        TableName: TABLE,
-        FilterExpression: "project_id = :p",
-        ExpressionAttributeValues: { ":p": { S: projectId } },
-      });
-
-      const resp = await ddb.send(cmd);
-      const items = (resp.Items || []).map((item) => {
-        const obj = {};
-        for (const [k, v] of Object.entries(item)) {
-          obj[k] = Object.values(v)[0];
-        }
-        return obj;
-      });
-
-      return { statusCode: 200, body: JSON.stringify(items) };
-    }
-
-    // -----------------------------
-    // SEARCH OFFERS BY BUYER NAME (case-insensitive)
-    // -----------------------------
-    if (method === "GET" && event.queryStringParameters?.name) {
-      const search = event.queryStringParameters.name.toLowerCase();
-
-      const cmd = new ScanCommand({
-        TableName: TABLE,
-        FilterExpression: "contains(buyer_name_lower, :n)",
-        ExpressionAttributeValues: { ":n": { S: search } },
-      });
-
-      const resp = await ddb.send(cmd);
-      const items = (resp.Items || []).map((item) => {
-        const obj = {};
-        for (const [k, v] of Object.entries(item)) {
-          obj[k] = Object.values(v)[0];
-        }
-        return obj;
-      });
-
-      return { statusCode: 200, body: JSON.stringify(items) };
-    }
-
-    // -----------------------------
-    // SEARCH OFFERS BY UNIT NUMBER (case-insensitive)
-    // -----------------------------
-    if (method === "GET" && event.queryStringParameters?.unit) {
-      const unit = event.queryStringParameters.unit.toLowerCase();
-
-      const cmd = new ScanCommand({
-        TableName: TABLE,
-        FilterExpression: "unit_number_lower = :u",
-        ExpressionAttributeValues: { ":u": { S: unit } },
-      });
-
-      const resp = await ddb.send(cmd);
-      const items = (resp.Items || []).map((item) => {
-        const obj = {};
-        for (const [k, v] of Object.entries(item)) {
-          obj[k] = Object.values(v)[0];
-        }
-        return obj;
-      });
-
-      return { statusCode: 200, body: JSON.stringify(items) };
-    }
-
-    // -----------------------------
-    // DEFAULT: METHOD NOT ALLOWED
-    // -----------------------------
-    return { statusCode: 405, body: "Method Not Allowed" };
+    return resp(405, { error: "Method Not Allowed" });
   } catch (err) {
-    console.error("offers error:", err);
-    return { statusCode: 500, body: `Server error: ${err.message}` };
+    console.error("Error in offers.js:", err);
+    return resp(500, { error: err.message });
   }
+}
+
+function resp(statusCode, body) {
+  return {
+    statusCode,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
+}
+
+function unmarshall(item) {
+  return Object.fromEntries(Object.entries(item).map(([k, v]) => [k, Object.values(v)[0]]));
 }
