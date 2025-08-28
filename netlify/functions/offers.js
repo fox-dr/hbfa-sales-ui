@@ -6,7 +6,7 @@ import {
   ScanCommand,
 } from "@aws-sdk/client-dynamodb";
 
-const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-west-1" });
+const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
 const TABLE = process.env.OFFERS_TABLE || "fusion_offers"; //enforce fusion_offers
 
 export async function handler(event) {
