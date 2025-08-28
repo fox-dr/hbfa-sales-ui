@@ -16,4 +16,3 @@
 
 [functions."docusign-auth"]
   external_node_modules = ["node-fetch"]
-
