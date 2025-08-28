@@ -18,8 +18,6 @@ const cognitoAuthConfig = {
   scope: "openid email phone",
 };
 
- 
-};
 console.log("cognitoAuthConfig", cognitoAuthConfig);
 
 const onSigninCallback = () => {
