@@ -6,7 +6,13 @@ import {
   ScanCommand,
 } from "@aws-sdk/client-dynamodb";
 
-const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
+const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2",
+  credentials: {
+    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY,
+  },
+);
+
 const TABLE = process.env.OFFERS_TABLE || "fusion_offers"; //enforce fusion_offers
 
 export async function handler(event) {
