@@ -8,7 +8,8 @@ import App from "./App.jsx";
 const baseUri = window.location.origin;
 
 const cognitoAuthConfig = {
-  authority: `https://cognito-idp.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${import.meta.env.VITE_COGNITO_USER_POOL_ID}`,
+// authority: `https://cognito-idp.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${import.meta.env.VITE_COGNITO_USER_POOL_ID}`,
+  authority: import.meta.env.VITE_COGNITO_DOMAIN, // <-- use Hosted UI domain
   client_id: import.meta.env.VITE_COGNITO_CLIENT_ID,
   //redirect_uri: redirectUri,
   redirect_uri: `${baseUri}/callback`, // must include callback
