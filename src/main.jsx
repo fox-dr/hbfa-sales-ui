@@ -26,6 +26,7 @@ const onSigninCallback = () => {
   // strip ?code=...&state=... from the URL
   window.history.replaceState({}, document.title, window.location.pathname);
 };
+console.log("cognitoAuthConfig", cognitoAuthConfig);
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
