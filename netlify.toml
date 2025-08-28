@@ -8,11 +8,21 @@
 
 [functions]
   node_bundler = "esbuild"
+  external_node_modules = ["node-fetch"]
   included_files = [
     "netlify/pdf-templates/**",
-    "netlify/keys/docusign_private.pem" # 👈 add this line
+    "netlify/keys/**"
   ]
 
-
 [functions."docusign-auth"]
+  node_bundler = "esbuild"
   external_node_modules = ["node-fetch"]
+
+[functions."offers"]
+  node_bundler = "esbuild"
+
+[functions."proxy-units"]
+  node_bundler = "esbuild"
+
+[functions."send-for-signature"]
+  node_bundler = "esbuild"
