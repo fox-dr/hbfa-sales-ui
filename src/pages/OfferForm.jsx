@@ -137,9 +137,10 @@ export default function OfferForm() {
     // add SA sender email from auth
     v.sa_email = saEmail;
     v.sa_name  = auth?.user?.profile?.name  || "";
-
-    // 1.send-fro-signature POST to backend (send-for-signature Lambda)
-    const sigRes = await fetch("/.netlify/functions/send-for-signature", {
+    
+    const API_BASE = "https://lyj4zmurck.execute-api.us-east-2.amazonaws.com/prod";
+    // 1.send-fro-signature POST to backend (send-for-signature Lambda)    
+    const sigRes = await fetch(`${API_BASE}/offers`, {
      method: "POST",
      headers,
     body: JSON.stringify(v),
@@ -162,7 +163,8 @@ export default function OfferForm() {
     console.log(">>> OFFER SAVE PAYLOAD", v);
 
     // 2. Save offer record directly to AWS
-    const saveRes = await fetch("/.netlify/functions/offers",{
+   // const saveRes = await fetch("/.netlify/functions/offers",{
+   const saveRes = await fetch(`${API_BASE}/offers`, {
       method: "POST",
       headers,
       body: JSON.stringify(v),
