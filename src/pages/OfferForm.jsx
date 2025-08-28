@@ -112,6 +112,8 @@ export default function OfferForm() {
         const t = await res.text();
         throw new Error(`${res.status} ${t}`);
       }
+      
+
 
       const data = await res.json();
       const items = Array.isArray(data.items) ? data.items : [];
@@ -257,6 +259,9 @@ const saveRes = await fetch(
                 </div>
               )}
             </div>
+            console.log("Fetch URL:", url);
+            console.log("Forwarding to:", upstreamUrl);
+
 
             {/* Address 1 */}
             <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
