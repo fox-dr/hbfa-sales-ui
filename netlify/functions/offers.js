@@ -7,7 +7,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 
 const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-west-1" });
-const TABLE = process.env.OFFERS_TABLE || "offers";
+const TABLE = process.env.OFFERS_TABLE || "fusion_offers"; //enforce fusion_offers
 
 export async function handler(event) {
   const method = event.httpMethod;
@@ -31,6 +31,9 @@ export async function handler(event) {
 
       if (!offer_id) {
         return { statusCode: 400, body: "Missing offer_id" };
+      }
+      if (!project_id) {
+        return { statusCode: 400, body: "Missing project_id" }; // 👈 enforce
       }
 
       const now = new Date().toISOString();
@@ -64,7 +67,7 @@ export async function handler(event) {
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ message: "Offer saved", offer_id }),
+        body: JSON.stringify({ message: "Offer saved", offer_id, project_id }),
       };
     }
 
