@@ -91,6 +91,29 @@ export async function handler(event) {
 
       return { statusCode: 200, body: JSON.stringify(obj) };
     }
+    // -----------------------------
+    // SEARCH OFFERS BY PROJECT ID
+    // -----------------------------
+    if (method === "GET" && event.queryStringParameters?.project_id) {
+      const projectId = event.queryStringParameters.project_id;
+
+      const cmd = new ScanCommand({
+        TableName: TABLE,
+        FilterExpression: "project_id = :p",
+        ExpressionAttributeValues: { ":p": { S: projectId } },
+      });
+
+      const resp = await ddb.send(cmd);
+      const items = (resp.Items || []).map((item) => {
+        const obj = {};
+        for (const [k, v] of Object.entries(item)) {
+          obj[k] = Object.values(v)[0];
+        }
+        return obj;
+      });
+
+      return { statusCode: 200, body: JSON.stringify(items) };
+    }
 
     // -----------------------------
     // SEARCH OFFERS BY BUYER NAME (case-insensitive)

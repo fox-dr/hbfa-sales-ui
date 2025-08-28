@@ -48,6 +48,9 @@ export async function handler(event) {
       const ct = event.headers?.["content-type"] || event.headers?.["Content-Type"];
       if (ct) options.headers["Content-Type"] = ct;
     }
+    console.log("event.headers:", event.headers);
+    console.log("forwarding headers:", headers);
+    console.log("upstreamUrl:", upstreamUrl);
 
     const upstream = await fetch(upstreamUrl, options);
     const contentType = upstream.headers.get("content-type") || "application/json";
