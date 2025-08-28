@@ -1,4 +1,6 @@
 // src/main.jsx
+console.log(">>> MAIN.JSX LOADED <<<");
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { AuthProvider } from "react-oidc-context";
