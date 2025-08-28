@@ -16,6 +16,7 @@ function parseJwt(token) {
 
 // const PROXY_BASE = "/.netlify/functions/proxy-units";
 const PROJECT_ID = import.meta.env.VITE_DEFAULT_PROJECT_ID || "Fusion";
+const PROXY_BASE = import.meta.env.VITE_PROXY_BASE || "/.netlify/functions/proxy-units";
 
 
 function unformatUSD(val) {
