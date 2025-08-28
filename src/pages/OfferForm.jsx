@@ -96,24 +96,16 @@ export default function OfferForm() {
     if (!jwt) return setMsg("Please sign in again (missing token).");
 
     try {
-      // Direct call to AWS API Gateway (no Netlify proxy)
-      const url =
-        `${import.meta.env.VITE_API_BASE}/projects/${encodeURIComponent(PROJECT_ID)}/units`;
-
-      
       const upstreamPath = `/projects/${encodeURIComponent(PROJECT_ID)}/units`;
       const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`;
 
       console.log("DEBUG: about to fetch", url, headers);
-
 
       const res = await fetch(url, { headers, cache: "no-store" });
       if (!res.ok) {
         const t = await res.text();
         throw new Error(`${res.status} ${t}`);
       }
-      
-
 
       const data = await res.json();
       const items = Array.isArray(data.items) ? data.items : [];
@@ -126,7 +118,7 @@ export default function OfferForm() {
       }
     } catch (e) {
       setMsg(`Error fetching unit: ${String(e.message || e)}`);
-    }
+}
   }
 
  // async function handleSubmit(e) {
