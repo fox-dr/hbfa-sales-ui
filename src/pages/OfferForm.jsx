@@ -101,8 +101,8 @@ export default function OfferForm() {
         `${import.meta.env.VITE_API_BASE}/projects/${encodeURIComponent(PROJECT_ID)}/units`;
 
       
-      //const upstreamPath = `/projects/${encodeURIComponent(PROJECT_ID)}/units`;
-      // const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`;
+      const upstreamPath = `/projects/${encodeURIComponent(PROJECT_ID)}/units`;
+      const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`;
 
       console.log("DEBUG: about to fetch", url, headers);
 
