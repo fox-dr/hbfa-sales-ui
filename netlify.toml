@@ -6,6 +6,14 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[build]
+  functions = "netlify/functions"
+  publish = "dist"
+
 [functions]
   node_bundler = "esbuild"
   included_files = ["netlify/pdf-templates/**"]
+
+[functions."docusign-auth"]
+  external_node_modules = ["node-fetch"]
+
