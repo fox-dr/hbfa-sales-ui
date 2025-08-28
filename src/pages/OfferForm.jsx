@@ -14,8 +14,9 @@ function parseJwt(token) {
   }
 }
 
-const PROXY_BASE = "/.netlify/functions/proxy-units";
-const PROJECT_ID = "Fusion";
+// const PROXY_BASE = "/.netlify/functions/proxy-units";
+const PROJECT_ID = import.meta.env.VITE_DEFAULT_PROJECT_ID || "Fusion";
+
 
 function unformatUSD(val) {
   const s = String(val ?? "").replace(/[^\d.-]/g, "");
@@ -95,8 +96,13 @@ export default function OfferForm() {
     if (!jwt) return setMsg("Please sign in again (missing token).");
 
     try {
-      const upstreamPath = `/projects/${encodeURIComponent(PROJECT_ID)}/units`;
-      const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`;
+      // Direct call to AWS API Gateway (no Netlify proxy)
+      const url =
+        `${import.meta.env.VITE_API_BASE}/projects/${encodeURIComponent(PROJECT_ID)}/units`;
+
+      
+      //const upstreamPath = `/projects/${encodeURIComponent(PROJECT_ID)}/units`;
+      // const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`;
 
       console.log("DEBUG: about to fetch", url, headers);
 
@@ -157,16 +163,26 @@ export default function OfferForm() {
     const envelopeId = sigJson.envelopeId;
     v.docusign_envelope_id = envelopeId;   // <-- carry forward into save
 
-    
+    // 2. Save offer record directly to AWS
+const saveRes = await fetch(
+  `${import.meta.env.VITE_API_BASE}/offers`,
+  {
+    method: "POST",
+    headers,
+    body: JSON.stringify(v),
+  }
+);
+
+
     // 2. Save offer record
-    const saveRes = await fetch(
-      `${PROXY_BASE}?path=${encodeURIComponent("/offers")}`,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify(v),
-      }
-    );
+  //  const saveRes = await fetch(
+  //    `${PROXY_BASE}?path=${encodeURIComponent("/offers")}`,
+  //    {
+  //      method: "POST",
+  //      headers,
+  //      body: JSON.stringify(v),
+  //    }
+  //  );
 
     const text = await saveRes.text();
     if (!saveRes.ok) throw new Error(text || `HTTP ${saveRes.status}`);
@@ -201,7 +217,7 @@ export default function OfferForm() {
       {/* Header */}
       <div style={styles.header}>
         <h2 style={{ margin: 0 }}>Preliminary Offer</h2>
-        <img src="/assets/fusion_logo.png" alt="Fusion Logo" style={{ height: 48 }} />
+        <img src={`/assets/${PROJECT_ID}_logo.png`} alt="Project Logo" style={{ height: 48 }} />
       </div>
 
       {/* Notice OR Form */}
@@ -322,8 +338,8 @@ export default function OfferForm() {
             <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
               <label style={styles.col}>Lender Institution<input name="lender" style={styles.input} /></label>
               <label style={styles.col}>Loan Officer<input name="loan_officer" style={styles.input} /></label>
-              <label style={styles.col}>Loan Officer Email<input type="email" name="l_o_contact_email" maxLength={40} style={styles.input} /></label>
-              <label style={styles.col}>Loan Officer Phone<input type="tel" name="l_o_phone" maxLength={20} style={styles.input} /></label>
+              <label style={styles.col}>Loan Officer Email<input type="email" name="loan_officer_email" maxLength={40} style={styles.input} /></label>
+              <label style={styles.col}>Loan Officer Phone<input type="tel" name="loan_officer_phone" maxLength={20} style={styles.input} /></label>
             </div>
 
             <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
@@ -366,14 +382,14 @@ export default function OfferForm() {
             <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
               <label style={styles.col}>
                 Qualification/Lender Notes
-                <textarea name="offer_notes_1" rows={3} maxLength={512} style={styles.textarea} />
+                <textarea name="lender_notes" rows={3} maxLength={512} style={styles.textarea} />
               </label>
             </div>
           </section>
 
           {/* Home Details */}
           <section style={styles.section}>
-            <h3 style={styles.legend}>Home Details (From Fusion)</h3>
+            <h3 style={styles.legend}>Home Details (From {PROJECT_ID})</h3>
             <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr auto" }}>
               <label style={styles.col}>Building Info<input value={buildingInfo} readOnly style={styles.inputRO} /></label>
               <label style={styles.col}>Plan Info<input value={planInfo} readOnly style={styles.inputRO} /></label>

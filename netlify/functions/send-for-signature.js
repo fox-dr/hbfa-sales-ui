@@ -5,9 +5,26 @@ import path from "path";
 import jwt from "jsonwebtoken";
 
 function renderOfferTemplate(offer) {
-  const templatePath = path.resolve("./netlify/pdf-templates/offer-template.html");
-  let html = fs.readFileSync(templatePath, "utf8");
+  //pick template folder based on project_id
+  const projectId = offer.project_id || "Fusion";   // fallback for safety
+  //const templatePath = path.resolve("./netlify/pdf-templates/${projectId}/offer-template.html");
 
+  const templatePath = path.join(
+  process.cwd(),
+  "netlify",
+  "pdf-templates",
+  projectId,
+  "offer-template.html"
+  );
+  
+  console.log("send-for-signature looking for template at:", templatePath);
+
+
+  if (!fs.existsSync(templatePath)) {
+    throw new Error(`Template not found for project_id=${projectId} at ${templatePath}`);
+  }
+
+  let html = fs.readFileSync(templatePath, "utf8");
   for (const [key, val] of Object.entries(offer)) {
     const safeVal = val == null ? "" : String(val);
     html = html.replace(new RegExp(`{{${key}}}`, "g"), safeVal);

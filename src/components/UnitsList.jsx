@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 
 // Call the Netlify Function (same-origin) instead of AWS directly.
-const PROXY_BASE = "/.netlify/functions/proxy-units";
+// const PROXY_BASE = "/.netlify/functions/proxy-units";
 
 export default function UnitsList({ token }) {
-  const [projectId, setProjectId] = useState("Fusion");
+  const defaultProject = import.meta.env.VITE_DEFAULT_PROJECT_ID || "Fusion";
+  const [projectId, setProjectId] = useState(defaultProject);
   const [buildingId, setBuildingId] = useState("");
   const [planType, setPlanType] = useState("");       // plan_type
   const [unitNumber, setUnitNumber] = useState("");   // unit_number (API filter)
@@ -30,12 +31,20 @@ export default function UnitsList({ token }) {
       if (bldg.trim()) qs.set("building_id", bldg.trim());
       if (plan.trim()) qs.set("plan_type", plan.trim());
       if (unit.trim()) qs.set("unit_number", unit.trim());
+      
+      console.log("proj raw:", proj);
+      
+      // Direct call to AWS API Gateway (bypass Netlify proxy)
+      const url =
+        `${import.meta.env.VITE_API_BASE}/projects/${encodeURIComponent(proj)}/units` +
+        (qs.toString() ? `?${qs.toString()}` : "");
+
 
       // Upstream path to AWS API (via Netlify proxy)
-      const upstreamPath = `/projects/${encodeURIComponent(proj)}/units`;
-      const url =
-        `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}` +
-        (qs.toString() ? `&${qs.toString()}` : "");
+      // const upstreamPath = `/projects/${encodeURIComponent(proj)}/units`;
+      // const url =
+      //   `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}` +
+      //   (qs.toString() ? `&${qs.toString()}` : "");
 
       if (!token) {
         throw new Error("Missing token; please sign in again.");
