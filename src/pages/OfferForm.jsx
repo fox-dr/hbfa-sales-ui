@@ -162,14 +162,11 @@ export default function OfferForm() {
     console.log(">>> OFFER SAVE PAYLOAD", v);
 
     // 2. Save offer record directly to AWS
-const saveRes = await fetch(
-  `${import.meta.env.VITE_API_BASE}/offers`,
-  {
-    method: "POST",
-    headers,
-    body: JSON.stringify(v),
-  }
-);
+    const saveRes = await fetch("/.netlify/functions/offers",{
+      method: "POST",
+      headers,
+      body: JSON.stringify(v),
+    });
 
     const text = await saveRes.text();
     if (!saveRes.ok) throw new Error(text || `HTTP ${saveRes.status}`);
