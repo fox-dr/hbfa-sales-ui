@@ -20,7 +20,7 @@ const cognitoAuthConfig = {
   // Seed Cognito Hosted UI endpoints for logout (discovery often omits end_session)
  
 };
-
+console.log("cognitoAuthConfig", cognitoAuthConfig);
 
 const onSigninCallback = () => {
   // strip ?code=...&state=... from the URL
