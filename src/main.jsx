@@ -10,16 +10,14 @@ import App from "./App.jsx";
 const baseUri = window.location.origin;
 
 const cognitoAuthConfig = {
-// authority: `https://cognito-idp.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${import.meta.env.VITE_COGNITO_USER_POOL_ID}`,
-  authority: import.meta.env.VITE_COGNITO_DOMAIN, // <-- use Hosted UI domain
+  authority: `https://cognito-idp.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${import.meta.env.VITE_COGNITO_USER_POOL_ID}`,
   client_id: import.meta.env.VITE_COGNITO_CLIENT_ID,
-  //redirect_uri: redirectUri,
-  redirect_uri: `${baseUri}/callback`, // must include callback
-  //post_logout_redirect_uri: redirectUri,  
-  post_logout_redirect_uri: baseUri, //safe to leave at root
+  redirect_uri: `${baseUri}/callback`,
+  post_logout_redirect_uri: baseUri,
   response_type: "code",
   scope: "openid email phone",
-  // Seed Cognito Hosted UI endpoints for logout (discovery often omits end_session)
+};
+
  
 };
 console.log("cognitoAuthConfig", cognitoAuthConfig);
