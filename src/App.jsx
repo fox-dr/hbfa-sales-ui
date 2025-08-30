@@ -5,7 +5,7 @@ import TrackingForm from "./pages/TrackingForm.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import OfferForm from "./pages/OfferForm.jsx";
 import ApprovalsPage from "./pages/ApprovalsPage.jsx"; // stub
-import TrackingPage from "./pages/TrackingPage.jsx";
+
 
 export default function App() {
   const auth = useAuth();
@@ -50,7 +50,7 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/offerform" element={<OfferForm />} />
           <Route path="/approvals" element={<ApprovalsPage />} />
-          
+          <Route path="/tracking" element={<TrackingForm />} />
         </Routes>
       </div>
     </Router>
