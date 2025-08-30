@@ -246,8 +246,8 @@ export default function OfferForm() {
                 </div>
               )}
             </div>
-            console.log("Fetch URL:", url);
-            console.log("Forwarding to:", upstreamUrl);
+            {/* console.log("Fetch URL:", url);
+            console.log("Forwarding to:", upstreamUrl); */}
 
 
             {/* Address 1 */}
