@@ -1,0 +1,65 @@
+
+# 📂 Project Folder Conventions
+
+## Project Names = TitleCase
+
+Projects are treated as **proper nouns**.
+
+* `Fusion` ✅
+* `Calistoga` ✅
+* `Milpitas` ✅
+* `fusion` ❌ (wrong)
+* `FUSION` ❌ (wrong)
+
+This matches:
+
+* API Gateway paths → `/projects/Fusion/units`
+* Logos → `/assets/Fusion_logo.png`
+* Templates → `/netlify/pdf-templates/Fusion/offer-template.html`
+
+---
+
+## Folder Layout
+
+Each project has its own folder inside `/netlify/pdf-templates/`:
+
+```
+netlify/pdf-templates/
+  Fusion/
+    offer-template.html
+    plan-1.pdf
+    plan-2.pdf
+    plan-3.pdf
+  Calistoga/
+    offer-template.html
+    plan-1.pdf
+    plan-3.pdf
+  Milpitas/
+    offer-template.html
+```
+
+* **Offer template**: required for DocuSign (`offer-template.html`)
+* **Floorplans**: optional PDFs, one per plan type (`plan-3.pdf`, etc.)
+
+---
+
+## Cleanup Policy
+
+When a project sells out and is retired:
+
+* Remove the entire folder (`rm -rf netlify/pdf-templates/Calistoga`)
+* This sweeps all related templates + floorplans in one shot.
+* Ensures nothing stale lingers.
+
+---
+
+## Quick Rules of Thumb
+
+* Logos: `{Project}_logo.png`
+* Templates: `/netlify/pdf-templates/{Project}/offer-template.html`
+* Floorplans: `/netlify/pdf-templates/{Project}/plan-X.pdf`
+* Delete the folder when project is done.
+
+---
+
+👉 Future contributors: **Respect TitleCase project names.** This isn’t “fusion” (hydrogen bombs) — it’s **Fusion**, a proper project.

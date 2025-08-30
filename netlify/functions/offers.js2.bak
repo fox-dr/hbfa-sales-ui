@@ -1,21 +1,8 @@
-import {
-  DynamoDBClient,
-  PutItemCommand,
-  GetItemCommand,
-  ScanCommand,
-  UpdateItemCommand,
-  DeleteItemCommand,
-} from "@aws-sdk/client-dynamodb";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { DynamoDBClient, PutItemCommand, GetItemCommand, ScanCommand, UpdateItemCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb";
 import { v4 as uuidv4 } from "uuid";
-import { splitPayload } from "./utils/splitPayload.js";
 
-const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
-const s3 = new S3Client({ region: process.env.S3_REGION || "us-east-2" });
-
-const TABLE = process.env.DDB_TABLE || "fusion_offers";
-const S3_BUCKET = process.env.S3_VAULT_BUCKET;
-const S3_PREFIX = process.env.S3_VAULT_PREFIX || "offers/";
+const client = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
+const TABLE = process.env.OFFERS_TABLE || "fusion_offers";
 
 export async function handler(event) {
   try {
@@ -26,31 +13,19 @@ export async function handler(event) {
       // Always set or replace offerId
       const offerId = body.offerId || uuidv4();
 
-      // Split payload according to schema contract
-      const { ddbItem, s3Payload } = splitPayload(offerId, body);
+      const item = {
+        offerId: { S: offerId },
+        ...Object.fromEntries(
+          Object.entries(body).map(([k, v]) => [k, { S: String(v) }])
+        ),
+      };
 
-      // Write DynamoDB item
-      const ddbMarshalled = Object.fromEntries(
-        Object.entries(ddbItem).map(([k, v]) => [k, { S: String(v) }])
-      );
-      await ddb.send(new PutItemCommand({ TableName: TABLE, Item: ddbMarshalled }));
-
-      // Write full payload to S3
-      await s3.send(
-        new PutObjectCommand({
-          Bucket: S3_BUCKET,
-          Key: `${S3_PREFIX}${offerId}.json`,
-          Body: JSON.stringify(s3Payload),
-          ContentType: "application/json",
-        })
-      );
-
+      await client.send(new PutItemCommand({ TableName: TABLE, Item: item }));
       return resp(200, { offerId });
-    }
 
-    else if (method === "GET") {
+    } else if (method === "GET") {
       if (event.queryStringParameters?.offerId) {
-        const { Item } = await ddb.send(
+        const { Item } = await client.send(
           new GetItemCommand({
             TableName: TABLE,
             Key: { offerId: { S: event.queryStringParameters.offerId } },
@@ -58,12 +33,11 @@ export async function handler(event) {
         );
         return resp(200, Item ? unmarshall(Item) : {});
       } else {
-        const { Items } = await ddb.send(new ScanCommand({ TableName: TABLE }));
+        const { Items } = await client.send(new ScanCommand({ TableName: TABLE }));
         return resp(200, Items.map(unmarshall));
       }
-    }
 
-    else if (method === "PUT") {
+    } else if (method === "PUT") {
       if (!body.offerId) return resp(400, { error: "offerId is required" });
 
       const updates = Object.entries(body)
@@ -78,7 +52,7 @@ export async function handler(event) {
           { UpdateExpression: [], ExpressionAttributeNames: {}, ExpressionAttributeValues: {} }
         );
 
-      await ddb.send(
+      await client.send(
         new UpdateItemCommand({
           TableName: TABLE,
           Key: { offerId: { S: body.offerId } },
@@ -89,11 +63,10 @@ export async function handler(event) {
       );
 
       return resp(200, { offerId: body.offerId });
-    }
 
-    else if (method === "DELETE") {
+    } else if (method === "DELETE") {
       if (!body.offerId) return resp(400, { error: "offerId is required" });
-      await ddb.send(
+      await client.send(
         new DeleteItemCommand({
           TableName: TABLE,
           Key: { offerId: { S: body.offerId } },
@@ -118,7 +91,5 @@ function resp(statusCode, body) {
 }
 
 function unmarshall(item) {
-  return Object.fromEntries(
-    Object.entries(item).map(([k, v]) => [k, Object.values(v)[0]])
-  );
+  return Object.fromEntries(Object.entries(item).map(([k, v]) => [k, Object.values(v)[0]]));
 }

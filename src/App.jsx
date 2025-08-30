@@ -1,6 +1,19 @@
 // src/App.jsx
 import { useAuth } from "react-oidc-context";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+import LandingPage from "./pages/LandingPage.jsx";
 import OfferForm from "./pages/OfferForm.jsx";
+import ApprovalsPage from "./pages/ApprovalsPage.jsx"; // stub
+import TrackingPage from "./pages/TrackingPage.jsx";
+
+<Routes>
+  <Route path="/" element={<LandingPage />} />
+  <Route path="/offerform" element={<OfferForm />} />
+  <Route path="/approvals" element={<ApprovalsPage />} />
+  <Route path="/tracking" element={<TrackingPage />} />
+</Routes>
+
 
 export default function App() {
   const auth = useAuth();
@@ -18,7 +31,11 @@ export default function App() {
   }
 
   if (auth.error) {
-    return <div style={{ padding: 16, color: "crimson" }}>Auth error: {auth.error.message}</div>;
+    return (
+      <div style={{ padding: 16, color: "crimson" }}>
+        Auth error: {auth.error.message}
+      </div>
+    );
   }
 
   if (!auth.isAuthenticated) {
@@ -29,13 +46,20 @@ export default function App() {
     );
   }
 
-  // ✅ Once authenticated, go straight to OfferForm
+  // ✅ Once authenticated, show router
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ float: "right" }}>
-        <button onClick={signOutRedirect}>Logout</button>
+    <Router>
+      <div style={{ padding: 16 }}>
+        <div style={{ float: "right" }}>
+          <button onClick={signOutRedirect}>Logout</button>
+        </div>
+
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/offerform" element={<OfferForm />} />
+          <Route path="/approvals" element={<ApprovalsPage />} />
+        </Routes>
       </div>
-      <OfferForm />
-    </div>
+    </Router>
   );
 }

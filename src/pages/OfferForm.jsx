@@ -4,6 +4,8 @@ import { useRef, useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 import "./offer-form.css";
 import { v4 as uuidv4 } from "uuid";
+import AppHeader from "../components/AppHeader";
+
 
 // --- Helper to parse JWT ---
 function parseJwt(token) {
@@ -201,10 +203,11 @@ export default function OfferForm() {
   return (
     <div id="offer" style={styles.container}>
       {/* Header */}
-      <div style={styles.header}>
-        <h2 style={{ margin: 0 }}>Preliminary Offer</h2>
-        <img src={`/assets/${PROJECT_ID}_logo.png`} alt="Project Logo" style={{ height: 48 }} />
-      </div>
+      <AppHeader
+        title="Preliminary Offer"
+        logo={`/assets/${PROJECT_ID}_logo.png`}
+      />
+
 
       {/* Notice OR Form */}
       
@@ -419,16 +422,7 @@ export default function OfferForm() {
             </div>
           )}
         </form>
-      <footer style={styles.footer} aria-hidden="true">
-        <img
-          src="/assets/hbfa-logo.png"
-          alt=""
-          height={48}
-          style={styles.footerLogo}
-          loading="lazy"
-          decoding="async"
-        />
-      </footer>
+
     </div>
   );
 }
