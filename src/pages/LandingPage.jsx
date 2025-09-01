@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
-
+import "../styles/form.css"; // shared austere styles
 
 export default function LandingPage() {
   const auth = useAuth();
@@ -10,75 +10,74 @@ export default function LandingPage() {
 
   // Groups come from Cognito claims in the ID token
   const groups = auth?.user?.profile?.["cognito:groups"] || [];
-  console.log("User groups:", groups);
-
   const hasGroup = (g) => groups.includes(g);
 
+  // Define available modules
+  const modules = [
+    {
+      id: "offer",
+      title: "New Offer",
+      desc: "Create a new buyer offer",
+      path: "/offerform",
+      roles: ["sales_user", "admin"],
+    },
+    {
+      id: "tracking",
+      title: "Sales Tracking",
+      desc: "Track contract status and closings",
+      path: "/tracking",
+      roles: ["sales_user", "admin"],
+    },
+    {
+      id: "approvals",
+      title: "Pending Approvals",
+      desc: "Review and approve offers",
+      path: "/approvals",
+      roles: ["sales_sudo", "admin"],
+    },
+    // Future ERP modules can go here
+    {
+      id: "reporting",
+      title: "Reporting",
+      desc: "Dashboards and exports (Coming Soon)",
+      path: null,
+      roles: ["admin"],
+    },
+  ];
 
+  // Filter modules by role
+  const visibleModules = modules.filter((m) =>
+    m.roles.some((role) => hasGroup(role))
+  );
 
   return (
-    
-    <div className="p-8">
-      <h1 className="text-xl font-bold mb-4">HBFA Sales Portal</h1>
+    <div className="app-form">
+      <AppHeader title="HBFA Sales Portal" logo="/assets/hbfa_logo.png" />
 
-      {/* Sales User (SAs, Escrow Coordinators) */}
-      {hasGroup("sales_user") && (
-        <>
-          <button
-            className="block bg-blue-500 text-white px-4 py-2 rounded mb-2"
-            onClick={() => navigate("/offerform")}
-          >
-            New Offer
-          </button>
-          <button
-            className="block bg-purple-500 text-white px-4 py-2 rounded mb-2"
-            onClick={() => navigate("/tracking")}
-          >
-            Sales Tracking
-          </button>
-        </>
-      )}
+      <h1>Welcome to the Sales Portal</h1>
 
-      {/* Sales Sudo (VP / elevated sales role) */}
-      {hasGroup("sales_sudo") && (
-        <button
-          className="block bg-green-500 text-white px-4 py-2 rounded mb-2"
-          onClick={() => navigate("/approvals")}
-        >
-          Pending Approvals
-        </button>
-      )}
+      <div className="app-grid">
+        {visibleModules.map((m) => (
+          <div
+            key={m.id}
+            className={`app-card ${!m.path ? "disabled" : ""}`}
+            onClick={() => m.path && navigate(m.path)}
+          >
+            <h2>{m.title}</h2>
+            <p>{m.desc}</p>
+          </div>
+        ))}
+      </div>
 
-      {/* Admin gets all three */}
-      {hasGroup("admin") && (
-        <>
-          <button
-            className="block bg-blue-500 text-white px-4 py-2 rounded mb-2"
-            onClick={() => navigate("/offerform")}
-          >
-            New Offer (Admin)
-          </button>
-          <button
-            className="block bg-green-500 text-white px-4 py-2 rounded mb-2"
-            onClick={() => navigate("/approvals")}
-          >
-            Pending Approvals (Admin)
-          </button>
-          <button
-            className="block bg-purple-500 text-white px-4 py-2 rounded mb-2"
-            onClick={() => navigate("/tracking")}
-          >
-            Sales Tracking (Admin)
-          </button>
-        </>
-      )}
-
-      {/* No group fallback */}
       {groups.length === 0 && (
-        <p className="text-gray-600">
+        <p style={{ marginTop: 24, color: "#666" }}>
           No groups detected. Contact admin.
         </p>
       )}
+
+      <footer>
+        <img src="/assets/hbfa_logo.png" alt="HBFA Logo" />
+      </footer>
     </div>
   );
 }

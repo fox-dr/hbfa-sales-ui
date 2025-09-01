@@ -1,166 +1,29 @@
-// src/pages/OfferForm-clean.jsx
+// src/pages/ApprovalForm.jsx
 import { useRef, useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
-import { v4 as uuidv4 } from "uuid";
 import AppHeader from "../components/AppHeader";
-import FormSection from "../components/FormSection"; // new helper
-import "../styles/form.css"; // shared styles
-
-// --- Helper to parse JWT ---
-function parseJwt(token) {
-  try {
-    return JSON.parse(atob(token.split(".")[1]));
-  } catch {
-    return {};
-  }
-}
+import FormSection from "../components/FormSection";
+import "../styles/form.css";
 
 const PROJECT_ID = import.meta.env.VITE_DEFAULT_PROJECT_ID || "Fusion";
-const PROXY_BASE =
-  import.meta.env.VITE_PROXY_BASE || "/.netlify/functions/proxy-units";
 
-function unformatUSD(val) {
-  const s = String(val ?? "").replace(/[^\d.-]/g, "");
-  return s === "" || s === "-" || s === "." || s === "-." ? "" : s;
-}
-function formatUSD(val) {
-  const raw = unformatUSD(val);
-  if (raw === "") return "";
-  const n = parseFloat(raw);
-  if (!Number.isFinite(n)) return "";
-  return n.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-export default function OfferFormClean() {
-  const [unitNumber, setUnitNumber] = useState("");
+export default function ApprovalForm() {
   const [msg, setMsg] = useState("");
-  const [buildingInfo, setBuildingInfo] = useState("");
-  const [planInfo, setPlanInfo] = useState("");
-  const [addressInfo, setAddressInfo] = useState("");
-  const [price, setPrice] = useState("");
-
-  const pdfBtnRef = useRef(null);
   const formRef = useRef(null);
 
   const auth = useAuth();
   const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
-  const claims = jwt ? parseJwt(jwt) : {};
-  const saEmail = claims.email || "";
 
-  const headers = jwt
-    ? { Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" }
-    : { "Content-Type": "application/json" };
-
-  function applyHomeDetails(obj = {}) {
-    const b =
-      obj.building_info ||
-      (obj.building_id
-        ? `Building ${obj.building_id}, Unit ${obj.unit_number ?? ""}`
-        : "") ||
-      "";
-    const p = obj.plan_info || obj.plan_type || "";
-    const a = obj.address || "";
-
-    setBuildingInfo(b);
-    setPlanInfo(p);
-    setAddressInfo(a);
-
-    const pdf = obj.pdf_url || obj.floorplan_url || "";
-    if (pdfBtnRef.current) {
-      if (pdf) {
-        pdfBtnRef.current.disabled = false;
-        pdfBtnRef.current.onclick = () => window.open(pdf, "_blank");
-      } else {
-        pdfBtnRef.current.disabled = true;
-        pdfBtnRef.current.onclick = null;
-      }
-    }
-  }
-
-  async function handleSelectUnit() {
-    setMsg("");
-    const n = String(unitNumber || "").trim();
-    if (!n) return setMsg("Enter a unit number.");
-    if (!jwt) return setMsg("Please sign in again (missing token).");
-
-    try {
-      const upstreamPath = `/projects/${encodeURIComponent(
-        PROJECT_ID
-      )}/units`;
-      const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`;
-
-      const res = await fetch(url, { headers, cache: "no-store" });
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(`${res.status} ${t}`);
-      }
-
-      const data = await res.json();
-      const items = Array.isArray(data.items) ? data.items : [];
-      const found = items.find((u) => String(u.unit_number) === String(n));
-
-      if (found) {
-        applyHomeDetails(found);
-      } else {
-        setMsg(`Unit ${n} not found.`);
-      }
-    } catch (e) {
-      setMsg(`Error fetching unit: ${String(e.message || e)}`);
-    }
-  }
-
-  async function handleSubmit(e) {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setMsg("");
+    const formData = new FormData(e.currentTarget);
+    const v = Object.fromEntries(formData.entries());
+    console.log("Approval form submitted:", v);
+    setMsg("Approval form submission logged to console (stub).");
+  };
 
-    try {
-      const formData = new FormData(e.currentTarget);
-      const v = Object.fromEntries(formData.entries());
-      v.project_id = PROJECT_ID;
-      v.price = unformatUSD(price || v.price);
-      v.offer_id = uuidv4();
-      v.sa_email = saEmail;
-      v.sa_name = auth?.user?.profile?.name || "";
-
-      const API_BASE =
-        "https://lyj4zmurck.execute-api.us-east-2.amazonaws.com/prod";
-
-      // Send-for-signature
-      const sigRes = await fetch(`${API_BASE}/offers`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(v),
-      });
-
-      if (!sigRes.ok) {
-        const errText = await sigRes.text();
-        throw new Error(`Signature send failed: ${errText}`);
-      }
-
-      const sigText = await sigRes.text();
-      const sigJson = JSON.parse(sigText);
-      v.docusign_envelope_id = sigJson.envelopeId;
-
-      // Save offer record
-      const saveRes = await fetch(`${API_BASE}/offers`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(v),
-      });
-
-      const text = await saveRes.text();
-      if (!saveRes.ok) throw new Error(text || `HTTP ${saveRes.status}`);
-
-      setMsg("Offer submitted and sent for signature successfully.");
-    } catch (err) {
-      setMsg(`Submit error: ${String(err.message || err)}`);
-    }
-  }
+  // Default auto-date = today
+  const today = new Date().toISOString().split("T")[0];
 
   // favicon
   useEffect(() => {
@@ -178,11 +41,13 @@ export default function OfferFormClean() {
   return (
     <div className="app-form">
       <AppHeader
-        title="Preliminary Offer"
+        title="Offer Approval"
         logo={`/assets/${PROJECT_ID}_logo.png`}
       />
 
       <form ref={formRef} onSubmit={handleSubmit}>
+        {/* Copy all the same sections from OfferForm here:
+            Buyer Contact Information, Offer Information, Home Details, Additional Notes, Disclaimer */}
         <FormSection>
           <h2>Buyer Contact Information</h2>
           <label>
@@ -351,7 +216,30 @@ export default function OfferFormClean() {
           </p>
         </FormSection>
 
-        <button type="submit">Send for Signature</button>
+        {/* === Approval Section replaces "Send for Signature" === */}
+        <FormSection>
+          <h2>Approval</h2>
+
+          <label>
+            <input type="checkbox" name="approved" /> Approved
+          </label>
+
+          <label>
+            Approval Date
+            <input
+              type="date"
+              name="approval_date"
+              defaultValue={today}
+            />
+          </label>
+
+          <label>
+            Approver Notes
+            <textarea name="approval_notes" rows={3} />
+          </label>
+        </FormSection>
+
+        <button type="submit">Save Approval</button>
 
         {msg && <div>{msg}</div>}
 

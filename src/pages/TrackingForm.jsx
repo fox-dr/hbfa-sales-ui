@@ -1,7 +1,8 @@
+{/* src/pages/TrackingForm.jsx */}
 import React, { useState } from "react";
 import AppHeader from "../components/AppHeader";
-
-
+import FormSection from "../components/FormSection";
+import "../styles/form.css";
 
 export default function TrackingForm() {
   const [form, setForm] = useState({});
@@ -18,29 +19,29 @@ export default function TrackingForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h1 className="text-xl font-bold mb-4">Sales Tracking Form</h1>
+    <form onSubmit={handleSubmit} className="app.form">
+      <h1>Sales Tracking Form</h1>
 
       {/* Status dropdown */}
-      <div>
-        <label className="block">Status</label>
-        <select
-          name="status"
-          onChange={handleChange}
-          className="border p-2 rounded w-full"
-        >
-          <option value="">Select status</option>
-          <option value="offer_approved">Offer Approved</option>
-          <option value="contract_ratified">Contract Ratified</option>
-          <option value="appraisal_received">Appraisal Received</option>
-          <option value="buyer_walk">Buyer Walk</option>
-          <option value="closed">Closed</option>
-          <option value="buyer_fulfillment">Buyer Fulfillment</option>
-          <option value="contract_canceled">Contract Canceled</option>
-        </select>
-      </div>
+      <FormSection>
+        <label>
+          Status
+          <select name="status" onChange={handleChange}>
+            <option value="">Select status</option>
+            <option value="offer_approved">Offer Approved</option>
+            <option value="contract_ratified">Contract Ratified</option>
+            <option value="appraisal_received">Appraisal Received</option>
+            <option value="buyer_walk">Buyer Walk</option>
+            <option value="closed">Closed</option>
+            <option value="buyer_fulfillment">Buyer Fulfillment</option>
+            <option value="contract_canceled">Contract Canceled</option>
+          </select>
+        </label>
+      </FormSection>
 
       {/* Date fields */}
+      <FormSection>
+        <h2>Key Dates</h2>
       {[
         "contract_sent_date",
         "fully_executed_date",
@@ -64,18 +65,16 @@ export default function TrackingForm() {
         "coe_date",
         "buyer_complete",
       ].map((field) => (
-        <div key={field}>
-          <label className="block capitalize">{field.replace(/_/g, " ")}</label>
-          <input
-            type="date"
-            name={field}
-            onChange={handleChange}
-            className="border p-2 rounded w-full"
-          />
-        </div>
+        <label key={field}>
+          {field.replace(/_/g, " ")}
+          <input type="date" name={field} onChange={handleChange} />
+        </label>
       ))}
+    </FormSection>
 
       {/* Currency fields */}
+      <FormSection>
+        <h2>Financials</h2>
       {[
         "final_price",
         "list_price",
@@ -86,33 +85,27 @@ export default function TrackingForm() {
         "hoa_credit",
         "total_credits",
       ].map((field) => (
-        <div key={field}>
-          <label className="block capitalize">{field.replace(/_/g, " ")}</label>
-          <input
-            type="number"
-            name={field}
-            onChange={handleChange}
-            className="border p-2 rounded w-full"
-          />
-        </div>
+        <label key={field}>
+          {field.replace(/_/g, " ")}
+          <input type="number" name={field} onChange={handleChange} />
+        </label>
       ))}
+    </FormSection>
+
 
       {/* Free text */}
-      <div>
-        <label className="block">Add Notes</label>
-        <textarea
-          name="add_notes"
-          onChange={handleChange}
-          className="border p-2 rounded w-full"
-        />
-      </div>
+      <FormSection>
+        <label>
+          Add Notes
+          <textarea name="add_notes" onChange={handleChange} />
+        </label>
+      </FormSection>
 
-      <button
-        type="submit"
-        className="bg-blue-500 text-white px-4 py-2 rounded"
-      >
-        Save Tracking
-      </button>
+      <button type="submit">Save Tracking</button>
+
+      <footer>
+        <img src="/assets/hbfa_logo.png" alt="HBFA Logo" />
+      </footer>
     </form>
   );
 }
