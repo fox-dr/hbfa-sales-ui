@@ -1,4 +1,6 @@
 // src/main.jsx
+import "./index.css";
+
 console.log(">>> MAIN.JSX LOADED <<<");
 
 import { StrictMode } from "react";
