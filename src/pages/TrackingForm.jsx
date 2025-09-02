@@ -3,6 +3,34 @@ import React, { useState } from "react";
 import AppHeader from "../components/AppHeader";
 import FormSection from "../components/FormSection";
 import "../styles/form.css";
+import { useAuth } from "react-oidc-context";
+
+function TrackingForm() {
+  const auth = useAuth();
+
+  const handleSearch = async (q) => {
+    try {
+      const token = auth.user?.id_token; // Cognito ID token
+
+      const res = await fetch(
+        `https://lyj4zmurck.execute-api.us-east-2.amazonaws.com/prod/tracking/search?query=${encodeURIComponent(q)}`,
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      console.log("Search results:", data);
+      // TODO: update state with results
+    } catch (err) {
+      console.error("Search error:", err);
+    }
+  };
+
+  // ...
 
 export default function TrackingForm() {
   const [form, setForm] = useState({});
