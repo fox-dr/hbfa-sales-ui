@@ -3,6 +3,40 @@
    Usage: wrap your form in <div class="app-form"> ... </div>
 */
 
+/* ------------------ Force Light Mode ------------------ */
+
+/* Tell browsers to ignore prefers-color-scheme: dark */
+:root {
+  color-scheme: light;
+}
+
+/* Override if the system tries to flip colors */
+@media (prefers-color-scheme: dark) {
+  body,
+  .app-form,
+  .app-grid,
+  .app-card {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .app-form input,
+  .app-form select,
+  .app-form textarea {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #ccc !important;
+  }
+
+  .app-card {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .app-card p {
+    color: #333 !important;
+  }
+}
 /* ------------------ Mobile-first tweaks ------------------ */
 @media (max-width: 640px) {
   /* Keep sizing sane on small screens */
