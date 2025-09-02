@@ -10,16 +10,16 @@ function TrackingForm() {
 
   const handleSearch = async (q) => {
     try {
-     //  const token = auth.user?.id_token; // Cognito ID token
+     //  const jwt = auth.user?.id_token; // Cognito ID token
      const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
-        if (!jwt) throw new Error("Not authenticated");
-        
+        if (!jwt) throw new Error("No JWT token available");
+
 
       const res = await fetch(
-        `https://lyj4zmurck.execute-api.us-east-2.amazonaws.com/prod/tracking/search?query=${encodeURIComponent(q)}`,
+        `/.netlify/functions/proxy-units?path=/tracking/search?query=${encodeURIComponent(q)}`,
         {
           headers: {
-            "Authorization": `Bearer ${token}`,
+            "Authorization": `Bearer ${jwt}`,
           },
         }
       );
