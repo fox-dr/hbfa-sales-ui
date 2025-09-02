@@ -38,7 +38,10 @@ export default function TrackingForm() {
     const q = searchQuery.trim();
     if (!q) return;
     try {
-      const res = await fetch(`/tracking/search?query=${encodeURIComponent(q)}`);
+ const res = await fetch(
+  `https://sgxrq4r.execute-api.us-east-2.amazonaws.com/dev/tracking/search?query=${encodeURIComponent(q)}`
+);
+
       if (res.ok) {
         const json = await res.json();
         setSearchResults(json.results);
