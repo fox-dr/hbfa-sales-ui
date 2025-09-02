@@ -51,6 +51,46 @@
     margin-bottom: 6px;
     color: #444;           /* neutral gray, keeps it austere */
   }
+  /* --- Universal form polish (from offer-form.css) --- */
+  .app-form input,
+  .app-form select,
+  .app-form textarea {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+
+  .app-form section {
+    margin-bottom: 20px;
+    padding: 16px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+
+  .app-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .app-form button[type="submit"] {
+    border-radius: 6px;
+    background-color: #3b82f6; /* match Tailwind blue-500 */
+    color: white;
+    font-weight: bold;
+    transition: background 0.2s ease-in-out;
+  }
+
+  .app-form button[type="submit"]:hover {
+    background-color: #2563eb; /* blue-600 */
+  }
+
+
   /* --- optional:Unit picker block: stack and stretch button */
   .app-form .unit-group {
     display: flex !important;
