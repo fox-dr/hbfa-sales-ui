@@ -84,6 +84,23 @@ export default function TrackingForm() {
         </ul>
       )}
 
+        {/* Show loading */}
+        {isLoading && <p>Searching…</p>}
+
+        {/* Show error */}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
+        {/* Show results */}
+        {!isLoading && !error && searchResults.length > 0 && (
+        <ul>…</ul>
+        )}
+
+        {/* Handle empty state only *after* search */}
+        {!isLoading && !error && hasSearched && searchResults.length === 0 && (
+        <p>No results found for "{searchQuery}". Try another search.</p>
+        )}
+
+
       {/* --- Your original form exactly as is --- */}
       <form onSubmit={handleSubmit} className="app-form">
         <img src="/assets/hbfa-logo.png" alt="HBFA Logo" />
