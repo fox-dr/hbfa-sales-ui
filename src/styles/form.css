@@ -1,27 +1,23 @@
 /* form.css
-   Shared mobile-first tweaks for all app forms.
+   Shared universal form styling
    Usage: wrap your form in <div class="app-form"> ... </div>
-   e.g 
-   <div className="app-form">
-     <section>…</section>
-   </div>
 */
 
+/* ------------------ Mobile-first tweaks ------------------ */
 @media (max-width: 640px) {
   /* Keep sizing sane on small screens */
-  .app-form *, 
-  .app-form *::before, 
-  .app-form *::after { 
-    box-sizing: border-box; 
+  .app-form *,
+  .app-form *::before,
+  .app-form *::after {
+    box-sizing: border-box;
   }
 
   /* Tighter section padding on phones */
-  .app-form section { 
-    padding: 14px !important; 
+  .app-form section {
+    padding: 14px !important;
   }
 
-  /* Stack each row inside sections.
-     (Assumes your rows are the direct DIVs under each <section>.) */
+  /* Stack each row inside sections */
   .app-form section > div {
     display: flex !important;
     flex-direction: column !important;
@@ -30,99 +26,104 @@
   }
 
   /* Make fields full-width on phones */
-  .app-form label { 
-    width: 100% !important; 
-    min-width: 0 !important; 
+  .app-form label {
+    width: 100% !important;
+    min-width: 0 !important;
   }
   .app-form label > input,
   .app-form label > select,
   .app-form label > textarea {
     width: 100% !important;
   }
-  /* ---neutral classes added for section headings---*/
+
+  /* Headings */
   .app-form h2 {
-  font-size: 1rem; /* ~16px */
-  font-weight: bold;
-  margin-bottom: 8px;
-}
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
   .app-form h3 {
-    font-size: 0.9rem;     /* ~14.5px */
+    font-size: 0.9rem;
     font-weight: 600;
     margin-bottom: 6px;
-    color: #444;           /* neutral gray, keeps it austere */
-  }
-  /* --- Universal form polish (from offer-form.css) --- */
-  .app-form input,
-  .app-form select,
-  .app-form textarea {
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    padding: 8px;
-    font-size: 0.95rem;
-    font-family: inherit;
+    color: #444;
   }
 
-  .app-form section {
-    margin-bottom: 20px;
-    padding: 16px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    background: #fafafa;
-  }
-
-  .app-form label {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-weight: 500;
-    color: #333;
-  }
-
-  .app-form button[type="submit"] {
-    border-radius: 6px;
-    background-color: #3b82f6; /* match Tailwind blue-500 */
-    color: white;
-    font-weight: bold;
-    transition: background 0.2s ease-in-out;
-  }
-
-  .app-form button[type="submit"]:hover {
-    background-color: #2563eb; /* blue-600 */
-  }
-
-
-  /* --- optional:Unit picker block: stack and stretch button */
+  /* Unit picker block */
   .app-form .unit-group {
     display: flex !important;
     flex-direction: column !important;
     gap: 8px !important;
     align-items: stretch !important;
   }
-  .app-form #select_unit { 
-    width: 100% !important; 
-    min-height: 44px; 
+  .app-form #select_unit {
+    width: 100% !important;
+    min-height: 44px;
   }
-  
-  /* ---optional: Submit button: full-width, tap-friendly--- */
-  .app-form button[type="submit"] { 
-    width: 100%; 
-    min-height: 44px; 
+
+  /* Submit button: full-width, tap-friendly */
+  .app-form button[type="submit"] {
+    width: 100%;
+    min-height: 44px;
   }
-  
-  /* ---Branding Footer--- */
-  /* Optional footer logo centering (if present) */
-  .app-form footer { 
-    display: flex; 
-    justify-content: center; 
-    margin-top: 24px; 
+
+  /* Footer logo centering */
+  .app-form footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
   }
-  .app-form footer img { 
-    height: 48px; 
+  .app-form footer img {
+    height: 48px;
     width: auto;
-    max-width: 100%; 
+    max-width: 100%;
   }
 }
-/* --- Module cards (used by LandingPage & future dashboards) --- */
+
+/* ------------------ Universal desktop + mobile polish ------------------ */
+
+/* Inputs and textareas */
+.app-form input,
+.app-form select,
+.app-form textarea {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+/* Section “cards” */
+.app-form section {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+/* Labels */
+.app-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Submit button */
+.app-form button[type="submit"] {
+  border-radius: 6px;
+  background-color: #3b82f6; /* Tailwind blue-500 */
+  color: white;
+  font-weight: bold;
+  transition: background 0.2s ease-in-out;
+}
+.app-form button[type="submit"]:hover {
+  background-color: #2563eb; /* Tailwind blue-600 */
+}
+
+/* ------------------ Module cards (LandingPage/dashboard) ------------------ */
 .app-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
