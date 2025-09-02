@@ -19,7 +19,8 @@ export default function LandingPage() {
   return (
     
     <div className="p-8">
-      <h1 className="text-xl font-bold mb-4">HBFA Sales Portal</h1>
+      <img src="/assets/hbfa-logo.png" alt="HBFA Logo" className="mb-4" />
+      <h3 className="text-xl font-bold mb-4">Home Built For America Sales Portal</h3>
 
       {/* Sales User (SAs, Escrow Coordinators) */}
       {hasGroup("sales_user") && (
