@@ -6,6 +6,9 @@ import "../styles/form.css";
 
 export default function TrackingForm() {
   const [form, setForm] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
 
