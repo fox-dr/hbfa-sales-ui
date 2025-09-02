@@ -20,7 +20,7 @@ export default function TrackingForm() {
 
   return (
     <form onSubmit={handleSubmit} className="app-form">
-      <h1>Sales Tracking Form</h1>
+      <h3>Sales Tracking Form</h3>
 
       {/* Status dropdown */}
       <FormSection>
@@ -66,7 +66,7 @@ export default function TrackingForm() {
         "buyer_complete",
       ].map((field) => (
         <label key={field}>
-          {field.replace(/_/g, " ")}
+          {field.replace(/_/g, " -")}
           <input type="date" name={field} onChange={handleChange} />
         </label>
       ))}
@@ -104,7 +104,7 @@ export default function TrackingForm() {
       <button type="submit">Save Tracking</button>
 
       <footer>
-        <img src="/assets/hbfa_logo.png" alt="HBFA Logo" />
+        <img src="/assets/hbfa-logo.png" alt="HBFA Logo" />
       </footer>
     </form>
   );

@@ -1,7 +1,7 @@
 // src/main.jsx
 import "./index.css";
-
-console.log(">>> MAIN.JSX LOADED <<<");
+import "./styles/form.css";
+// console.log(">>> MAIN.JSX LOADED <<<");
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
