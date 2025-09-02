@@ -86,8 +86,8 @@ export default function TrackingForm() {
         "total_credits",
       ].map((field) => (
         <label key={field}>
-          {field.replace(/_/g, " ")}
-          <input type="number" name={field} onChange={handleChange} />
+          {field.replace(/_/g, " ")} ($)
+          <input type="number" name={field} onChange={handleChange} step="1" min="0" inputMode="numeric" />
         </label>
       ))}
     </FormSection>
