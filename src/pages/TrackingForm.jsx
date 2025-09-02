@@ -20,8 +20,8 @@ export default function TrackingForm() {
 
   return (
     <form onSubmit={handleSubmit} className="app-form">
-      <h3>Sales Tracking Form </h3><img src="/assets/hbfa-logo.png" alt="HBFA Logo" />
-
+      <img src="/assets/hbfa-logo.png" alt="HBFA Logo" />
+      <h3>Sales Tracking Form </h3>
       {/* Status dropdown */}
       <FormSection>
         <label>
@@ -103,9 +103,9 @@ export default function TrackingForm() {
 
       <button type="submit">Save Tracking</button>
 
-      <footer>
+      {/* <footer>
         <img src="/assets/hbfa-logo.png" alt="HBFA Logo" />
       </footer>
-    </form>
+    </form> */}
   );
 }
