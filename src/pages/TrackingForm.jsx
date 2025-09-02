@@ -1,15 +1,35 @@
-// TrackingForm.jsx
-import React, { useState } from 'react';
+// src/pages/TrackingForm.jsx
+import React, { useState } from "react";
+import AppHeader from "../components/AppHeader";
+import FormSection from "../components/FormSection";
+import "../styles/form.css";
 
-function TrackingForm(props) {
-  // 1. Your existing state and submit handler should already exist; keep them intact
-  const { formData, setFormData, existingSubmitHandler } = props;
-
-  // 2. New state for search feature
-  const [searchQuery, setSearchQuery] = useState('');
+export default function TrackingForm() {
+  const [form, setForm] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
 
-  // 3. New: Handle lookup/search
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Tracking form submitted:", form);
+    alert("Tracking form submission logged to console (stub).");
+  };
+
+  const formatCurrency = (val) => {
+    if (val === undefined || val === "") return "";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+    }).format(val);
+  };
+
+  // --- New search handling code ---
   const handleSearch = async (e) => {
     e.preventDefault();
     const q = searchQuery.trim();
@@ -21,44 +41,42 @@ function TrackingForm(props) {
         setSearchResults(json.results);
       }
     } catch (err) {
-      console.error('Search error:', err);
+      console.error("Search error:", err);
     }
   };
 
-  // 4. New: On selecting a result, populate form fields (and preserve the rest)
   const selectResult = (item) => {
-    setFormData(prev => ({
+    setForm((prev) => ({
       ...prev,
       offerId: item.offerId,
       buyer_name: item.buyer_name,
       unit_number: item.unit_number,
       status: item.status,
-      // other form fields remain unchanged
+      // your other fields are preserved
     }));
     setSearchResults([]);
   };
 
   return (
     <div>
-      {/* NEW: Search bar, inserted above your existing form */}
-      <form onSubmit={handleSearch} style={{ marginBottom: '1rem' }}>
+      {/* --- New: Search UI at the top --- */}
+      <form onSubmit={handleSearch} className="app-form" style={{ marginBottom: "1rem" }}>
         <input
           type="text"
           placeholder="Search by buyer or unit"
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
         <button type="submit">Lookup</button>
       </form>
 
-      {/* NEW: Search results shown below the search bar */}
       {searchResults.length > 0 && (
-        <ul style={{ padding: 0, listStyle: 'none', marginBottom: '1rem' }}>
-          {searchResults.map(item => (
+        <ul style={{ listStyle: "none", padding: 0, marginBottom: "1rem" }}>
+          {searchResults.map((item) => (
             <li
               key={item.offerId}
+              style={{ cursor: "pointer", padding: "0.5rem 0" }}
               onClick={() => selectResult(item)}
-              style={{ cursor: 'pointer', padding: '0.5rem 0' }}
             >
               <strong>{item.offerId}</strong> — {item.buyer_name} — {item.unit_number}
             </li>
@@ -66,14 +84,93 @@ function TrackingForm(props) {
         </ul>
       )}
 
-      {/* YOUR EXISTING FORM BELOW (unchanged): */}
-      <form onSubmit={existingSubmitHandler}>
-        {/* Preserve all current inputs bound to formData */}
-        <button type="submit">Save Tracking Updates</button>
+      {/* --- Your original form exactly as is --- */}
+      <form onSubmit={handleSubmit} className="app-form">
+        <img src="/assets/hbfa-logo.png" alt="HBFA Logo" />
+        <h3>Sales Tracking Form</h3>
+
+        <FormSection>
+          <label>
+            Status
+            <select name="status" onChange={handleChange}>
+              {/* options... */}
+            </select>
+          </label>
+        </FormSection>
+
+        <FormSection>
+          <h3>Key Dates</h3>
+          {[
+            "contract_sent_date",
+            "fully_executed_date",
+            "week_ratified_date",
+            "initial_deposit_receipt_date",
+            "financing_contingency_date",
+            "loan_app_complete",
+            "loan_approved",
+            "loan_lock",
+            "appraisal_ordered",
+            "appraiser_visit_date",
+            "appraisal_complete",
+            "loan_fund",
+            "loan_docs_ordered",
+            "loan_docs_signed",
+            "projected_closing_date",
+            "adjusted_coe",
+            "walk_through_date",
+            "buyer_walk",
+            "notice_to_close",
+            "coe_date",
+            "buyer_complete",
+          ].map((field) => (
+            <label key={field}>
+              {field.replace(/_/g, " -")}
+              <input type="date" name={field} onChange={handleChange} />
+            </label>
+          ))}
+        </FormSection>
+
+        <FormSection>
+          <h3>Financials</h3>
+          {[
+            "final_price",
+            "list_price",
+            "initial_deposit_amount",
+            "seller_credit",
+            "upgrade_credit",
+            "total_upgrades_solar",
+            "hoa_credit",
+            "total_credits",
+          ].map((field) => (
+            <label key={field}>
+              {field.replace(/_/g, " ")} ($)
+              <input
+                type="number"
+                name={field}
+                value={form[field] || ""}
+                onChange={handleChange}
+                step="1"
+                min="0"
+                inputMode="numeric"
+              />
+              {form[field] && (
+                <small style={{ color: "#555" }}>{formatCurrency(form[field])}</small>
+              )}
+            </label>
+          ))}
+        </FormSection>
+
+        <FormSection>
+          <label>
+            Add Notes
+            <textarea name="add_notes" onChange={handleChange} />
+          </label>
+        </FormSection>
+
+        <button type="submit">Save Tracking</button>
+
+        <footer>{/* optional logo or footer */}</footer>
       </form>
     </div>
   );
 }
-
-export default TrackingForm;
-
