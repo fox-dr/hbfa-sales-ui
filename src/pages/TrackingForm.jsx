@@ -103,9 +103,9 @@ export default function TrackingForm() {
 
       <button type="submit">Save Tracking</button>
 
-      {/* <footer>
-        <img src="/assets/hbfa-logo.png" alt="HBFA Logo" />
+      <footer>
+        {/* <img src="/assets/hbfa-logo.png" alt="HBFA Logo" /> */}
       </footer>
-    </form> */}
+    </form>
   );
 }
