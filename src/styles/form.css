@@ -159,3 +159,9 @@
   margin: 0;
   color: #555;
 }
+/* Center the whole form container */
+.app-form {
+  max-width: 800px;        /* keep it from stretching full width */
+  margin: 0 auto;          /* center horizontally */
+  padding: 0 16px;         /* a little breathing room at edges */
+}
