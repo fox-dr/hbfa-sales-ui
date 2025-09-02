@@ -39,7 +39,7 @@ export default function TrackingForm() {
     if (!q) return;
     try {
   const res = await fetch(
-   `https://lyj4zmurck.execute-api.us-east-2.amazonaws.com/prod/FusionUnitsApi_CreateOffer/tracking/search?query=${encodeURIComponent(q)}`
+   `https://lyj4zmurck.execute-api.us-east-2.amazonaws.com/prod/tracking/search?query=${encodeURIComponent(q)}`
   );
 
       if (res.ok) {
