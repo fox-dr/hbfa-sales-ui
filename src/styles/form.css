@@ -20,6 +20,13 @@
     color: #000000 !important;
   }
 
+  /* >>> Add this to fix buttons <<< */
+  .app-form button[type="submit"] {
+    background-color: #3b82f6 !important;  /* force blue */
+    color: #ffffff !important;             /* force white text */
+    border: none !important;
+  }
+
   .app-form input,
   .app-form select,
   .app-form textarea {
@@ -97,6 +104,10 @@
 
   /* Submit button: full-width, tap-friendly */
   .app-form button[type="submit"] {
+    border-radius: 6px;
+    background-color: #3b82f6; /* tailwind blue-500 */
+    color: white;
+    weight: bold;
     width: 100%;
     min-height: 44px;
   }
