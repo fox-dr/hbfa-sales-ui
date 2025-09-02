@@ -20,7 +20,7 @@ export default function TrackingForm() {
 
   return (
     <form onSubmit={handleSubmit} className="app-form">
-      <h3>Sales Tracking Form</h3>
+      <h3>Sales Tracking Form </h3><img src="/assets/hbfa-logo.png" alt="HBFA Logo" />
 
       {/* Status dropdown */}
       <FormSection>
@@ -41,7 +41,7 @@ export default function TrackingForm() {
 
       {/* Date fields */}
       <FormSection>
-        <h2>Key Dates</h2>
+        <h3>Key Dates</h3>
       {[
         "contract_sent_date",
         "fully_executed_date",
@@ -74,7 +74,7 @@ export default function TrackingForm() {
 
       {/* Currency fields */}
       <FormSection>
-        <h2>Financials</h2>
+        <h3>Financials</h3>
       {[
         "final_price",
         "list_price",
