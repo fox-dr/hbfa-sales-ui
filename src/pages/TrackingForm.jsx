@@ -19,7 +19,7 @@ export default function TrackingForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="app.form">
+    <form onSubmit={handleSubmit} className="app-form">
       <h1>Sales Tracking Form</h1>
 
       {/* Status dropdown */}
