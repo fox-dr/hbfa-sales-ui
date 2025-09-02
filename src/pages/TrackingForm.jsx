@@ -18,6 +18,16 @@ export default function TrackingForm() {
     alert("Tracking form submission logged to console (stub).");
   };
 
+  const formatCurrency = (val) => {
+    if (val === undefined || val === "") return "";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0, // whole dollars only
+    }).format(val);
+  };
+
+
   return (
     <form onSubmit={handleSubmit} className="app-form">
       <img src="/assets/hbfa-logo.png" alt="HBFA Logo" />
@@ -87,7 +97,13 @@ export default function TrackingForm() {
       ].map((field) => (
         <label key={field}>
           {field.replace(/_/g, " ")} ($)
-          <input type="number" name={field} onChange={handleChange} step="1" min="0" inputMode="numeric" />
+          <input type="number" name={field} value={form[field] || ""} onChange={handleChange} step="1" min="0" inputMode="numeric" />
+        {form[field] && (
+          <small style={{ color: "#555" }}>
+            {formatCurrency(form[field])}
+          </small>
+        )}
+
         </label>
       ))}
     </FormSection>
