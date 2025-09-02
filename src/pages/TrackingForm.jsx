@@ -1,46 +1,64 @@
-// src/pages/TrackingForm.jsx- added searching
+// >>> copypasta starts here
+// src/pages/TrackingForm.jsx
 import React, { useState } from "react";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
 import FormSection from "../components/FormSection";
 import "../styles/form.css";
 
-function TrackingForm() {
+export default function TrackingForm() {
+  const [form, setForm] = useState({});
   const auth = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
 
-  const handleSearch = async (q) => {
+  // --- Single handleSearch (proxy + JWT) ---
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q) return;
+
+    setIsLoading(true);
+    setError("");
+    setHasSearched(true);
+
     try {
-     //  const jwt = auth.user?.id_token; // Cognito ID token
-     const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
-        if (!jwt) throw new Error("No JWT token available");
-
+      const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
+      if (!jwt) throw new Error("No JWT token available");
 
       const res = await fetch(
-        `/.netlify/functions/proxy-units?path=/tracking/search?query=${encodeURIComponent(q)}`,
+        `/.netlify/functions/proxy-units?path=/tracking/search&query=${encodeURIComponent(q)}`,
         {
           headers: {
-            "Authorization": `Bearer ${jwt}`,
+            Authorization: `Bearer ${jwt}`,
           },
         }
       );
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      console.log("Search results:", data);
-      // TODO: update state with results
+      setSearchResults(data.results || []);
     } catch (err) {
       console.error("Search error:", err);
+      setError(err.message || "Search failed");
+    } finally {
+      setIsLoading(false);
     }
   };
-}
 
-export default function TrackingForm() {
-  const [form, setForm] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [error, setError] = useState('');
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
+  const selectResult = (item) => {
+    setForm((prev) => ({
+      ...prev,
+      offerId: item.offerId,
+      buyer_name: item.buyer_name,
+      unit_number: item.unit_number,
+      status: item.status,
+    }));
+    setSearchResults([]);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,40 +80,9 @@ export default function TrackingForm() {
     }).format(val);
   };
 
-  // --- New search handling code ---
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    const q = searchQuery.trim();
-    if (!q) return;
-    try {
-  const res = await fetch(
-   `https://lyj4zmurck.execute-api.us-east-2.amazonaws.com/prod/tracking/search?query=${encodeURIComponent(q)}`
-  );
-
-      if (res.ok) {
-        const json = await res.json();
-        setSearchResults(json.results);
-      }
-    } catch (err) {
-      console.error("Search error:", err);
-    }
-  };
-
-  const selectResult = (item) => {
-    setForm((prev) => ({
-      ...prev,
-      offerId: item.offerId,
-      buyer_name: item.buyer_name,
-      unit_number: item.unit_number,
-      status: item.status,
-      // your other fields are preserved
-    }));
-    setSearchResults([]);
-  };
-
   return (
     <div>
-      {/* --- New: Search UI at the top --- */}
+      {/* --- Search UI --- */}
       <form onSubmit={handleSearch} className="app-form" style={{ marginBottom: "1rem" }}>
         <input
           type="text"
@@ -105,6 +92,9 @@ export default function TrackingForm() {
         />
         <button type="submit">Lookup</button>
       </form>
+
+      {isLoading && <p>Searching…</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
       {searchResults.length > 0 && (
         <ul style={{ listStyle: "none", padding: 0, marginBottom: "1rem" }}>
@@ -120,24 +110,11 @@ export default function TrackingForm() {
         </ul>
       )}
 
-        {/* Show loading */}
-        {isLoading && <p>Searching…</p>}
+      {!isLoading && !error && hasSearched && searchResults.length === 0 && (
+        <p>No results found for "{searchQuery}".</p>
+      )}
 
-        {/* Show error */}
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-
-        {/* Show results */}
-        {!isLoading && !error && searchResults.length > 0 && (
-        <ul>…</ul>
-        )}
-
-        {/* Handle empty state only *after* search */}
-        {!isLoading && !error && hasSearched && searchResults.length === 0 && (
-        <p>No results found for "{searchQuery}". Try another search.</p>
-        )}
-
-
-      {/* --- Your original form exactly as is --- */}
+      {/* --- Original tracking form --- */}
       <form onSubmit={handleSubmit} className="app-form">
         <img src="/assets/hbfa-logo.png" alt="HBFA Logo" />
         <h3>Sales Tracking Form</h3>
@@ -177,7 +154,7 @@ export default function TrackingForm() {
             "buyer_complete",
           ].map((field) => (
             <label key={field}>
-              {field.replace(/_/g, " -")}
+              {field.replace(/_/g, " ")}
               <input type="date" name={field} onChange={handleChange} />
             </label>
           ))}
@@ -221,9 +198,8 @@ export default function TrackingForm() {
         </FormSection>
 
         <button type="submit">Save Tracking</button>
-
-        <footer>{/* optional logo or footer */}</footer>
       </form>
     </div>
   );
 }
+// <<< copypasta ends here
