@@ -16,13 +16,13 @@ function parseJwt(token) {
 
 
 export default function TrackingForm() {
-  const [form, setForm] = useState({});
   const auth = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [error, setError] = useState("");
+  const [form, setForm] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
 
   // --- Single handleSearch (proxy + JWT) ---
   const handleSearch = async (e) => {
@@ -37,7 +37,7 @@ export default function TrackingForm() {
     try {
       const jwt = auth?.user?.access_token || auth?.user?.access_token || null;
       if (!jwt) throw new Error("No JWT token available");
-      console.log("JWT claims:", parseJwt(jwt));
+      // console.log("JWT claims:", parseJwt(jwt));
 
       const res = await fetch(
         `/.netlify/functions/proxy-units?path=/tracking/search&query=${encodeURIComponent(q)}`,
@@ -59,6 +59,7 @@ export default function TrackingForm() {
     }
   };
 
+    // --- When a result is clicked, fill form ---
   const selectResult = (item) => {
     setForm((prev) => ({
       ...prev,
@@ -69,11 +70,12 @@ export default function TrackingForm() {
     }));
     setSearchResults([]);
   };
-
+  // --- Form change handler ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -92,16 +94,18 @@ export default function TrackingForm() {
 
   return (
     <div>
-      {/* --- Search UI --- */}
-      <form onSubmit={handleSearch} className="app-form" style={{ marginBottom: "1rem" }}>
-        <input
-          type="text"
-          placeholder="Search by buyer or unit"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <button type="submit">Lookup</button>
-      </form>
+        <AppHeader />
+        
+        {/* --- Search UI --- */}
+        <form onSubmit={handleSearch} className="app-form" style={{ marginBottom: "1rem" }}>
+            <input
+            type="text"
+            placeholder="Search by buyer or unit"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button type="submit">Lookup</button>
+        </form>
 
       {isLoading && <p>Searching…</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -132,8 +136,12 @@ export default function TrackingForm() {
         <FormSection>
           <label>
             Status
-            <select name="status" onChange={handleChange}>
+            <select name="status" value={form.status || ""} onChange={handleChange}>
               {/* options... */}
+              <option value="">--Select--</option>
+              <option value="offer">Offer</option>
+              <option value="sent">Sent</option>
+              <option value="approved">Approved</option>
             </select>
           </label>
         </FormSection>
