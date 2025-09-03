@@ -39,16 +39,31 @@ export async function handler(event) {
     const qs = params.toString();
     const upstreamUrl = `${base}${path}${qs ? `?${qs}` : ""}`;
 
-    const headers = {};
-    if (event.headers?.authorization) headers.Authorization = event.headers.authorization;
+const headers = {};
+
+// Grab Authorization header regardless of case
+const authHeader =
+  event.headers?.authorization || event.headers?.Authorization || null;
+
+if (authHeader) {
+  headers.Authorization = authHeader;
+}
 
     const options = { method: event.httpMethod || "GET", headers };
+
     if (event.body && options.method !== "GET" && options.method !== "HEAD") {
-      options.body = event.isBase64Encoded ? Buffer.from(event.body, "base64") : event.body;
-      const ct = event.headers?.["content-type"] || event.headers?.["Content-Type"];
+      options.body = event.isBase64Encoded
+        ? Buffer.from(event.body, "base64")
+        : event.body;
+
+      const ct =
+        event.headers?.["content-type"] || event.headers?.["Content-Type"];
       if (ct) options.headers["Content-Type"] = ct;
     }
+
+    // Debug logs
     console.log("event.headers:", event.headers);
+    console.log("authHeader seen:", authHeader);
     console.log("forwarding headers:", headers);
     console.log("upstreamUrl:", upstreamUrl);
 
