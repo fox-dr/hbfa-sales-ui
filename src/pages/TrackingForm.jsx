@@ -6,6 +6,15 @@ import AppHeader from "../components/AppHeader";
 import FormSection from "../components/FormSection";
 import "../styles/form.css";
 
+function parseJwt(token) {
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return {};
+  }
+}
+
+
 export default function TrackingForm() {
   const [form, setForm] = useState({});
   const auth = useAuth();
