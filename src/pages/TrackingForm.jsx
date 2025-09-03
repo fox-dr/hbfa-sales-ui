@@ -124,9 +124,12 @@ export default function TrackingForm() {
         </ul>
       )}
 
-      {!isLoading && !error && hasSearched && searchResults.length === 0 && (
+      {/* --- {!isLoading && !error && hasSearched && searchResults.length === 0 && (
         <p>No results found for "{searchQuery}".</p>
-      )}
+      )} --*/}
+
+      <pre>{JSON.stringify(searchResults, null, 2)}</pre>
+ 
 
       {/* --- Original tracking form --- */}
       <form onSubmit={handleSubmit} className="app-form">
