@@ -35,7 +35,7 @@ export default function TrackingForm() {
     setHasSearched(true);
 
     try {
-      const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
+      const jwt = auth?.user?.access_token || auth?.user?.access_token || null;
       if (!jwt) throw new Error("No JWT token available");
       console.log("JWT claims:", parseJwt(jwt));
 
