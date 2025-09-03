@@ -35,9 +35,9 @@ export default function TrackingForm() {
     setHasSearched(true);
 
     try {
-      const jwt = auth?.user?.access_token || auth?.user?.access_token || null;
+      const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
       if (!jwt) throw new Error("No JWT token available");
-      // console.log("JWT claims:", parseJwt(jwt));
+      console.log("JWT claims:", parseJwt(jwt));
 
       const res = await fetch(
         `/.netlify/functions/proxy-units?path=/tracking/search&query=${encodeURIComponent(q)}`,
