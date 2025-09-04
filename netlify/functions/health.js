@@ -1,10 +1,11 @@
 // netlify/functions/health.js
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 
-const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
-const s3 = new S3Client({ region: process.env.S3_REGION || process.env.DDB_REGION || "us-east-2" });
+const ddb = new DynamoDBClient(awsClientConfig());
+const s3 = new S3Client(awsClientConfig());
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
 const S3_BUCKET = process.env.S3_VAULT_BUCKET || null;
 const S3_PREFIX = process.env.S3_VAULT_PREFIX || "offers/";
@@ -76,4 +77,3 @@ async function checkS3() {
     return { ok: false, error: e.message };
   }
 }
-

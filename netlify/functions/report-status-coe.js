@@ -1,8 +1,9 @@
 // netlify/functions/report-status-coe.js
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 
-const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
+const ddb = new DynamoDBClient(awsClientConfig());
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
 
 const CORS = {
@@ -114,4 +115,3 @@ function toCsv(rows) {
   }
   return lines.join("\n");
 }
-

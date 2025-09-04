@@ -1,5 +1,6 @@
 // netlify/functions/send-for-signature.js
 import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 import fs from "fs";
 import path from "path";
@@ -34,9 +35,7 @@ function renderOfferTemplate(offer) {
   return html;
 }
 
-const ddb = new DynamoDBClient({
-  region: process.env.DDB_REGION || "us-east-2",
-});
+const ddb = new DynamoDBClient(awsClientConfig());
 
 
 // const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-west-1" });

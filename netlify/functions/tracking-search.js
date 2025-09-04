@@ -1,11 +1,12 @@
 // netlify/functions/tracking-search.js
 import { DynamoDBClient, ScanCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
 const REGION = process.env.DDB_REGION || "us-east-2";
 
-const ddb = new DynamoDBClient({ region: REGION });
+const ddb = new DynamoDBClient(awsClientConfig());
 
 export async function handler(event) {
   try {

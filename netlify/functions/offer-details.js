@@ -1,8 +1,9 @@
 // netlify/functions/offer-details.js
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 
-const s3 = new S3Client({ region: process.env.S3_REGION || process.env.DDB_REGION || "us-east-2" });
+const s3 = new S3Client(awsClientConfig());
 const S3_BUCKET = process.env.S3_VAULT_BUCKET;
 const S3_PREFIX = process.env.S3_VAULT_PREFIX || "offers/";
 
@@ -50,4 +51,3 @@ async function streamToString(stream) {
   for await (const chunk of stream) chunks.push(Buffer.from(chunk));
   return Buffer.concat(chunks).toString("utf8");
 }
-

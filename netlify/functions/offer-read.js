@@ -1,8 +1,9 @@
 // netlify/functions/offer-read.js
 import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 
-const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
+const ddb = new DynamoDBClient(awsClientConfig());
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
 
 const CORS = {
@@ -181,4 +182,3 @@ function baseShape(_) {
     vp_id: null,
   };
 }
-

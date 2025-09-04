@@ -10,9 +10,10 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
 import { splitPayload } from "./utils/splitPayload.js";
 import { requireAuth } from "./utils/auth.js";
+import { awsClientConfig } from "./utils/awsClients.js";
 
-const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
-const s3 = new S3Client({ region: process.env.S3_REGION || "us-east-2" });
+const ddb = new DynamoDBClient(awsClientConfig());
+const s3 = new S3Client(awsClientConfig());
 
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
 const S3_BUCKET = process.env.S3_VAULT_BUCKET;
