@@ -5,6 +5,8 @@ import TrackingForm from "./pages/TrackingForm.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import OfferForm from "./pages/OfferForm.jsx";
 import ApprovalsPage from "./pages/ApprovalsPage.jsx"; // stub
+import ReportsPage from "./pages/ReportsPage.jsx";
+import Healthcheck from "./pages/Healthcheck.jsx";
 
 
 export default function App() {
@@ -52,6 +54,8 @@ export default function App() {
           <Route path="/offerform" element={<OfferForm />} />
           <Route path="/approvals" element={<ApprovalsPage />} />
           <Route path="/tracking" element={<TrackingForm />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/health" element={<Healthcheck />} />
         </Routes>
       </div>
     </Router>

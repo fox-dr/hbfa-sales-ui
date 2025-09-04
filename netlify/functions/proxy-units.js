@@ -5,11 +5,17 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
 };
 
+import { requireAuth } from "./utils/auth.js";
+
 export async function handler(event) {
   try {
     if (event.httpMethod === "OPTIONS") {
       return { statusCode: 204, headers: CORS, body: "" };
     }
+
+    // Require auth for proxy usage (SA or VP)
+    const auth = requireAuth(event, ["SA", "VP"]);
+    if (!auth.ok) return json(auth.statusCode, { error: auth.message });
 
     const API_BASE = process.env.API_BASE; // e.g. https://.../prod
     if (!API_BASE) return json(500, { error: "API_BASE not configured" });

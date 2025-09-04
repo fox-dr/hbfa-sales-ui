@@ -23,6 +23,7 @@ export default function TrackingForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+  const [pii, setPii] = useState(null);
 
   // --- Single handleSearch (proxy + JWT) ---
   const handleSearch = async (e) => {
@@ -40,12 +41,8 @@ export default function TrackingForm() {
       console.log("JWT claims:", parseJwt(jwt));
 
       const res = await fetch(
-        `/.netlify/functions/proxy-units?path=/tracking/search&query=${encodeURIComponent(q)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
-        }
+        `/.netlify/functions/tracking-search?query=${encodeURIComponent(q)}`,
+        { headers: { Authorization: `Bearer ${jwt}` } }
       );
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -69,6 +66,8 @@ export default function TrackingForm() {
       status: item.status,
     }));
     setSearchResults([]);
+    // Optionally fetch PII details for contact (phone, emails) for authorized roles
+    fetchOfferDetails(item.offerId);
   };
   // --- Form change handler ---
   const handleChange = (e) => {
@@ -80,8 +79,42 @@ export default function TrackingForm() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Tracking form submitted:", form);
-    alert("Tracking form submission logged to console (stub).");
+    saveTracking();
   };
+
+  async function fetchOfferDetails(offerId) {
+    try {
+      const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
+      if (!jwt) return;
+      const res = await fetch(`/.netlify/functions/offer-details?offerId=${encodeURIComponent(offerId)}`,
+        { headers: { Authorization: `Bearer ${jwt}` } }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      setPii(data);
+    } catch (e) {
+      // swallow for now
+    }
+  }
+
+  async function saveTracking() {
+    try {
+      const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
+      if (!jwt) throw new Error("No JWT token available");
+      if (!form.offerId) throw new Error("Select a record before saving");
+
+      const payload = { ...form };
+      const res = await fetch(`/.netlify/functions/offers`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`Save failed: HTTP ${res.status}`);
+      alert("Tracking saved");
+    } catch (e) {
+      alert(e.message || "Save failed");
+    }
+  }
 
   const formatCurrency = (val) => {
     if (val === undefined || val === "") return "";
@@ -118,10 +151,21 @@ export default function TrackingForm() {
               style={{ cursor: "pointer", padding: "0.5rem 0" }}
               onClick={() => selectResult(item)}
             >
-              <strong>{item.offerId}</strong> — {item.buyer_name} — {item.unit_number}
+              <strong>{item.offerId}</strong> - {item.buyer_name} - {item.unit_number}
             </li>
           ))}
         </ul>
+      )}
+      {pii && (
+        <div style={{ marginBottom: "1rem" }}>
+          <strong>Contact</strong>
+          <div>Phone 1: {pii.phone_number_1 || "—"}</div>
+          <div>Phone 2: {pii.phone_number_2 || "—"}</div>
+          <div>Phone 3: {pii.phone_number_3 || "—"}</div>
+          <div>Email 1: {pii.email_1 || "—"}</div>
+          <div>Email 2: {pii.email_2 || "—"}</div>
+          <div>Email 3: {pii.email_3 || "—"}</div>
+        </div>
       )}
        {/*--comment out for debugging--*/}
       {/* --- {!isLoading && !error && hasSearched && searchResults.length === 0 && (
@@ -129,7 +173,7 @@ export default function TrackingForm() {
       )} --*/}
 
       <pre>{JSON.stringify(searchResults, null, 2)}</pre>
- 
+
 
       {/* --- Original tracking form --- */}
       <form onSubmit={handleSubmit} className="app-form">

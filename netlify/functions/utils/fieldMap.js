@@ -1,16 +1,23 @@
 // fieldMap.js
 export const fieldMap = {
   // Buyer
-  buyer_name: "S3",
+  buyer_name: "BOTH",
   buyer_notes: "S3",
   email_1: "S3",
   email_2: "S3",
   email_3: "S3",
-  phone_number_1: "S3",
+  phone_number_1: "S3", // full numbers stored only in S3 vault
   phone_number_2: "S3",
   phone_number_3: "S3",
   buyer_1_full_name: "BOTH",
   buyer_2_full_name: "BOTH",
+
+  // Address (retain street lines in S3 only; store city/state/zip for lookups)
+  address_1: "S3",
+  address_2: "S3",
+  city: "DDB",
+  state: "DDB",
+  zip_code: "DDB",
 
   // Project + Unit
   project_id: "DDB",

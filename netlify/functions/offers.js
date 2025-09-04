@@ -9,6 +9,7 @@ import {
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
 import { splitPayload } from "./utils/splitPayload.js";
+import { requireAuth } from "./utils/auth.js";
 
 const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
 const s3 = new S3Client({ region: process.env.S3_REGION || "us-east-2" });
@@ -20,6 +21,10 @@ const S3_PREFIX = process.env.S3_VAULT_PREFIX || "offers/";
 export async function handler(event) {
   try {
     const method = event.httpMethod;
+    // Require auth for all methods; allow SA and VP
+    const rolesAllowed = ["SA", "VP"];
+    const auth = requireAuth(event, rolesAllowed);
+    if (!auth.ok) return resp(auth.statusCode, { error: auth.message });
     const body = event.body ? JSON.parse(event.body) : {};
 
     if (method === "POST") {

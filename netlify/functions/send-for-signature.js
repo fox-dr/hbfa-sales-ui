@@ -1,5 +1,6 @@
 // netlify/functions/send-for-signature.js
 import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { requireAuth } from "./utils/auth.js";
 import fs from "fs";
 import path from "path";
 import jwt from "jsonwebtoken";
@@ -99,6 +100,10 @@ export async function handler(event) {
     if (event.httpMethod !== "POST") {
       return { statusCode: 405, body: "Method Not Allowed" };
     }
+
+    // Require SA or VP to send for signature
+    const auth = requireAuth(event, ["SA", "VP"]);
+    if (!auth.ok) return { statusCode: auth.statusCode, body: JSON.stringify({ error: auth.message }) };
 
     const offer = JSON.parse(event.body);
 
