@@ -26,7 +26,7 @@ export default function ReportsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
+        const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
         if (!jwt) return;
         const res = await fetch("/.netlify/functions/projects-list", { headers: { Authorization: `Bearer ${jwt}` } });
         if (!res.ok) return;
@@ -41,7 +41,7 @@ export default function ReportsPage() {
     setLoading(true);
     setMsg("");
     try {
-      const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
+      const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
       if (!jwt) throw new Error("No JWT token available");
       const url = `/.netlify/functions/report-status-coe?${buildQuery("json")}`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${jwt}` } });
@@ -58,7 +58,7 @@ export default function ReportsPage() {
 
   async function downloadCsv() {
     try {
-      const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
+      const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
       if (!jwt) throw new Error("No JWT token available");
       const url = `/.netlify/functions/report-status-coe?${buildQuery("csv")}`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${jwt}` } });

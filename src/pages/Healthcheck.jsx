@@ -18,7 +18,7 @@ export default function Healthcheck() {
 
   useEffect(() => {
     (async () => {
-      const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
+      const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
       if (!jwt) return;
       const headers = { Authorization: `Bearer ${jwt}` };
 
@@ -76,4 +76,3 @@ export default function Healthcheck() {
     </div>
   );
 }
-

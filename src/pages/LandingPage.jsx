@@ -12,7 +12,21 @@ export default function LandingPage() {
   const groups = auth?.user?.profile?.["cognito:groups"] || [];
   console.log("User groups:", groups);
 
-  const hasGroup = (g) => groups.includes(g);
+  // Backward compatible role checks:
+  // - Legacy: sales_user, sales_sudo, admin
+  // - New: SA (Sales Associate), EC (Escrow Coordinator), VP, ADMIN
+  const inGroup = (name) => {
+    if (!name) return false;
+    return (
+      groups.includes(name) ||
+      groups.includes(name.toUpperCase()) ||
+      groups.includes(name.toLowerCase())
+    );
+  };
+
+  const isAdmin = inGroup("admin") || inGroup("ADMIN");
+  const canSales = isAdmin || inGroup("sales_user") || inGroup("SA") || inGroup("EC");
+  const canApprove = isAdmin || inGroup("sales_sudo") || inGroup("VP");
 
 
 
@@ -22,8 +36,8 @@ export default function LandingPage() {
       <img src="/assets/hbfa-logo.png" alt="HBFA Logo" className="mb-4" />
       <h3 className="text-xl font-bold mb-4">Homes Built For America Sales Portal</h3>
 
-      {/* Sales User (SAs, Escrow Coordinators) */}
-      {hasGroup("sales_user") && (
+      {/* Sales access: SA, EC, ADMIN (and legacy sales_user) */}
+      {canSales && !isAdmin && (
         <>
           <button
             className="block bg-blue-500 text-white px-4 py-2 rounded mb-2"
@@ -40,8 +54,8 @@ export default function LandingPage() {
         </>
       )}
 
-      {/* Sales Sudo (VP / elevated sales role) */}
-      {hasGroup("sales_sudo") && (
+      {/* Approvals: VP, ADMIN (and legacy sales_sudo) */}
+      {canApprove && !isAdmin && (
         <button
           className="block bg-green-500 text-white px-4 py-2 rounded mb-2"
           onClick={() => navigate("/approvals")}
@@ -50,8 +64,8 @@ export default function LandingPage() {
         </button>
       )}
 
-      {/* Admin gets all three */}
-      {hasGroup("admin") && (
+      {/* Admin (ADMIN/admin) gets all three */}
+      {isAdmin && (
         <>
           <button
             className="block bg-blue-500 text-white px-4 py-2 rounded mb-2"

@@ -1,12 +1,10 @@
 // src/App.jsx
 import { useAuth } from "react-oidc-context";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TrackingForm from "./pages/TrackingForm.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import OfferForm from "./pages/OfferForm.jsx";
 import ApprovalsPage from "./pages/ApprovalsPage.jsx"; // stub
-import ReportsPage from "./pages/ReportsPage.jsx";
-import Healthcheck from "./pages/Healthcheck.jsx";
 
 
 export default function App() {
@@ -44,15 +42,15 @@ export default function App() {
   return (
     <Router>
       <div style={{ padding: 16 }}>
-        
+        <div style={{ float: "right" }}>
+          <button onClick={signOutRedirect}>Logout</button>
+        </div>
+
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/callback" element={<Navigate to="/" replace />} /> {/* 👈 one line fix */}
           <Route path="/offerform" element={<OfferForm />} />
           <Route path="/approvals" element={<ApprovalsPage />} />
           <Route path="/tracking" element={<TrackingForm />} />
-          <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/health" element={<Healthcheck />} />
         </Routes>
       </div>
     </Router>

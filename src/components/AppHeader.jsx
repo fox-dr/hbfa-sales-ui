@@ -1,14 +1,21 @@
 import React from "react";
+import { useAuth } from "react-oidc-context";
 
 export default function AppHeader({ title = "HBFA Sales Portal", logo = "/assets/hbfa_logo.png" }) {
+  const auth = useAuth();
   const signOutRedirect = () => {
-    const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
-    const logoutUri = window.location.origin;
-    const cognitoDomain = import.meta.env.VITE_COGNITO_DOMAIN;
-
-    window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(
-      logoutUri
-    )}`;
+    try {
+      auth?.signoutRedirect?.({ post_logout_redirect_uri: window.location.origin });
+    } catch {
+      const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
+      const logoutUri = window.location.origin;
+      const cognitoDomain = import.meta.env.VITE_COGNITO_DOMAIN;
+      if (clientId && cognitoDomain) {
+        window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(
+          logoutUri
+        )}`;
+      }
+    }
   };
 
   return (

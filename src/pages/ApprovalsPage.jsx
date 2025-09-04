@@ -18,7 +18,7 @@ export default function ApprovalsPage() {
     setMsg("");
     setLoading(true);
     try {
-      const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
+      const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
       if (!jwt) throw new Error("No JWT token available");
       const res = await fetch(`/.netlify/functions/tracking-search?query=${encodeURIComponent(query)}`,
         { headers: { Authorization: `Bearer ${jwt}` } }
@@ -35,7 +35,7 @@ export default function ApprovalsPage() {
 
   async function loadDetails(offerId) {
     try {
-      const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
+      const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
       if (!jwt) return;
       // Non-PII (DDB, condensed schema)
       const dRes = await fetch(`/.netlify/functions/offer-read?offerId=${encodeURIComponent(offerId)}`,
@@ -74,7 +74,7 @@ export default function ApprovalsPage() {
 
   async function decide(approved) {
     try {
-      const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
+      const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
       if (!jwt) throw new Error("No JWT token available");
       if (!selected?.offerId) throw new Error("Select a record first");
       const res = await fetch(`/.netlify/functions/offers-approve?offerId=${encodeURIComponent(selected.offerId)}`,
