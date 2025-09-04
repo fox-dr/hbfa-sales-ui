@@ -1,0 +1,213 @@
+/* form.css
+   Shared universal form styling
+   Usage: wrap your form in <div class="app-form"> ... </div> this should work. remember the main.jsx
+*/
+
+/* ------------------ Force Light Mode ------------------ */
+
+/* Tell browsers to ignore prefers-color-scheme: dark */
+:root {
+  color-scheme: light;
+}
+
+/* Override if the system tries to flip colors */
+@media (prefers-color-scheme: dark) {
+  body,
+  .app-form,
+  .app-grid,
+  .app-card {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* >>> Add this to fix buttons <<< */
+  .app-form button[type="submit"] {
+    background-color: #3b82f6 !important;  /* force blue */
+    color: #ffffff !important;             /* force white text */
+    border: none !important;
+  }
+
+  .app-form input,
+  .app-form select,
+  .app-form textarea {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #ccc !important;
+  }
+
+  .app-card {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .app-card p {
+    color: #333 !important;
+  }
+}
+/* ------------------ Mobile-first tweaks ------------------ */
+@media (max-width: 640px) {
+  /* Keep sizing sane on small screens */
+  .app-form *,
+  .app-form *::before,
+  .app-form *::after {
+    box-sizing: border-box;
+  }
+
+  /* Tighter section padding on phones */
+  .app-form section {
+    padding: 14px !important;
+  }
+
+  /* Stack each row inside sections */
+  .app-form section > div {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  /* Make fields full-width on phones */
+  .app-form label {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .app-form label > input,
+  .app-form label > select,
+  .app-form label > textarea {
+    width: 100% !important;
+  }
+
+  /* Headings */
+  .app-form h2 {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  .app-form h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #444;
+  }
+
+  /* Unit picker block */
+  .app-form .unit-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+  }
+  .app-form #select_unit {
+    width: 100% !important;
+    min-height: 44px;
+  }
+
+  /* Submit button: full-width, tap-friendly */
+  .app-form button[type="submit"] {
+    border-radius: 6px;
+    background-color: #3b82f6; /* tailwind blue-500 */
+    color: white;
+    weight: bold;
+    width: 100%;
+    min-height: 44px;
+  }
+
+  /* Footer logo centering */
+  .app-form footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+  }
+  .app-form footer img {
+    height: 48px;
+    width: auto;
+    max-width: 100%;
+  }
+}
+
+/* ------------------ Universal desktop + mobile polish ------------------ */
+
+/* Inputs and textareas */
+.app-form input,
+.app-form select,
+.app-form textarea {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+/* Section “cards” */
+.app-form section {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+/* Labels */
+.app-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Submit button */
+.app-form button[type="submit"] {
+  border-radius: 6px;
+  background-color: #3b82f6; /* Tailwind blue-500 */
+  color: white;
+  font-weight: bold;
+  transition: background 0.2s ease-in-out;
+}
+.app-form button[type="submit"]:hover {
+  background-color: #2563eb; /* Tailwind blue-600 */
+}
+
+/* ------------------ Module cards (LandingPage/dashboard) ------------------ */
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.app-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.app-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.app-card.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.app-card h2 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.app-card p {
+  margin: 0;
+  color: #555;
+}
+/* Center the whole form container */
+.app-form {
+  display: block;
+  max-width: 800px;        /* keep it from stretching full width */
+  margin: 0 auto;          /* center horizontally */
+  padding: 0 16px;         /* a little breathing room at edges */
+}

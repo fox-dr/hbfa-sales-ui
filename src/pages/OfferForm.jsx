@@ -1,8 +1,11 @@
+console.log("OfferForm mounted")
 // src/pages/OfferForm.jsx rev for mobile
 import { useRef, useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 import "./offer-form.css";
 import { v4 as uuidv4 } from "uuid";
+import AppHeader from "../components/AppHeader";
+
 
 // --- Helper to parse JWT ---
 function parseJwt(token) {
@@ -13,8 +16,10 @@ function parseJwt(token) {
   }
 }
 
-const PROXY_BASE = "/.netlify/functions/proxy-units";
-const PROJECT_ID = "Fusion";
+// const PROXY_BASE = "/.netlify/functions/proxy-units";
+const PROJECT_ID = import.meta.env.VITE_DEFAULT_PROJECT_ID || "Fusion";
+const PROXY_BASE = import.meta.env.VITE_PROXY_BASE || "/.netlify/functions/proxy-units";
+
 
 function unformatUSD(val) {
   const s = String(val ?? "").replace(/[^\d.-]/g, "");
@@ -36,6 +41,7 @@ function formatUSD(val) {
 
 
 export default function OfferForm() {
+  const [unitNumber, setUnitNumber] = useState("");
   const auth = useAuth();
   const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
   const claims = jwt ? parseJwt(jwt) : {};
@@ -43,8 +49,9 @@ export default function OfferForm() {
 
 
   // form bits
-  const [unitNumber, setUnitNumber] = useState("");
+  // const [unitNumber, setUnitNumber] = useState("");
   const [msg, setMsg] = useState("");
+
 
   // home details
   const [buildingInfo, setBuildingInfo] = useState("");
@@ -84,14 +91,18 @@ export default function OfferForm() {
   }
 
   async function handleSelectUnit() {
+    console.log("handleSelectUnit fired");
     setMsg("");
-    const n = unitNumber.trim();
+    const n = String(unitNumber || "").trim();
+
     if (!n) return setMsg("Enter a unit number.");
     if (!jwt) return setMsg("Please sign in again (missing token).");
 
     try {
       const upstreamPath = `/projects/${encodeURIComponent(PROJECT_ID)}/units`;
       const url = `${PROXY_BASE}?path=${encodeURIComponent(upstreamPath)}`;
+
+      console.log("DEBUG: about to fetch", url, headers);
 
       const res = await fetch(url, { headers, cache: "no-store" });
       if (!res.ok) {
@@ -110,7 +121,7 @@ export default function OfferForm() {
       }
     } catch (e) {
       setMsg(`Error fetching unit: ${String(e.message || e)}`);
-    }
+}
   }
 
  // async function handleSubmit(e) {
@@ -128,16 +139,15 @@ export default function OfferForm() {
     // add SA sender email from auth
     v.sa_email = saEmail;
     v.sa_name  = auth?.user?.profile?.name  || "";
-
-    // 1.send-fro-signature POST to backend (send-for-signature Lambda)
-    const sigRes = await fetch(
-      `${PROXY_BASE}?path=${encodeURIComponent("/send-for-signature")}`,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify(v),
-      }
-    );
+    
+    const API_BASE = "https://lyj4zmurck.execute-api.us-east-2.amazonaws.com/prod";
+    // 1.send-fro-signature POST to backend (send-for-signature Lambda)    
+    const sigRes = await fetch(`${API_BASE}/offers`, {
+     method: "POST",
+     headers,
+    body: JSON.stringify(v),
+    });
+    
     if (!sigRes.ok) {
       const errText = await sigRes.text();
       throw new Error(`Signature send failed: ${errText}`);
@@ -151,16 +161,16 @@ export default function OfferForm() {
     const envelopeId = sigJson.envelopeId;
     v.docusign_envelope_id = envelopeId;   // <-- carry forward into save
 
-    
-    // 2. Save offer record
-    const saveRes = await fetch(
-      `${PROXY_BASE}?path=${encodeURIComponent("/offers")}`,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify(v),
-      }
-    );
+    // 🪵 DEBUG: dump payload before saving
+    console.log(">>> OFFER SAVE PAYLOAD", v);
+
+    // 2. Save offer record directly to AWS
+   // const saveRes = await fetch("/.netlify/functions/offers",{
+   const saveRes = await fetch(`${API_BASE}/offers`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(v),
+    });
 
     const text = await saveRes.text();
     if (!saveRes.ok) throw new Error(text || `HTTP ${saveRes.status}`);
@@ -193,10 +203,11 @@ export default function OfferForm() {
   return (
     <div id="offer" style={styles.container}>
       {/* Header */}
-      <div style={styles.header}>
-        <h2 style={{ margin: 0 }}>Preliminary Offer</h2>
-        <img src="/assets/fusion_logo.png" alt="Fusion Logo" style={{ height: 48 }} />
-      </div>
+      <AppHeader
+        title="Preliminary Offer"
+        logo={`/assets/${PROJECT_ID}_logo.png`}
+      />
+
 
       {/* Notice OR Form */}
       
@@ -219,14 +230,25 @@ export default function OfferForm() {
                   type="number"
                   value={unitNumber}
                   onChange={(e) => setUnitNumber(e.target.value)}
-                  style={{ ...styles.input, width: 120 }}
+                  style={{ ...styles.input, width: 80 }}
                 />
               </label>
 
               <div style={{ display: "flex", alignItems: "end", gap: 8 }}>
                 <button type="button" onClick={handleSelectUnit}>Select Unit</button>
+                { /* <button type="button" onClick={() => alert("Clicked!")}>
+                  Select Unit
+                </button> */}
               </div>
+              {msg && (
+                <div style={{ alignSelf: "end", marginLeft: 8, color: msg.toLowerCase().includes("error") ? "crimson" : "green" }}>
+                  {msg}
+                </div>
+              )}
             </div>
+            {/* console.log("Fetch URL:", url);
+            console.log("Forwarding to:", upstreamUrl); */}
+
 
             {/* Address 1 */}
             <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
@@ -308,8 +330,8 @@ export default function OfferForm() {
             <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
               <label style={styles.col}>Lender Institution<input name="lender" style={styles.input} /></label>
               <label style={styles.col}>Loan Officer<input name="loan_officer" style={styles.input} /></label>
-              <label style={styles.col}>Loan Officer Email<input type="email" name="l_o_contact_email" maxLength={40} style={styles.input} /></label>
-              <label style={styles.col}>Loan Officer Phone<input type="tel" name="l_o_phone" maxLength={20} style={styles.input} /></label>
+              <label style={styles.col}>Loan Officer Email<input type="email" name="loan_officer_email" maxLength={40} style={styles.input} /></label>
+              <label style={styles.col}>Loan Officer Phone<input type="tel" name="loan_officer_phone" maxLength={20} style={styles.input} /></label>
             </div>
 
             <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
@@ -352,14 +374,14 @@ export default function OfferForm() {
             <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
               <label style={styles.col}>
                 Qualification/Lender Notes
-                <textarea name="offer_notes_1" rows={3} maxLength={512} style={styles.textarea} />
+                <textarea name="lender_notes" rows={3} maxLength={512} style={styles.textarea} />
               </label>
             </div>
           </section>
 
           {/* Home Details */}
           <section style={styles.section}>
-            <h3 style={styles.legend}>Home Details (From Fusion)</h3>
+            <h3 style={styles.legend}>Home Details (From {PROJECT_ID})</h3>
             <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr auto" }}>
               <label style={styles.col}>Building Info<input value={buildingInfo} readOnly style={styles.inputRO} /></label>
               <label style={styles.col}>Plan Info<input value={planInfo} readOnly style={styles.inputRO} /></label>
@@ -400,16 +422,7 @@ export default function OfferForm() {
             </div>
           )}
         </form>
-      <footer style={styles.footer} aria-hidden="true">
-        <img
-          src="/assets/hbfa-logo.png"
-          alt=""
-          height={48}
-          style={styles.footerLogo}
-          loading="lazy"
-          decoding="async"
-        />
-      </footer>
+
     </div>
   );
 }

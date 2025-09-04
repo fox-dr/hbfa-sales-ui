@@ -1,0 +1,27 @@
+ Volume in drive D is DATA
+ Volume Serial Number is EA75-A79F
+
+ Directory of D:\Downloads\HBFASales\hbfa-sales-ui
+
+08/14/2025  06:53 PM               281 .env
+08/15/2025  08:12 PM               133 .env.example
+08/25/2025  10:45 PM               130 .gitignore
+08/16/2025  03:57 PM             2,411 CHANGELOG.md
+08/16/2025  03:57 PM             9,142 Compass Contract CRM System Overview.md
+08/14/2025  05:04 PM                 0 curl
+08/11/2025  12:18 PM               763 eslint.config.js
+08/15/2025  10:56 PM               301 index.html
+08/15/2025  08:12 PM               149 netlify.toml
+08/12/2025  10:28 PM                 0 New Text Document.txt
+08/15/2025  08:54 PM            10,158 offer_form - Copy.html
+08/16/2025  04:22 PM            11,555 offer_form.html
+08/15/2025  05:39 PM             9,296 offer_form.html.bak
+08/25/2025  06:33 PM           106,750 package-lock.json
+08/25/2025  06:33 PM               836 package.json
+08/15/2025  06:08 PM             1,631 proxy-units.js
+08/11/2025  12:18 PM               856 README.md
+08/26/2025  03:34 PM                 0 repo_files.txt
+08/16/2025  03:57 PM             2,426 ROADMAP.md
+08/15/2025  08:12 PM               161 vite.config.js
+              20 File(s)        156,979 bytes
+               0 Dir(s)  623,615,541,248 bytes free

@@ -1,0 +1,15 @@
+ Volume in drive D is DATA
+ Volume Serial Number is EA75-A79F
+
+ Directory of D:\Downloads\HBFASales\hbfa-sales-ui
+
+08/26/2025  03:35 PM    <DIR>          .
+08/26/2025  03:35 PM    <DIR>          ..
+08/25/2025  11:21 PM    <DIR>          .git
+08/19/2025  09:39 AM    <DIR>          .vs
+08/25/2025  07:11 PM    <DIR>          netlify
+08/25/2025  05:47 PM    <DIR>          node_modules
+08/25/2025  03:20 PM    <DIR>          public
+08/16/2025  11:48 PM    <DIR>          src
+               0 File(s)              0 bytes
+               8 Dir(s)  623,615,541,248 bytes free

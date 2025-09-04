@@ -2,10 +2,12 @@
 node_modules/
 
 # build output
-dist/
 build/
 
 # local env files (do not commit)
 .env
 .env.*
 !.env.example
+
+# Local Netlify folder
+.netlify
