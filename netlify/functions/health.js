@@ -26,12 +26,20 @@ export async function handler(event) {
     if (!auth.ok) return json(auth.statusCode, { error: auth.message });
 
     const env = checkEnv();
+    const authEnv = {
+      hbfaKeyId: Boolean(process.env.HBFA_AWS_ACCESS_KEY_ID),
+      hbfaSecret: Boolean(process.env.HBFA_AWS_SECRET_ACCESS_KEY),
+      hbfaRegion: process.env.HBFA_AWS_REGION || null,
+      ddbRegion: process.env.DDB_REGION || null,
+      s3Region: process.env.S3_REGION || null,
+    };
     const ddbOk = await checkDdb();
     const s3Ok = await checkS3();
 
     return json(200, {
       ok: env.ok && ddbOk.ok && s3Ok.ok,
       env,
+      auth_env: authEnv,
       dynamodb: ddbOk,
       s3: s3Ok,
     });
