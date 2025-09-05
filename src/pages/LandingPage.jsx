@@ -37,7 +37,7 @@ export default function LandingPage() {
     
     <div className="p-8">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <img src={hbfaLogo} alt="HBFA Logo" className="mb-4" style={{ maxHeight: 48 }} />
+        <img src={hbfaLogo} alt="HBFA Logo" className="mb-4 landing-logo" />
         {/* Health mini visible to all users; shows amber for unauthorized */}
         <HealthMini />
       </div>
