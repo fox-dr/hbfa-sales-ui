@@ -95,7 +95,7 @@ export default function ApprovalsPage() {
   return (
     <div className="p-8">
       <AppHeader />
-      <h1 className="text-xl font-bold mb-4">VP Approval</h1>
+      <h3 className="text-xl font-bold mb-4">VP Approval</h3>
 
       <form onSubmit={search} style={{ marginBottom: 16 }}>
         <input
