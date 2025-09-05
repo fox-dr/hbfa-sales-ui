@@ -98,7 +98,7 @@ export default function ReportsPage() {
   return (
     <div className="p-8">
       <AppHeader />
-      <h1 className="text-xl font-bold mb-4">Status / COE Report</h1>
+      <h3 className="text-xl font-bold mb-4">Status / COE Report</h3>
       <div style={{ marginBottom: 12, color: "#555" }}>
         Access: VP and Admin via UI. Backend allows SA, VP, EC, ADMIN.
         Endpoints: <code>/.netlify/functions/projects-list</code> and <code>/.netlify/functions/report-status-coe</code>.

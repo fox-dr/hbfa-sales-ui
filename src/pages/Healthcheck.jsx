@@ -1,3 +1,6 @@
+// Routes Used by this page
+// - Various: /.netlify/functions/{offers, tracking-search, offer-read, offer-details, report-status-coe, health}
+// Access: Admin recommended (touches multiple endpoints)
 import React, { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
@@ -61,7 +64,11 @@ export default function Healthcheck() {
   return (
     <div className="p-8">
       <AppHeader />
-      <h1 className="text-xl font-bold mb-4">Healthcheck</h1>
+      <h3 className="text-xl font-bold mb-4">Healthcheck</h3>
+      <div style={{ marginBottom: 12, color: "#555" }}>
+        Endpoints pinged: offers, tracking-search, offer-read, offer-details, report-status-coe, health.
+        Admin access recommended.
+      </div>
       <p>OfferId used: {offerId || "(none)"}</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, maxWidth: 520 }}>
         {targets.map((t) => (
