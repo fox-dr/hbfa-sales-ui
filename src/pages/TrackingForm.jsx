@@ -45,7 +45,7 @@ export default function TrackingForm() {
         `/.netlify/functions/tracking-search?query=${encodeURIComponent(q)}`,
         { headers: { Authorization: `Bearer ${jwt}` } }
       );
-
+      if (res.status === 403) throw new Error("User Action Not Authorized");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setSearchResults(data.results || []);
@@ -90,6 +90,7 @@ export default function TrackingForm() {
       const res = await fetch(`/.netlify/functions/offer-details?offerId=${encodeURIComponent(offerId)}`,
         { headers: { Authorization: `Bearer ${jwt}` } }
       );
+      if (res.status === 403) return; // silently ignore unauthorized PII access
       if (!res.ok) return;
       const data = await res.json();
       setPii(data);
@@ -110,6 +111,7 @@ export default function TrackingForm() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
         body: JSON.stringify(payload),
       });
+      if (res.status === 403) throw new Error("User Action Not Authorized");
       if (!res.ok) throw new Error(`Save failed: HTTP ${res.status}`);
       alert("Tracking saved");
     } catch (e) {

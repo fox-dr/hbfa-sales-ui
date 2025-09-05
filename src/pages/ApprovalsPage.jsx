@@ -23,6 +23,7 @@ export default function ApprovalsPage() {
       const res = await fetch(`/.netlify/functions/tracking-search?query=${encodeURIComponent(query)}`,
         { headers: { Authorization: `Bearer ${jwt}` } }
       );
+      if (res.status === 403) throw new Error("User Action Not Authorized");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setResults(data.results || []);
@@ -85,6 +86,7 @@ export default function ApprovalsPage() {
         }
       );
       const data = await res.json().catch(() => ({}));
+      if (res.status === 403) throw new Error("User Action Not Authorized");
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
       setMsg(data?.message || (approved ? "Approved" : "Not approved"));
     } catch (e) {
