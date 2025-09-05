@@ -18,8 +18,8 @@ export async function handler(event) {
     if (event.httpMethod === "OPTIONS") return json(204, "");
     if (event.httpMethod !== "GET") return json(405, { error: "Method Not Allowed" });
 
-    // Auth: SA or VP may access PII details
-    const auth = requireAuth(event, ["SA", "VP"]);
+    // Auth: SA or VP (and ADMIN) may access PII details
+    const auth = requireAuth(event, ["SA", "VP", "ADMIN"]);
     if (!auth.ok) return json(auth.statusCode, { error: auth.message });
 
     const offerId = event.queryStringParameters?.offerId;

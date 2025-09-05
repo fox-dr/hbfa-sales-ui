@@ -28,6 +28,9 @@ export function splitPayload(offerId, fullPayload) {
   // Derived normalized fields for indexing
   if (fullPayload.buyer_name) {
     ddbItem.buyer_name = sanitizeForDDB("buyer_name", fullPayload.buyer_name);
+  } else if (fullPayload.buyer_1_full_name) {
+    // Derive buyer_name from buyer_1_full_name when not explicitly provided
+    ddbItem.buyer_name = sanitizeForDDB("buyer_name", fullPayload.buyer_1_full_name);
   }
   if (fullPayload.unit_number) {
     ddbItem.unit_number = sanitizeForDDB("unit_number", fullPayload.unit_number);

@@ -44,9 +44,9 @@ export async function handler(event) {
     // Keep only fields needed by the UI; include status if present
     const results = filtered.map((r) => ({
       offerId: r.offerId,
-      buyer_name: r.buyer_name,
-      unit_number: r.unit_number,
-      status: r.status,
+      buyer_name: r.buyer_name || r.buyer_1_full_name || r.buyer_2_full_name || "",
+      unit_number: r.unit_number || "",
+      status: r.status || "",
     }));
 
     return cors(200, JSON.stringify({ results }));
