@@ -1,7 +1,8 @@
 import React from "react";
 import { useAuth } from "react-oidc-context";
+import logoUrl from "../assets/hbfa-logo.png";
 
-export default function AppHeader({ title = "HBFA Sales Portal", logo = "/assets/hbfa_logo.png" }) {
+export default function AppHeader({ title = "HBFA Sales Portal", logo = logoUrl }) {
   const auth = useAuth();
   const signOutRedirect = () => {
     try {

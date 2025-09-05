@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
+import hbfaLogo from "../assets/hbfa-logo.png";
 import FormSection from "../components/FormSection";
 import "../styles/form.css";
 
@@ -177,7 +178,7 @@ export default function TrackingForm() {
 
       {/* --- Original tracking form --- */}
       <form onSubmit={handleSubmit} className="app-form">
-        <img src="/assets/hbfa-logo.png" alt="HBFA Logo" />
+        <img src={hbfaLogo} alt="HBFA Logo" />
         <h3>Sales Tracking Form</h3>
 
         <FormSection>

@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
+import hbfaLogo from "../assets/hbfa-logo.png";
 
 
 export default function LandingPage() {
@@ -33,7 +34,7 @@ export default function LandingPage() {
   return (
     
     <div className="p-8">
-      <img src="/assets/hbfa-logo.png" alt="HBFA Logo" className="mb-4" />
+      <img src={hbfaLogo} alt="HBFA Logo" className="mb-4" />
       <h3 className="text-xl font-bold mb-4">Homes Built For America Sales Portal</h3>
 
       {/* Sales access: SA, EC, ADMIN (and legacy sales_user) */}

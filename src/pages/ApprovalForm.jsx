@@ -2,6 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
+import hbfaLogo from "../assets/hbfa-logo.png";
 import FormSection from "../components/FormSection";
 import "../styles/form.css";
 
@@ -40,10 +41,7 @@ export default function ApprovalForm() {
 
   return (
     <div className="app-form">
-      <AppHeader
-        title="Offer Approval"
-        logo={`/assets/${PROJECT_ID}_logo.png`}
-      />
+      <AppHeader title="Offer Approval" />
 
       <form ref={formRef} onSubmit={handleSubmit}>
         {/* Copy all the same sections from OfferForm here:
@@ -244,7 +242,7 @@ export default function ApprovalForm() {
         {msg && <div>{msg}</div>}
 
         <footer>
-          <img src="/assets/hbfa_logo.png" alt="HBFA Logo" />
+          <img src={hbfaLogo} alt="HBFA Logo" />
         </footer>
       </form>
     </div>
