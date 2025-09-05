@@ -6,6 +6,7 @@
 import React, { useState } from "react";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
+import { searchOffers, getOfferRead, getOfferDetails, approveOffer } from "../api/client";
 
 export default function ApprovalsPage() {
   const auth = useAuth();
@@ -25,13 +26,8 @@ export default function ApprovalsPage() {
     try {
       const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
       if (!jwt) throw new Error("No JWT token available");
-      const res = await fetch(`/.netlify/functions/tracking-search?query=${encodeURIComponent(query)}`,
-        { headers: { Authorization: `Bearer ${jwt}` } }
-      );
-      if (res.status === 403) throw new Error("User Action Not Authorized");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setResults(data.results || []);
+      const results = await searchOffers(jwt, query);
+      setResults(results || []);
     } catch (e) {
       setMsg(e.message || "Search failed");
     } finally {
@@ -43,26 +39,10 @@ export default function ApprovalsPage() {
     try {
       const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
       if (!jwt) return;
-      // Non-PII (DDB, condensed schema)
-      const dRes = await fetch(`/.netlify/functions/offer-read?offerId=${encodeURIComponent(offerId)}`,
-        { headers: { Authorization: `Bearer ${jwt}` } }
-      );
-      if (dRes.ok) {
-        const ddb = await dRes.json();
-        setOfferDdb(ddb || null);
-      } else {
-        setOfferDdb(null);
-      }
-      // PII (S3)
-      const pRes = await fetch(`/.netlify/functions/offer-details?offerId=${encodeURIComponent(offerId)}`,
-        { headers: { Authorization: `Bearer ${jwt}` } }
-      );
-      if (pRes.ok) {
-        const pii = await pRes.json();
-        setOfferPii(pii || null);
-      } else {
-        setOfferPii(null);
-      }
+      const ddb = await getOfferRead(jwt, offerId).catch(() => null);
+      setOfferDdb(ddb || null);
+      const pii = await getOfferDetails(jwt, offerId); // returns null if 403
+      setOfferPii(pii || null);
     } catch {
       setOfferDdb(null);
       setOfferPii(null);
@@ -83,16 +63,7 @@ export default function ApprovalsPage() {
       const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
       if (!jwt) throw new Error("No JWT token available");
       if (!selected?.offerId) throw new Error("Select a record first");
-      const res = await fetch(`/.netlify/functions/offers-approve?offerId=${encodeURIComponent(selected.offerId)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
-          body: JSON.stringify({ approved, vp_notes: notes }),
-        }
-      );
-      const data = await res.json().catch(() => ({}));
-      if (res.status === 403) throw new Error("User Action Not Authorized");
-      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      const data = await approveOffer(jwt, selected.offerId, { approved, vp_notes: notes });
       setMsg(data?.message || (approved ? "Approved" : "Not approved"));
     } catch (e) {
       setMsg(e.message || "Decision failed");

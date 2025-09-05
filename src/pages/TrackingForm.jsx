@@ -10,6 +10,7 @@ import AppHeader from "../components/AppHeader";
 import hbfaLogo from "../assets/hbfa-logo.png";
 import FormSection from "../components/FormSection";
 import "../styles/form.css";
+import { searchOffers, getOfferDetails as apiGetOfferDetails, saveOfferTracking } from "../api/client";
 
 function parseJwt(token) {
   try {
@@ -44,15 +45,8 @@ export default function TrackingForm() {
       const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
       if (!jwt) throw new Error("No JWT token available");
       console.log("JWT claims:", parseJwt(jwt));
-
-      const res = await fetch(
-        `/.netlify/functions/tracking-search?query=${encodeURIComponent(q)}`,
-        { headers: { Authorization: `Bearer ${jwt}` } }
-      );
-      if (res.status === 403) throw new Error("User Action Not Authorized");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setSearchResults(data.results || []);
+      const results = await searchOffers(jwt, q);
+      setSearchResults(results);
     } catch (err) {
       console.error("Search error:", err);
       setError(err.message || "Search failed");
@@ -91,13 +85,8 @@ export default function TrackingForm() {
     try {
       const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
       if (!jwt) return;
-      const res = await fetch(`/.netlify/functions/offer-details?offerId=${encodeURIComponent(offerId)}`,
-        { headers: { Authorization: `Bearer ${jwt}` } }
-      );
-      if (res.status === 403) return; // silently ignore unauthorized PII access
-      if (!res.ok) return;
-      const data = await res.json();
-      setPii(data);
+      const data = await apiGetOfferDetails(jwt, offerId);
+      if (data) setPii(data);
     } catch (e) {
       // swallow for now
     }
@@ -108,15 +97,8 @@ export default function TrackingForm() {
       const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
       if (!jwt) throw new Error("No JWT token available");
       if (!form.offerId) throw new Error("Select a record before saving");
-
       const payload = { ...form };
-      const res = await fetch(`/.netlify/functions/offers`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
-        body: JSON.stringify(payload),
-      });
-      if (res.status === 403) throw new Error("User Action Not Authorized");
-      if (!res.ok) throw new Error(`Save failed: HTTP ${res.status}`);
+      await saveOfferTracking(jwt, payload);
       alert("Tracking saved");
     } catch (e) {
       alert(e.message || "Save failed");
