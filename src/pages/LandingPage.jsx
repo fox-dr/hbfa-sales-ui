@@ -28,6 +28,7 @@ export default function LandingPage() {
   const isAdmin = inGroup("admin") || inGroup("ADMIN");
   const canSales = isAdmin || inGroup("sales_user") || inGroup("SA") || inGroup("EC");
   const canApprove = isAdmin || inGroup("sales_sudo") || inGroup("VP");
+  const canReports = isAdmin || inGroup("VP");
 
 
 
@@ -57,12 +58,22 @@ export default function LandingPage() {
 
       {/* Approvals: VP, ADMIN (and legacy sales_sudo) */}
       {canApprove && !isAdmin && (
-        <button
-          className="block bg-green-500 text-white px-4 py-2 rounded mb-2"
-          onClick={() => navigate("/approvals")}
-        >
-          Pending Approvals
-        </button>
+        <>
+          <button
+            className="block bg-green-500 text-white px-4 py-2 rounded mb-2"
+            onClick={() => navigate("/approvals")}
+          >
+            Pending Approvals
+          </button>
+          {canReports && (
+            <button
+              className="block bg-amber-600 text-white px-4 py-2 rounded mb-2"
+              onClick={() => navigate("/reports")}
+            >
+              Reports
+            </button>
+          )}
+        </>
       )}
 
       {/* Admin (ADMIN/admin) gets all three */}
@@ -85,6 +96,18 @@ export default function LandingPage() {
             onClick={() => navigate("/tracking")}
           >
             Sales Tracking (Admin)
+          </button>
+          <button
+            className="block bg-amber-600 text-white px-4 py-2 rounded mb-2"
+            onClick={() => navigate("/reports")}
+          >
+            Reports (Admin)
+          </button>
+          <button
+            className="block bg-gray-700 text-white px-4 py-2 rounded mb-2"
+            onClick={() => navigate("/health")}
+          >
+            Health (Admin)
           </button>
         </>
       )}
