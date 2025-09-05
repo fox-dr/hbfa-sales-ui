@@ -102,8 +102,7 @@ export default function HealthMini() {
       {targets.map((t) => {
         const st = statuses[t.code];
         const c = colorFor(st);
-        const title = `${t.code} • ${t.name} • ${st || (loading ? "checking" : "
-")}`.trim();
+        const title = `${t.code} • ${t.name} • ${st || (loading ? "checking" : "")}`.trim();
         return (
           <div key={t.code} title={title} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
             <span style={{ fontFamily: "monospace", opacity: 0.85 }}>{t.code}</span>
@@ -128,4 +127,3 @@ export default function HealthMini() {
     </div>
   );
 }
-
