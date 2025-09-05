@@ -203,6 +203,21 @@ export default function ApprovalsPage() {
             <button onClick={() => decide(true)} style={{ marginRight: 8 }}>Approve</button>
             <button onClick={() => decide(false)}>Not Approve</button>
           </div>
+          {/* Handoff status (tiny note) */}
+          {(() => {
+            const envId = offerDdb?.docusign_envelope;
+            const sent = offerDdb?.envelope_sent_date;
+            const signed = offerDdb?.buyer_sign_date;
+            if (!envId && !sent && !signed) return null;
+            return (
+              <div style={{ marginTop: 10, color: "#555" }}>
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>DocuSign (manual)</div>
+                {envId && <div><strong>Envelope:</strong> {envId}</div>}
+                {sent && <div><strong>Sent:</strong> {new Date(sent).toLocaleDateString()}</div>}
+                {signed && <div><strong>Buyer signed:</strong> {new Date(signed).toLocaleDateString()}</div>}
+              </div>
+            );
+          })()}
           <div style={{ marginTop: 12, paddingTop: 8, borderTop: "1px solid #eee" }}>
             <div style={{ fontWeight: 600, marginBottom: 6 }}>Offer Handoff</div>
             <button onClick={generateDoc} style={{ marginRight: 8 }}>Generate Offer HTML</button>
