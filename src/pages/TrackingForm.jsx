@@ -1,3 +1,7 @@
+// Routes Used by this page
+// - GET `/.netlify/functions/tracking-search`: search offers by buyer/unit/id
+// - GET `/.netlify/functions/offer-details`: PII contact details for selected offer
+// - PUT `/.netlify/functions/offers`: save tracking fields for the current offer
 // >>> copypasta starts here
 // src/pages/TrackingForm.jsx
 import React, { useState } from "react";

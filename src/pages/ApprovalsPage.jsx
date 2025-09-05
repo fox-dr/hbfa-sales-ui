@@ -1,3 +1,8 @@
+// Routes Used by this page
+// - GET `/.netlify/functions/tracking-search`: search offers by buyer/unit/id
+// - GET `/.netlify/functions/offer-read`: non-PII details for selected offer (DDB)
+// - GET `/.netlify/functions/offer-details`: PII details for selected offer (S3)
+// - POST `/.netlify/functions/offers-approve?offerId=...`: approve/deny offer (writes VP decision)
 import React, { useState } from "react";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
