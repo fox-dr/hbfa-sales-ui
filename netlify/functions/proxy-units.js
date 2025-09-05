@@ -1,4 +1,10 @@
 // netlify/functions/proxy-units.js
+// Route: `/.netlify/functions/proxy-units`
+// Methods: GET, POST, OPTIONS
+// Purpose: Authenticated proxy to upstream `API_BASE` for unit data
+// Consumers: Any UI proxying unit lookups (if configured)
+// Env: API_BASE
+// IAM: None (HTTP proxy); relies on upstream auth via forwarded headers
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
@@ -6,8 +12,9 @@ const CORS = {
 };
 
 import { requireAuth } from "./utils/auth.js";
+import { audit } from "./utils/audit.js";
 
-export async function handler(event) {
+export async function handler(event, context) {
   try {
     if (event.httpMethod === "OPTIONS") {
       return { statusCode: 204, headers: CORS, body: "" };
@@ -16,6 +23,7 @@ export async function handler(event) {
     // Require auth for proxy usage (SA or VP)
     const auth = requireAuth(event, ["SA", "VP"]);
     if (!auth.ok) return json(auth.statusCode, { error: auth.message });
+    audit(event, { fn: "proxy-units", stage: "invoke", claims: auth.claims });
 
     const API_BASE = process.env.API_BASE; // e.g. https://.../prod
     if (!API_BASE) return json(500, { error: "API_BASE not configured" });
@@ -93,13 +101,16 @@ export async function handler(event) {
       };
     }
 
-    return {
+    const out = {
       statusCode: upstream.status,
       headers: { ...CORS, "Content-Type": contentType },
       body: bodyText,
     };
+    audit(event, { fn: "proxy-units", stage: "success", claims: auth.claims, extra: { upstream: upstreamUrl, status: upstream.status } });
+    return out;
   } catch (err) {
     console.error("proxy-units error:", err);
+    audit(event, { fn: "proxy-units", stage: "error", extra: { message: String(err) } });
     return json(502, { error: "Upstream fetch failed", details: String(err) });
   }
 }

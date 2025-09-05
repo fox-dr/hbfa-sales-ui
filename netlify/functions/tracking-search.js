@@ -1,14 +1,22 @@
 // netlify/functions/tracking-search.js
+// Route: `/.netlify/functions/tracking-search`
+// Methods: GET, OPTIONS
+// Purpose: Search offers by buyer name, unit number, or offerId (DynamoDB)
+// Consumers: `src/pages/TrackingForm.jsx` (search), `src/pages/ApprovalsPage.jsx` (search)
+// Env: DDB_TABLE, DDB_REGION
+// IAM: dynamodb:Query (if using GSIs) and dynamodb:Scan on the table
+// Notes: Returns condensed result set suitable for selection lists
 import { DynamoDBClient, ScanCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
+import { audit } from "./utils/audit.js";
 
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
 const REGION = process.env.DDB_REGION || "us-east-2";
 
 const ddb = new DynamoDBClient(awsClientConfig());
 
-export async function handler(event) {
+export async function handler(event, context) {
   try {
     if (event.httpMethod === "OPTIONS") {
       return cors(204, "");
@@ -21,6 +29,7 @@ export async function handler(event) {
     // Auth: SA or VP may search
     const auth = requireAuth(event, ["SA", "VP"]);
     if (!auth.ok) return cors(auth.statusCode, JSON.stringify({ error: auth.message }));
+    audit(event, { fn: "tracking-search", stage: "invoke", claims: auth.claims });
 
     const q = (event.queryStringParameters?.query || "").trim();
     if (!q) {
@@ -49,9 +58,12 @@ export async function handler(event) {
       status: r.status || "",
     }));
 
-    return cors(200, JSON.stringify({ results }));
+    const resBody = { results };
+    audit(event, { fn: "tracking-search", stage: "success", claims: auth.claims, extra: { count: results.length } });
+    return cors(200, JSON.stringify(resBody));
   } catch (err) {
     console.error("tracking-search error:", err);
+    audit(event, { fn: "tracking-search", stage: "error", extra: { message: err?.message } });
     return cors(500, JSON.stringify({ error: err.message || "Server error" }));
   }
 }

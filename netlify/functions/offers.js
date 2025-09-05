@@ -10,6 +10,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
 import { splitPayload } from "./utils/splitPayload.js";
 import { requireAuth } from "./utils/auth.js";
+import { audit } from "./utils/audit.js";
 import { awsClientConfig } from "./utils/awsClients.js";
 
 const ddb = new DynamoDBClient(awsClientConfig());
@@ -19,13 +20,21 @@ const TABLE = process.env.DDB_TABLE || "fusion_offers";
 const S3_BUCKET = process.env.S3_VAULT_BUCKET;
 const S3_PREFIX = process.env.S3_VAULT_PREFIX || "offers/";
 
-export async function handler(event) {
+// netlify/functions/offers.js
+// Route: `/.netlify/functions/offers`
+// Methods: POST (create), GET (read), PUT (update), DELETE (delete)
+// Purpose: CRUD for offer records; DDB for normalized fields, S3 vault for full payload
+// Consumers: `src/pages/TrackingForm.jsx` (PUT save). POST may be used by offer creation flows.
+// Env: DDB_TABLE, S3_VAULT_BUCKET, S3_VAULT_PREFIX
+// IAM: dynamodb:{PutItem,GetItem,UpdateItem,DeleteItem,Scan}, s3:PutObject on vault prefix
+export async function handler(event, context) {
   try {
     const method = event.httpMethod;
     // Require auth for all methods; allow SA and VP
     const rolesAllowed = ["SA", "VP"];
     const auth = requireAuth(event, rolesAllowed);
     if (!auth.ok) return resp(auth.statusCode, { error: auth.message });
+    audit(event, { fn: "offers", stage: "invoke", claims: auth.claims, extra: { method } });
     const body = event.body ? JSON.parse(event.body) : {};
 
     if (method === "POST") {
@@ -51,7 +60,9 @@ export async function handler(event) {
         })
       );
 
-      return resp(200, { offerId });
+      const out = { offerId };
+      audit(event, { fn: "offers", stage: "success", claims: auth.claims, extra: { method, offerId } });
+      return resp(200, out);
     }
 
     else if (method === "GET") {
@@ -62,10 +73,14 @@ export async function handler(event) {
             Key: { offerId: { S: event.queryStringParameters.offerId } },
           })
         );
-        return resp(200, Item ? unmarshall(Item) : {});
+        const data = Item ? unmarshall(Item) : {};
+        audit(event, { fn: "offers", stage: "success", claims: auth.claims, extra: { method, type: "getOne" } });
+        return resp(200, data);
       } else {
         const { Items } = await ddb.send(new ScanCommand({ TableName: TABLE }));
-        return resp(200, Items.map(unmarshall));
+        const list = Items.map(unmarshall);
+        audit(event, { fn: "offers", stage: "success", claims: auth.claims, extra: { method, type: "scan", count: list.length } });
+        return resp(200, list);
       }
     }
 
@@ -94,6 +109,7 @@ export async function handler(event) {
         })
       );
 
+      audit(event, { fn: "offers", stage: "success", claims: auth.claims, extra: { method, offerId: body.offerId } });
       return resp(200, { offerId: body.offerId });
     }
 
@@ -105,12 +121,14 @@ export async function handler(event) {
           Key: { offerId: { S: body.offerId } },
         })
       );
+      audit(event, { fn: "offers", stage: "success", claims: auth.claims, extra: { method, offerId: body.offerId, type: "delete" } });
       return resp(200, { offerId: body.offerId });
     }
 
     return resp(405, { error: "Method Not Allowed" });
   } catch (err) {
     console.error("Error in offers.js:", err);
+    audit(event, { fn: "offers", stage: "error", extra: { message: err?.message } });
     return resp(500, { error: err.message });
   }
 }

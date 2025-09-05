@@ -1,4 +1,10 @@
 // netlify/functions/send-for-signature.js
+// Route: `/.netlify/functions/send-for-signature`
+// Methods: POST, OPTIONS (expected)
+// Purpose: Generate DocuSign envelope for an offer using project template
+// Consumers: Signature initiation UI/flow
+// Env: DDB_REGION, DocuSign env vars; reads template from `netlify/pdf-templates/${project_id}`
+// IAM: dynamodb:UpdateItem if writing status, filesystem read for templates
 import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";

@@ -1,14 +1,22 @@
+// netlify/functions/offers-approve.js
+// Route: `/.netlify/functions/offers-approve?offerId=...`
+// Methods: POST
+// Purpose: VP decision (approve/deny) on offer; writes VP fields to DDB
+// Consumers: `src/pages/ApprovalsPage.jsx` (Approve/Not Approve buttons)
+// Env: DDB_TABLE, DDB_REGION
+// IAM: dynamodb:UpdateItem on the offers table
 import {
   DynamoDBClient,
   UpdateItemCommand,
   GetItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { requireAuth } from "./utils/auth.js";
+import { audit } from "./utils/audit.js";
 
 const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
 
-export async function handler(event) {
+export async function handler(event, context) {
   try {
     const method = event.httpMethod;
     if (method !== "POST") {
@@ -18,6 +26,7 @@ export async function handler(event) {
     // VP-only endpoint
     const auth = requireAuth(event, ["VP"]);
     if (!auth.ok) return resp(auth.statusCode, { error: auth.message });
+    audit(event, { fn: "offers-approve", stage: "invoke", claims: auth.claims });
 
     const offerId = event.pathParameters?.offerId || event.queryStringParameters?.offerId;
     if (!offerId) return resp(400, { error: "offerId is required in path" });
@@ -46,15 +55,18 @@ export async function handler(event) {
 
     const result = await ddb.send(cmd);
 
-    return resp(200, {
+    const bodyOut = {
       message: approved ? "Offer approved" : "Offer not approved",
       offerId,
       vp_id: vpId,
       vp_approval_date: now,
       vp_decision: approved ? "approved" : "denied",
-    });
+    };
+    audit(event, { fn: "offers-approve", stage: "success", claims: auth.claims, extra: { offerId, decision: bodyOut.vp_decision } });
+    return resp(200, bodyOut);
   } catch (err) {
     console.error("Error in offers-approve.js:", err);
+    audit(event, { fn: "offers-approve", stage: "error", extra: { message: err?.message } });
     return resp(500, { error: err.message });
   }
 }

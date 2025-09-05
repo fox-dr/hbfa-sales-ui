@@ -1,7 +1,14 @@
 // netlify/functions/offer-read.js
+// Route: `/.netlify/functions/offer-read`
+// Methods: GET, OPTIONS
+// Purpose: Return stable, non-PII subset of an offer (DDB)
+// Consumers: `src/pages/ApprovalsPage.jsx` (details pane)
+// Env: DDB_TABLE, DDB_REGION
+// IAM: dynamodb:GetItem on the offers table
 import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
+import { audit } from "./utils/audit.js";
 
 const ddb = new DynamoDBClient(awsClientConfig());
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
@@ -12,13 +19,14 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
 };
 
-export async function handler(event) {
+export async function handler(event, context) {
   try {
     if (event.httpMethod === "OPTIONS") return json(204, "");
     if (event.httpMethod !== "GET") return json(405, { error: "Method Not Allowed" });
 
     const auth = requireAuth(event, ["SA", "VP"]);
     if (!auth.ok) return json(auth.statusCode, { error: auth.message });
+    audit(event, { fn: "offer-read", stage: "invoke", claims: auth.claims });
 
     const offerId = event.queryStringParameters?.offerId;
     if (!offerId) return json(400, { error: "offerId is required" });
@@ -32,9 +40,11 @@ export async function handler(event) {
 
     const raw = Item ? unmarshall(Item) : null;
     const body = shapeOffer(raw);
+    audit(event, { fn: "offer-read", stage: "success", claims: auth.claims });
     return json(200, body);
   } catch (err) {
     console.error("offer-read error:", err);
+    audit(event, { fn: "offer-read", stage: "error", extra: { message: err?.message } });
     return json(500, { error: err.message || String(err) });
   }
 }

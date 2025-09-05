@@ -1,4 +1,10 @@
 // netlify/functions/projects-list.js
+// Route: `/.netlify/functions/projects-list`
+// Methods: GET, OPTIONS
+// Purpose: List available projects (source depends on implementation)
+// Consumers: Unit/offer creation UIs (if present)
+// Env: (none defined here)
+// IAM: (none if static; add notes if calling AWS)
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { requireAuth } from "./utils/auth.js";
 

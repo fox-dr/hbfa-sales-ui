@@ -1,7 +1,14 @@
 // netlify/functions/report-status-coe.js
+// Route: `/.netlify/functions/report-status-coe`
+// Methods: GET, OPTIONS (supports `format=csv`)
+// Purpose: COE status report filtered by project/status/date window
+// Consumers: Reports tooling (CSV/JSON export)
+// Env: DDB_TABLE
+// IAM: dynamodb:Scan on the offers table
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
+import { audit } from "./utils/audit.js";
 
 const ddb = new DynamoDBClient(awsClientConfig());
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
@@ -12,7 +19,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
 };
 
-export async function handler(event) {
+export async function handler(event, context) {
   try {
     if (event.httpMethod === "OPTIONS") return cors(204, "");
     if (event.httpMethod !== "GET") return cors(405, JSON.stringify({ error: "Method Not Allowed" }));
@@ -20,6 +27,7 @@ export async function handler(event) {
     // Allow SA, VP, EC (Escrow Coordinator), ADMIN
     const auth = requireAuth(event, ["SA", "VP", "EC", "ADMIN"]);
     if (!auth.ok) return cors(auth.statusCode, JSON.stringify({ error: auth.message }));
+    audit(event, { fn: "report-status-coe", stage: "invoke", claims: auth.claims });
 
     const qs = event.queryStringParameters || {};
     const project = (qs.project_id || qs.project || "").trim().toLowerCase();
@@ -61,16 +69,21 @@ export async function handler(event) {
 
     if (format === "csv") {
       const csv = toCsv(data);
-      return {
+      const response = {
         statusCode: 200,
         headers: { ...CORS, "Content-Type": "text/csv", "Content-Disposition": "attachment; filename=report.csv" },
         body: csv,
       };
+      audit(event, { fn: "report-status-coe", stage: "success", claims: auth.claims, extra: { format, count: data.length } });
+      return response;
     }
 
-    return cors(200, JSON.stringify({ count: data.length, items: data }));
+    const body = { count: data.length, items: data };
+    audit(event, { fn: "report-status-coe", stage: "success", claims: auth.claims, extra: { format, count: data.length } });
+    return cors(200, JSON.stringify(body));
   } catch (err) {
     console.error("report-status-coe error:", err);
+    audit(event, { fn: "report-status-coe", stage: "error", extra: { message: err?.message } });
     return cors(500, JSON.stringify({ error: err.message || String(err) }));
   }
 }

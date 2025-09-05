@@ -1,3 +1,9 @@
+// netlify/functions/docusign-auth.js
+// Route: (helper module, not an HTTP endpoint)
+// Purpose: Provide DocuSign access token via JWT flow
+// Consumers: `netlify/functions/send-for-signature.js`
+// Env: DOCUSIGN_INTEGRATION_KEY, DOCUSIGN_USER_ID, DOCUSIGN_PRIVATE_KEY
+// IAM: none (external HTTP)
 import jwt from "jsonwebtoken";
 import fetch from "node-fetch";
 
