@@ -178,7 +178,7 @@ export default function TrackingForm() {
 
       {/* --- Original tracking form --- */}
       <form onSubmit={handleSubmit} className="app-form">
-        <img src={hbfaLogo} alt="HBFA Logo" />
+       {/* ---} <img src={hbfaLogo} alt="HBFA Logo" /> --- */}
         <h3>Sales Tracking Form</h3>
 
         <FormSection>
