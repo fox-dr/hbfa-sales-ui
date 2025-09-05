@@ -1,3 +1,7 @@
+// Routes Used by this page
+// - GET `/.netlify/functions/projects-list`: list available projects
+// - GET `/.netlify/functions/report-status-coe?format=json|csv`: run/export COE report
+// Access: VP and ADMIN via UI; backend allows SA, VP, EC, ADMIN
 import React, { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
@@ -29,6 +33,10 @@ export default function ReportsPage() {
         const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
         if (!jwt) return;
         const res = await fetch("/.netlify/functions/projects-list", { headers: { Authorization: `Bearer ${jwt}` } });
+        if (res.status === 403) {
+          setMsg("User Action Not Authorized");
+          return;
+        }
         if (!res.ok) return;
         const data = await res.json();
         setProjects(Array.isArray(data.projects) ? data.projects : []);
@@ -45,6 +53,7 @@ export default function ReportsPage() {
       if (!jwt) throw new Error("No JWT token available");
       const url = `/.netlify/functions/report-status-coe?${buildQuery("json")}`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${jwt}` } });
+      if (res.status === 403) throw new Error("User Action Not Authorized");
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
       setItems(data.items || []);
@@ -62,6 +71,7 @@ export default function ReportsPage() {
       if (!jwt) throw new Error("No JWT token available");
       const url = `/.netlify/functions/report-status-coe?${buildQuery("csv")}`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${jwt}` } });
+      if (res.status === 403) throw new Error("User Action Not Authorized");
       const text = await res.text();
       if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
       const blob = new Blob([text], { type: "text/csv;charset=utf-8;" });
@@ -89,6 +99,10 @@ export default function ReportsPage() {
     <div className="p-8">
       <AppHeader />
       <h1 className="text-xl font-bold mb-4">Status / COE Report</h1>
+      <div style={{ marginBottom: 12, color: "#555" }}>
+        Access: VP and Admin via UI. Backend allows SA, VP, EC, ADMIN.
+        Endpoints: <code>/.netlify/functions/projects-list</code> and <code>/.netlify/functions/report-status-coe</code>.
+      </div>
       <form onSubmit={runReport} style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
         <label>
           Project
