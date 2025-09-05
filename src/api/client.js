@@ -71,3 +71,13 @@ export async function approveOffer(jwt, offerId, { approved, vp_notes, vp_id } =
   return await res.json();
 }
 
+export async function generateOfferDoc(jwt, offer) {
+  const url = `/.netlify/functions/offer-doc`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { ...JSON_HEADERS, ...authHeaders(jwt) },
+    body: JSON.stringify({ offer }),
+  });
+  await handleResponse(res, "Generate failed");
+  return await res.json();
+}

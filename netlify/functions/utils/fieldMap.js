@@ -81,4 +81,9 @@ export const fieldMap = {
   notice_to_close: "DDB",
   coe_date: "DDB",
   buyer_complete: "DDB",
+
+  // DocuSign/Handoff (manual tracking)
+  docusign_envelope: "DDB",
+  envelope_sent_date: "DDB",
+  buyer_sign_date: "DDB",
 };

@@ -204,6 +204,9 @@ export default function TrackingForm() {
             "loan_fund",
             "coe_date",
             "buyer_complete",
+            // Handoff mode tracking
+            "envelope_sent_date",
+            "buyer_sign_date",
           ].map((field) => (
             <label key={field}>
               {field.replace(/_/g, " ")}
@@ -240,6 +243,14 @@ export default function TrackingForm() {
               )}
             </label>
           ))}
+        </FormSection>
+
+        <FormSection>
+          <h3>DocuSign (manual)</h3>
+          <label>
+            docusign envelope
+            <input type="text" name="docusign_envelope" value={form.docusign_envelope || ""} onChange={handleChange} />
+          </label>
         </FormSection>
 
         <FormSection>

@@ -111,6 +111,10 @@ function shapeOffer(src) {
   o.notice_to_close = f(src.notice_to_close);
   o.coe_date = f(src.coe_date);
   o.buyer_complete = f(src.buyer_complete);
+  // DocuSign/Handoff
+  o.docusign_envelope = f(src.docusign_envelope);
+  o.envelope_sent_date = f(src.envelope_sent_date);
+  o.buyer_sign_date = f(src.buyer_sign_date);
 
   // Financials (sanitized numbers stored as strings in DDB; keep as strings here)
   o.price = f(src.price);
@@ -174,6 +178,9 @@ function baseShape(_) {
     notice_to_close: null,
     coe_date: null,
     buyer_complete: null,
+    docusign_envelope: null,
+    envelope_sent_date: null,
+    buyer_sign_date: null,
     price: null,
     final_price: null,
     list_price: null,
