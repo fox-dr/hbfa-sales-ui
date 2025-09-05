@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
 import hbfaLogo from "../assets/hbfa-logo.png";
+import HealthMini from "../components/HealthMini";
 
 
 export default function LandingPage() {
@@ -35,7 +36,11 @@ export default function LandingPage() {
   return (
     
     <div className="p-8">
-      <img src={hbfaLogo} alt="HBFA Logo" className="mb-4" />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <img src={hbfaLogo} alt="HBFA Logo" className="mb-4" style={{ maxHeight: 48 }} />
+        {/* Health mini visible to all users; shows amber for unauthorized */}
+        <HealthMini />
+      </div>
       <h3 className="text-xl font-bold mb-4">Homes Built For America Sales Portal</h3>
 
       {/* Sales access: SA, EC, ADMIN (and legacy sales_user) */}
