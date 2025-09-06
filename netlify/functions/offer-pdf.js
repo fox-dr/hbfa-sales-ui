@@ -45,20 +45,8 @@ function ts() {
   );
 }
 
-function footerHtml(logoDataUrl) {
-  // Signature lines and centered logo
-  return `
-    <div style="width: 100%; margin-top: 24px; padding-top: 16px; border-top: 1px solid #ddd;">
-      <div style="display:flex; justify-content:space-between; gap:24px; margin-bottom: 16px;">
-        <div style="flex:1;">Signature ________________________ Date: ____________</div>
-        <div style="flex:1;">Signature ________________________ Date: ____________</div>
-      </div>
-      <div style="text-align:center; margin-top:8px;">
-        <img src="${logoDataUrl}" alt="HBFA" style="height:36px; opacity:0.9;" />
-      </div>
-    </div>
-  `;
-}
+// Note: Do not append our own footer/signature blocks here —
+// the project HTML template already includes branding and signatures.
 
 export async function handler(event) {
   let browser = null;
@@ -82,7 +70,11 @@ export async function handler(event) {
     const logoDataUrl = fs.existsSync(logoPath)
       ? `data:image/png;base64,${fs.readFileSync(logoPath).toString("base64")}`
       : "";
-    const htmlFull = `<!doctype html><html><head><meta charset='utf-8'><style>body{font-family:Arial,Helvetica,sans-serif;}</style></head><body>${htmlCore}${footerHtml(logoDataUrl)}</body></html>`;
+    // If the template is a full HTML document, use as-is; otherwise wrap minimally
+    const isFullHtml = /<html[\s>]/i.test(htmlCore);
+    const htmlFull = isFullHtml
+      ? htmlCore
+      : `<!doctype html><html><head><meta charset='utf-8'><style>body{font-family:Arial,Helvetica,sans-serif;}</style></head><body>${htmlCore}</body></html>`;
 
     // Launch headless Chrome for Lambda
     const executablePath = await chromium.executablePath();
@@ -121,4 +113,3 @@ export async function handler(event) {
     try { await browser?.close(); } catch {}
   }
 }
-
