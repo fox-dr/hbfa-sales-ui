@@ -81,3 +81,19 @@ export async function generateOfferDoc(jwt, offer) {
   await handleResponse(res, "Generate failed");
   return await res.json();
 }
+
+export async function generateOfferPdf(jwt, offer) {
+  const url = `/.netlify/functions/offer-pdf`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { ...authHeaders(jwt) },
+    body: JSON.stringify({ offer }),
+  });
+  if (res.status === 403) throw new Error("User Action Not Authorized");
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    throw new Error(t || `HTTP ${res.status}`);
+  }
+  const blob = await res.blob();
+  return blob;
+}

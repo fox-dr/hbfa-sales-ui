@@ -26,3 +26,10 @@
 
 [functions."send-for-signature"]
   node_bundler = "esbuild"
+
+[functions."offer-pdf"]
+  node_bundler = "esbuild"
+  external_node_modules = [
+    "@sparticuz/chromium",
+    "puppeteer-core"
+  ]

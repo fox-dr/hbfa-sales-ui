@@ -140,33 +140,8 @@ export default function OfferForm() {
     v.sa_email = saEmail;
     v.sa_name  = auth?.user?.profile?.name  || "";
     
-    const API_BASE = "https://lyj4zmurck.execute-api.us-east-2.amazonaws.com/prod";
-    // 1.send-fro-signature POST to backend (send-for-signature Lambda)    
-    const sigRes = await fetch(`${API_BASE}/offers`, {
-     method: "POST",
-     headers,
-    body: JSON.stringify(v),
-    });
-    
-    if (!sigRes.ok) {
-      const errText = await sigRes.text();
-      throw new Error(`Signature send failed: ${errText}`);
-    }
-
-    const sigText = await sigRes.text();
-    if (!sigRes.ok) throw new Error(`Signature send failed: ${sigText}`);
-
-    // Parse envelopeId from the Lambda response
-    const sigJson = JSON.parse(sigText);
-    const envelopeId = sigJson.envelopeId;
-    v.docusign_envelope_id = envelopeId;   // <-- carry forward into save
-
-    // 🪵 DEBUG: dump payload before saving
-    console.log(">>> OFFER SAVE PAYLOAD", v);
-
-    // 2. Save offer record directly to AWS
-   // const saveRes = await fetch("/.netlify/functions/offers",{
-   const saveRes = await fetch(`${API_BASE}/offers`, {
+        // Save offer to HBFA store via Netlify function (DDB + S3 vault)
+    const saveRes = await fetch(`/.netlify/functions/offers`, {
       method: "POST",
       headers,
       body: JSON.stringify(v),
@@ -175,7 +150,18 @@ export default function OfferForm() {
     const text = await saveRes.text();
     if (!saveRes.ok) throw new Error(text || `HTTP ${saveRes.status}`);
 
-    setMsg("Offer submitted and sent for signature successfully.");
+    // Generate real PDF and download (also stored to S3)
+    try {
+      const blob = await generateOfferPdf(jwt, { ...v, offerId: v.offer_id, project_id: PROJECT_ID });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `offer-${v.offer_id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setMsg("Offer saved and PDF generated.");
+    } catch (e) {
+      setMsg(`Offer saved, PDF generation failed: ${e.message || e}`);
+    }
   } catch (err) {
     setMsg(`Submit error: ${String(err.message || err)}`);
   }
@@ -442,3 +428,4 @@ const styles = {
   footerLogo: { width: "auto" }
 
 };
+
