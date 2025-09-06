@@ -15,6 +15,7 @@ import path from "path";
 const s3 = new S3Client(awsClientConfig());
 const S3_BUCKET = process.env.S3_VAULT_BUCKET;
 const S3_PREFIX = (process.env.S3_VAULT_PREFIX || "offers/").replace(/^\/+|\/+$/g, "");
+const S3_KMS_KEY_ARN = process.env.S3_VAULT_KMS_KEY_ARN || process.env.S3_VAULT_KMS_KEY_ID || null;
 
 function renderOfferTemplate(offer) {
   const projectId = offer.project_id || "Fusion";
@@ -61,14 +62,17 @@ export async function handler(event) {
     const html = renderOfferTemplate(offer);
     const key = `${S3_PREFIX}/docs/${offerId}-${ts()}.html`.replace(/\/+/, "/");
 
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: S3_BUCKET,
-        Key: key,
-        Body: html,
-        ContentType: "text/html; charset=utf-8",
-      })
-    );
+    const putParams = {
+      Bucket: S3_BUCKET,
+      Key: key,
+      Body: html,
+      ContentType: "text/html; charset=utf-8",
+    };
+    if (S3_KMS_KEY_ARN) {
+      putParams.ServerSideEncryption = "aws:kms";
+      putParams.SSEKMSKeyId = S3_KMS_KEY_ARN;
+    }
+    await s3.send(new PutObjectCommand(putParams));
 
     return json(200, { key, html });
   } catch (err) {
@@ -80,4 +84,3 @@ export async function handler(event) {
 function json(statusCode, body) {
   return { statusCode, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
 }
-
