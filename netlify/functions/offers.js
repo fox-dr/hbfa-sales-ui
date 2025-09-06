@@ -19,6 +19,7 @@ const s3 = new S3Client(awsClientConfig());
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
 const S3_BUCKET = process.env.S3_VAULT_BUCKET;
 const S3_PREFIX = process.env.S3_VAULT_PREFIX || "offers/";
+const S3_KMS_KEY_ARN = process.env.S3_VAULT_KMS_KEY_ARN || process.env.S3_VAULT_KMS_KEY_ID || null;
 
 // netlify/functions/offers.js
 // Route: `/.netlify/functions/offers`
@@ -50,15 +51,20 @@ export async function handler(event, context) {
       );
       await ddb.send(new PutItemCommand({ TableName: TABLE, Item: ddbMarshalled }));
 
-      // Write full payload to S3
-      await s3.send(
-        new PutObjectCommand({
+      // Write full payload to S3 (with SSE-KMS when configured)
+      {
+        const putParams = {
           Bucket: S3_BUCKET,
           Key: `${S3_PREFIX}${offerId}.json`,
           Body: JSON.stringify(s3Payload),
           ContentType: "application/json",
-        })
-      );
+        };
+        if (S3_KMS_KEY_ARN) {
+          putParams.ServerSideEncryption = "aws:kms";
+          putParams.SSEKMSKeyId = S3_KMS_KEY_ARN;
+        }
+        await s3.send(new PutObjectCommand(putParams));
+      }
 
       const out = { offerId };
       audit(event, { fn: "offers", stage: "success", claims: auth.claims, extra: { method, offerId } });
