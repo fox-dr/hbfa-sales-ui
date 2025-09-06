@@ -58,6 +58,18 @@ export async function handler(event) {
     // Enrich convenience fields (non-breaking if already present)
     if (offer.price && !offer.priceFmt) offer.priceFmt = `$${offer.price}`;
     if (offer.final_price && !offer.final_priceFmt) offer.final_priceFmt = `$${offer.final_price}`;
+    // Alias placeholders similar to offer-pdf for template compatibility
+    if (typeof offer.cash === 'undefined') offer.cash = offer.cash_purchase ? 'Yes' : 'No';
+    if (!offer['off er_notes_1'] && offer.offer_notes_1) offer['off er_notes_1'] = offer.offer_notes_1;
+    if (!offer.bldg) offer.bldg = offer.building_info || offer.bldg || '';
+    if (!offer.plan) offer.plan = offer.plan_info || offer.plan_type || offer.plan || '';
+    if (!offer.addr) {
+      const addr1 = offer.address || offer.address_1 || '';
+      const addr2 = offer.address_2 || '';
+      offer.addr = `${addr1} ${addr2}`.trim();
+    }
+    if (!offer.l_o_contact_email) offer.l_o_contact_email = offer.loan_officer_email || offer.broker_email || '';
+    if (!offer.l_o_phone) offer.l_o_phone = offer.loan_officer_phone || offer.broker_phone || '';
 
     const html = renderOfferTemplate(offer);
     const key = `${S3_PREFIX}/docs/${offerId}-${ts()}.html`.replace(/\/+/, "/");

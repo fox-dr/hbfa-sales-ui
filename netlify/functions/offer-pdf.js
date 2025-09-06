@@ -64,6 +64,18 @@ export async function handler(event) {
     const enrich = { ...offer };
     if (offer.price && !offer.priceFmt) enrich.priceFmt = `$${offer.price}`;
     if (offer.final_price && !offer.final_priceFmt) enrich.final_priceFmt = `$${offer.final_price}`;
+    // Alias and derive fields to match template placeholders
+    enrich.cash = typeof offer.cash !== 'undefined' ? offer.cash : (offer.cash_purchase ? 'Yes' : 'No');
+    if (!enrich['off er_notes_1'] && offer.offer_notes_1) enrich['off er_notes_1'] = offer.offer_notes_1;
+    if (!enrich.bldg) enrich.bldg = offer.building_info || offer.bldg || '';
+    if (!enrich.plan) enrich.plan = offer.plan_info || offer.plan_type || offer.plan || '';
+    if (!enrich.addr) {
+      const addr1 = offer.address || offer.address_1 || '';
+      const addr2 = offer.address_2 || '';
+      enrich.addr = `${addr1} ${addr2}`.trim();
+    }
+    if (!enrich.l_o_contact_email) enrich.l_o_contact_email = offer.loan_officer_email || offer.broker_email || '';
+    if (!enrich.l_o_phone) enrich.l_o_phone = offer.loan_officer_phone || offer.broker_phone || '';
 
     const htmlCore = renderOfferTemplate(enrich);
     const logoPath = path.join(process.cwd(), "src", "assets", "hbfa-logo.png");

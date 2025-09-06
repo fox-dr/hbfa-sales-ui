@@ -140,6 +140,12 @@ export default function OfferForm() {
     // add SA sender email from auth
     v.sa_email = saEmail;
     v.sa_name  = auth?.user?.profile?.name  || "";
+    // include derived unit details for template compatibility
+    v.bldg = buildingInfo || v.bldg || "";
+    v.plan = planInfo || v.plan || v.plan_type || "";
+    v.addr = addressInfo || `${v.address_1 ?? ""} ${v.address_2 ?? ""}`.trim();
+    // alias template typo
+    if (v.offer_notes_1 && !v['off er_notes_1']) v['off er_notes_1'] = v.offer_notes_1;
     
         // Save offer to HBFA store via Netlify function (DDB + S3 vault)
     const saveRes = await fetch(`/.netlify/functions/offers`, {
