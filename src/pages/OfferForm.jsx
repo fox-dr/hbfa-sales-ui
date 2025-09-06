@@ -5,6 +5,7 @@ import { useAuth } from "react-oidc-context";
 import "./offer-form.css";
 import { v4 as uuidv4 } from "uuid";
 import AppHeader from "../components/AppHeader";
+import { generateOfferPdf } from "../api/client";
 
 
 // --- Helper to parse JWT ---
