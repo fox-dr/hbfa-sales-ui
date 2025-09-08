@@ -41,21 +41,37 @@ export async function handler(event, context) {
     // Prefer GSIs when configured; fallback to scan
     const records = await queryWithGsisFirst(qLower);
 
-    const filtered = records.filter((r) => {
-      const buyer = String(r.buyer_name || r.buyer_1_full_name || r.buyer_2_full_name || "").toLowerCase();
-      const unit = String(r.unit_number || "").toLowerCase();
-      const id = String(r.offerId || "").toLowerCase();
-      return (
-        buyer.includes(qLower) || unit.includes(qLower) || id.includes(qLower)
-      );
-    });
+    let filtered;
+    if (qLower === "approved") {
+      // Show items approved in last 30 days
+      const now = new Date();
+      const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      filtered = records.filter((r) => {
+        const decision = String(r.vp_decision || r.status || "").toLowerCase();
+        if (decision !== "approved") return false;
+        const dateStr = r.vp_approval_date || r.status_date || null;
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        if (Number.isNaN(d.getTime())) return false;
+        return d >= from && d <= now;
+      });
+    } else {
+      filtered = records.filter((r) => {
+        const buyer = String(r.buyer_name || r.buyer_1_full_name || r.buyer_2_full_name || "").toLowerCase();
+        const unit = String(r.unit_number || "").toLowerCase();
+        const id = String(r.offerId || "").toLowerCase();
+        return (
+          buyer.includes(qLower) || unit.includes(qLower) || id.includes(qLower)
+        );
+      });
+    }
 
     // Keep only fields needed by the UI; include status if present
     const results = filtered.map((r) => ({
       offerId: r.offerId,
       buyer_name: r.buyer_name || r.buyer_1_full_name || r.buyer_2_full_name || "",
       unit_number: r.unit_number || "",
-      status: r.status || "",
+      status: r.status || r.vp_decision || "",
     }));
 
     const resBody = { results };

@@ -39,19 +39,31 @@ export async function handler(event, context) {
     const vpId = body.vp_id || auth.claims?.email || auth.claims?.sub || "unknown";
     const now = new Date().toISOString();
 
-    // Update VP approval fields
+    // Update VP approval fields (and status when approved)
+    const updateExpr = [
+      "vp_approval_status = :status",
+      "vp_approval_date = :date",
+      "vp_id = :vp",
+      "vp_decision = :dec",
+      "vp_notes = :notes",
+    ];
+    if (approved) {
+      updateExpr.push("#status = :approvedStatus", "#status_date = :date");
+    }
+
     const cmd = new UpdateItemCommand({
       TableName: TABLE,
       Key: { offerId: { S: offerId } },
-      UpdateExpression:
-        "SET vp_approval_status = :status, vp_approval_date = :date, vp_id = :vp, vp_decision = :dec, vp_notes = :notes",
+      UpdateExpression: "SET " + updateExpr.join(", "),
       ExpressionAttributeValues: {
         ":status": { BOOL: approved },
         ":date": { S: now },
         ":vp": { S: vpId },
         ":dec": { S: approved ? "approved" : "denied" },
         ":notes": { S: String(vpNotes) },
+        ":approvedStatus": { S: "approved" },
       },
+      ExpressionAttributeNames: approved ? { "#status": "status", "#status_date": "status_date" } : undefined,
       ReturnValues: "ALL_NEW",
     });
 
