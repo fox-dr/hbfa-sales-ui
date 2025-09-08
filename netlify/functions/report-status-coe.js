@@ -6,6 +6,7 @@
 // Env: DDB_TABLE
 // IAM: dynamodb:Scan on the offers table
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 import { audit } from "./utils/audit.js";
@@ -27,6 +28,14 @@ export async function handler(event, context) {
     // Allow SA, VP, EC (Escrow Coordinator), ADMIN
     const auth = requireAuth(event, ["SA", "VP", "EC", "ADMIN"]);
     if (!auth.ok) return cors(auth.statusCode, JSON.stringify({ error: auth.message }));
+    // whoami log
+    try {
+      const sts = new STSClient(awsClientConfig());
+      const id = await sts.send(new GetCallerIdentityCommand({}));
+      console.log(`whoami report-status-coe account=${id.Account} arn=${id.Arn}`);
+    } catch (e) {
+      console.log(`whoami report-status-coe error=${e?.message}`);
+    }
     audit(event, { fn: "report-status-coe", stage: "invoke", claims: auth.claims });
 
     const qs = event.queryStringParameters || {};

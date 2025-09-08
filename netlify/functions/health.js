@@ -1,6 +1,7 @@
 // netlify/functions/health.js
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 
@@ -26,6 +27,14 @@ export async function handler(event) {
     if (!auth.ok) return json(auth.statusCode, { error: auth.message });
 
     const env = checkEnv();
+    // whoami log
+    try {
+      const sts = new STSClient(awsClientConfig());
+      const id = await sts.send(new GetCallerIdentityCommand({}));
+      console.log(`whoami health account=${id.Account} arn=${id.Arn}`);
+    } catch (e) {
+      console.log(`whoami health error=${e?.message}`);
+    }
     const authEnv = {
       hbfaKeyId: Boolean(process.env.HBFA_AWS_ACCESS_KEY_ID),
       hbfaSecret: Boolean(process.env.HBFA_AWS_SECRET_ACCESS_KEY),
