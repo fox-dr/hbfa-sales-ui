@@ -7,8 +7,10 @@
 // IAM: (none if static; add notes if calling AWS)
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { requireAuth } from "./utils/auth.js";
+import { awsClientConfig } from "./utils/awsClients.js";
+import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 
-const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
+const ddb = new DynamoDBClient(awsClientConfig());
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
 
 const CORS = {
@@ -25,6 +27,15 @@ export async function handler(event) {
     // Allow common roles to view list
     const auth = requireAuth(event, ["SA", "VP", "EC", "ADMIN"]);
     if (!auth.ok) return json(auth.statusCode, { error: auth.message });
+
+    // whoami log to confirm account/role
+    try {
+      const sts = new STSClient(awsClientConfig());
+      const id = await sts.send(new GetCallerIdentityCommand({}));
+      console.log(`whoami projects-list account=${id.Account} arn=${id.Arn}`);
+    } catch (e) {
+      console.log(`whoami projects-list error=${e?.message}`);
+    }
 
     const { Items } = await ddb.send(new ScanCommand({ TableName: TABLE, ProjectionExpression: "project_id" }));
     const vals = new Set();
