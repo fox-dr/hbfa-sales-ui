@@ -6,7 +6,6 @@
 import React, { useState } from "react";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
-import { generateOfferDoc } from "../api/client";
 import { searchOffers, getOfferRead, getOfferDetails, approveOffer } from "../api/client";
 
 export default function ApprovalsPage() {
@@ -71,49 +70,6 @@ export default function ApprovalsPage() {
     }
   }
 
-  function copyDocuSignMessage() {
-    try {
-      const unit = offerDdb?.unit_number || selected?.unit_number || "";
-      const project = offerDdb?.project_id || offerDdb?.project_name || "";
-      const subject = `Offer for Unit ${unit} at ${project}`.trim();
-      const buyer = offerDdb?.buyer_name || "Buyer";
-      const body = [
-        `Hello ${buyer},`,
-        "",
-        "Attached is your offer. Please review and sign.",
-        "",
-        "Thank you,",
-        "Sales Team",
-      ].join("\n");
-      const text = `${subject}\n\n${body}`;
-      navigator.clipboard.writeText(text);
-      setMsg("DocuSign message copied to clipboard");
-    } catch (e) {
-      setMsg("Copy failed");
-    }
-  }
-
-  async function generateDoc() {
-    try {
-      const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
-      if (!jwt) throw new Error("No JWT token available");
-      if (!selected?.offerId) throw new Error("Select a record first");
-      // Merge non-PII and PII for best fill
-      const offer = { ...(offerDdb || {}), ...(offerPii || {}), offerId: selected.offerId };
-      const res = await generateOfferDoc(jwt, offer);
-      const html = res?.html || "";
-      if (!html) throw new Error("No document generated");
-      const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `offer-${selected.offerId}.html`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-      setMsg("Offer HTML generated and downloaded");
-    } catch (e) {
-      setMsg(e.message || "Generate failed");
-    }
-  }
 
   return (
     <div className="p-8">
@@ -218,11 +174,7 @@ export default function ApprovalsPage() {
               </div>
             );
           })()}
-          <div style={{ marginTop: 12, paddingTop: 8, borderTop: "1px solid #eee" }}>
-            <div style={{ fontWeight: 600, marginBottom: 6 }}>Offer Handoff</div>
-            <button onClick={generateDoc} style={{ marginRight: 8 }}>Generate Offer HTML</button>
-            <button onClick={copyDocuSignMessage}>Copy DocuSign Message</button>
-          </div>
+          {/* Offer handoff actions removed: OfferForm owns PDF generation */}
         </div>
       )}
     </div>
