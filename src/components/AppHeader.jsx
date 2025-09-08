@@ -31,7 +31,15 @@ export default function AppHeader({ title = "HBFA Sales Portal", logo = logoUrl 
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <h2 style={{ margin: 0 }}>{title}</h2>
+        <h2
+          style={{ margin: 0, cursor: "pointer" }}
+          title="Go to landing page"
+          onClick={() => {
+            try { window.location.assign("/"); } catch { window.location.href = "/"; }
+          }}
+        >
+          {title}
+        </h2>
         <img src={logo} alt="Logo" style={{ height: 48 }} />
       </div>
       <button
