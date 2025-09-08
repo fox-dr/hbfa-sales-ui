@@ -11,9 +11,11 @@ import {
   GetItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { requireAuth } from "./utils/auth.js";
+import { awsClientConfig } from "./utils/awsClients.js";
 import { audit } from "./utils/audit.js";
 
-const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-east-2" });
+// Use the same configured credentials as other functions (HBFA keys if provided)
+const ddb = new DynamoDBClient(awsClientConfig());
 const TABLE = process.env.DDB_TABLE || "fusion_offers";
 
 export async function handler(event, context) {
