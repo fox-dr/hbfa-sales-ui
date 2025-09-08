@@ -55,6 +55,20 @@ export async function handler(event, context) {
         if (Number.isNaN(d.getTime())) return false;
         return d >= from && d <= now;
       });
+    } else if (qLower === "pending") {
+      // Show items pending approval in last 30 days
+      const now = new Date();
+      const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      filtered = records.filter((r) => {
+        const status = String(r.status || "").toLowerCase();
+        const isPending = status === "pending" || r.vp_approval_status === false || r.vp_approval_status == null;
+        if (!isPending) return false;
+        const dateStr = r.status_date || r.vp_approval_date || null;
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        if (Number.isNaN(d.getTime())) return false;
+        return d >= from && d <= now;
+      });
     } else {
       filtered = records.filter((r) => {
         const buyer = String(r.buyer_name || r.buyer_1_full_name || r.buyer_2_full_name || "").toLowerCase();

@@ -98,6 +98,9 @@ export default function TrackingForm() {
       if (!jwt) throw new Error("No JWT token available");
       if (!form.offerId) throw new Error("Select a record before saving");
       const payload = { ...form };
+      if (payload.status && !payload.status_date) {
+        payload.status_date = new Date().toISOString();
+      }
       await saveOfferTracking(jwt, payload);
       alert("Tracking saved");
     } catch (e) {
@@ -173,11 +176,10 @@ export default function TrackingForm() {
           <label>
             Status
             <select name="status" value={form.status || ""} onChange={handleChange}>
-              {/* options... */}
               <option value="">--Select--</option>
-              <option value="offer">Offer</option>
-              <option value="sent">Sent</option>
+              <option value="pending">Pending Approval</option>
               <option value="approved">Approved</option>
+              <option value="contract_sent">Sales Contract Sent</option>
             </select>
           </label>
         </FormSection>

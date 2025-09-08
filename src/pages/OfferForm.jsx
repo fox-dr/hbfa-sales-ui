@@ -140,6 +140,11 @@ export default function OfferForm() {
     // add SA sender email from auth
     v.sa_email = saEmail;
     v.sa_name  = auth?.user?.profile?.name  || "";
+    // default initial status
+    if (!v.status) {
+      v.status = "pending";
+      v.status_date = new Date().toISOString();
+    }
     // include derived unit details for template compatibility
     v.bldg = buildingInfo || v.bldg || "";
     v.plan = planInfo || v.plan || v.plan_type || "";
