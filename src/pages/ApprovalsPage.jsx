@@ -93,7 +93,7 @@ export default function ApprovalsPage() {
         <ul style={{ listStyle: "none", padding: 0, marginBottom: 16 }}>
           {results.map((r) => (
             <li key={r.offerId} style={{ padding: "6px 0", cursor: "pointer" }} onClick={() => handleSelect(r)}>
-              <strong>{r.offerId}</strong> â€” {r.buyer_name} â€” {r.unit_number}
+              <strong>{r.offerId}</strong> — {r.buyer_name} — {r.unit_number} — {(r.status || \ \).toLowerCase()}
             </li>
           ))}
         </ul>
@@ -180,3 +180,4 @@ export default function ApprovalsPage() {
     </div>
   );
 }
+

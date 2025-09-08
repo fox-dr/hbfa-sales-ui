@@ -143,7 +143,7 @@ export default function TrackingForm() {
               style={{ cursor: "pointer", padding: "0.5rem 0" }}
               onClick={() => selectResult(item)}
             >
-              <strong>{item.offerId}</strong> - {item.buyer_name} - {item.unit_number}
+              <strong>{item.offerId}</strong> - {item.buyer_name} - {item.unit_number} - {(item.status || "").toLowerCase()}
             </li>
           ))}
         </ul>

@@ -42,7 +42,10 @@ export async function handler(event, context) {
     const records = await queryWithGsisFirst(qLower);
 
     let filtered;
-    if (qLower === "approved") {
+    const isApprovedQuery = qLower === "approved";
+    const isPendingQuery = qLower === "pending" || qLower === "pending approval" || qLower.includes("pending") || qLower.includes("approval");
+    const isContractSentQuery = qLower.includes("contract");
+    if (isApprovedQuery) {
       // Show items approved in last 30 days
       const now = new Date();
       const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -55,7 +58,7 @@ export async function handler(event, context) {
         if (Number.isNaN(d.getTime())) return false;
         return d >= from && d <= now;
       });
-    } else if (qLower === "pending") {
+    } else if (isPendingQuery) {
       // Show items pending approval in last 30 days
       const now = new Date();
       const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -67,6 +70,18 @@ export async function handler(event, context) {
         if (!dateStr) return false;
         const d = new Date(dateStr);
         if (Number.isNaN(d.getTime())) return false;
+        return d >= from && d <= now;
+      });
+    } else if (isContractSentQuery) {
+      const now = new Date();
+      const from = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+      filtered = records.filter((r) => {
+        const status = String(r.status || "").toLowerCase();
+        if (status !== "contract_sent") return false;
+        const dateStr = r.status_date || null;
+        if (!dateStr) return true;
+        const d = new Date(dateStr);
+        if (Number.isNaN(d.getTime())) return true;
         return d >= from && d <= now;
       });
     } else {
@@ -81,12 +96,17 @@ export async function handler(event, context) {
     }
 
     // Keep only fields needed by the UI; include status if present
-    const results = filtered.map((r) => ({
-      offerId: r.offerId,
-      buyer_name: r.buyer_name || r.buyer_1_full_name || r.buyer_2_full_name || "",
-      unit_number: r.unit_number || "",
-      status: r.status || r.vp_decision || "",
-    }));
+    const results = filtered.map((r) => {
+      let status = String(r.status || "").toLowerCase();
+      if (!status) status = String(r.vp_decision || "").toLowerCase();
+      if (!status && (r.vp_approval_status === false || r.vp_approval_status == null)) status = "pending";
+      return {
+        offerId: r.offerId,
+        buyer_name: r.buyer_name || r.buyer_1_full_name || r.buyer_2_full_name || "",
+        unit_number: r.unit_number || "",
+        status,
+      };
+    });
 
     const resBody = { results };
     audit(event, { fn: "tracking-search", stage: "success", claims: auth.claims, extra: { count: results.length } });
