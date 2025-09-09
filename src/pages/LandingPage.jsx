@@ -41,8 +41,6 @@ export default function LandingPage() {
   const canSales = isAdmin || inGroup("sales_user") || inGroup("SA") || inGroup("EC");
   const canApprove = isAdmin || inGroup("sales_sudo") || inGroup("VP");
   const canReports = isAdmin || inGroup("VP");
-  const opsEnabled = import.meta.env.VITE_ENABLE_OPS === "true";
-  const canOps = opsEnabled && (isAdmin || inGroup("OP"));
 
 
 
@@ -127,14 +125,7 @@ export default function LandingPage() {
           >
             Health (Admin)
           </button>
-          {opsEnabled && (
-            <button
-              className="block bg-slate-700 text-white px-4 py-2 rounded mb-2"
-              onClick={() => navigate("/ops/schedule")}
-            >
-              Construction Schedule (OPS)
-            </button>
-          )}
+          {/* OPS button intentionally omitted to keep Sales isolated */}
         </>
       )}
 
@@ -145,15 +136,7 @@ export default function LandingPage() {
         </p>
       )}
 
-      {/* OPS access: OP or ADMIN via separate button when not admin */}
-      {!isAdmin && canOps && (
-        <button
-          className="block bg-slate-700 text-white px-4 py-2 rounded mt-4"
-          onClick={() => navigate("/ops/schedule")}
-        >
-          Construction Schedule (OPS)
-        </button>
-      )}
+      {/* No OPS links on Sales landing */}
     </div>
   );
 }
