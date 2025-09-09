@@ -312,7 +312,7 @@ export default function OfferFormClean() {
 
           <label>
             Qualification/Lender Notes
-            <textarea name="lender_notes" rows={3} maxLength={512} />
+            <textarea name="offer_notes_1" rows={3} maxLength={512} />
           </label>
         </FormSection>
 

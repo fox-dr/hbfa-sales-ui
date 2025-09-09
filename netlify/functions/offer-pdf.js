@@ -66,7 +66,8 @@ export async function handler(event) {
     if (offer.final_price && !offer.final_priceFmt) enrich.final_priceFmt = `$${offer.final_price}`;
     // Alias and derive fields to match template placeholders
     enrich.cash = typeof offer.cash !== 'undefined' ? offer.cash : (offer.cash_purchase ? 'Yes' : 'No');
-    if (!enrich['off er_notes_1'] && offer.offer_notes_1) enrich['off er_notes_1'] = offer.offer_notes_1;
+    // Map Qualification/Lender Notes to canonical template key: {{offer_notes_1}}
+    if (!enrich.offer_notes_1 && offer.lender_notes) enrich.offer_notes_1 = offer.lender_notes;
     if (!enrich.bldg) enrich.bldg = offer.building_info || offer.bldg || '';
     if (!enrich.plan) enrich.plan = offer.plan_info || offer.plan_type || offer.plan || '';
     if (!enrich.addr) {

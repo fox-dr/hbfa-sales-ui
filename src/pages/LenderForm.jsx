@@ -8,7 +8,7 @@ const lenderFields = [
   { name: "broker_name", type: "txt" },
   { name: "broker_email", type: "txt" },
   { name: "escrow_number", type: "txt" },
-  { name: "lender_notes", type: "txt" },
+  { name: "offer_notes_1", type: "txt" },
 ];
 
 export default function LenderBrokerForm({ data, onChange }) {

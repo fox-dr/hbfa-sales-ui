@@ -149,8 +149,7 @@ export default function OfferForm() {
     v.bldg = buildingInfo || v.bldg || "";
     v.plan = planInfo || v.plan || v.plan_type || "";
     v.addr = addressInfo || `${v.address_1 ?? ""} ${v.address_2 ?? ""}`.trim();
-    // alias template typo
-    if (v.offer_notes_1 && !v['off er_notes_1']) v['off er_notes_1'] = v.offer_notes_1;
+    // Notes are canonical as offer_notes_1
     
         // Save offer to HBFA store via Netlify function (DDB + S3 vault)
     const saveRes = await fetch(`/.netlify/functions/offers`, {
@@ -372,7 +371,7 @@ export default function OfferForm() {
             <div style={{ ...styles.row, gridTemplateColumns: "1fr" }}>
               <label style={styles.col}>
                 Qualification/Lender Notes
-                <textarea name="lender_notes" rows={3} maxLength={512} style={styles.textarea} />
+                <textarea name="offer_notes_1" rows={3} maxLength={512} style={styles.textarea} />
               </label>
             </div>
           </section>

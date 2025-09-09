@@ -60,7 +60,8 @@ export async function handler(event) {
     if (offer.final_price && !offer.final_priceFmt) offer.final_priceFmt = `$${offer.final_price}`;
     // Alias placeholders similar to offer-pdf for template compatibility
     if (typeof offer.cash === 'undefined') offer.cash = offer.cash_purchase ? 'Yes' : 'No';
-    if (!offer['off er_notes_1'] && offer.offer_notes_1) offer['off er_notes_1'] = offer.offer_notes_1;
+    // Map Qualification/Lender Notes to canonical template key: {{offer_notes_1}}
+    if (!offer.offer_notes_1 && offer.lender_notes) offer.offer_notes_1 = offer.lender_notes;
     if (!offer.bldg) offer.bldg = offer.building_info || offer.bldg || '';
     if (!offer.plan) offer.plan = offer.plan_info || offer.plan_type || offer.plan || '';
     if (!offer.addr) {
