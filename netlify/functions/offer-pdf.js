@@ -25,9 +25,11 @@ function renderOfferTemplate(offer) {
     throw new Error(`Template not found for project_id=${projectId} at ${templatePath}`);
   }
   let html = fs.readFileSync(templatePath, "utf8");
+  // Replace placeholders like {{key}} or {{ key }} using a function to avoid $-sequence issues
   for (const [key, val] of Object.entries(offer || {})) {
     const safeVal = val == null ? "" : String(val);
-    html = html.replace(new RegExp(`{{${key}}}`, "g"), safeVal);
+    const re = new RegExp(`{{\\s*${key}\\s*}}`, "g");
+    html = html.replace(re, () => safeVal);
   }
   return html;
 }
@@ -78,6 +80,8 @@ export async function handler(event) {
     if (!enrich.l_o_contact_email) enrich.l_o_contact_email = offer.loan_officer_email || offer.broker_email || '';
     if (!enrich.l_o_phone) enrich.l_o_phone = offer.loan_officer_phone || offer.broker_phone || '';
 
+    // Ensure canonical notes field is populated
+    if (!enrich.offer_notes_1 && enrich.lender_notes) enrich.offer_notes_1 = enrich.lender_notes;
     const htmlCore = renderOfferTemplate(enrich);
     const logoPath = path.join(process.cwd(), "src", "assets", "hbfa-logo.png");
     const logoDataUrl = fs.existsSync(logoPath)
