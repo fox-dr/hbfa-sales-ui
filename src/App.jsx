@@ -7,7 +7,7 @@ import OfferForm from "./pages/OfferForm.jsx";
 import ApprovalsPage from "./pages/ApprovalsPage.jsx"; // stub
 import ReportsPage from "./pages/ReportsPage.jsx";
 import Healthcheck from "./pages/Healthcheck.jsx";
-// OPS demo intentionally not wired into Sales router
+import ConstructionSchedule from "./pages/ops/ConstructionSchedule.jsx";
 
 
 export default function App() {
@@ -54,6 +54,8 @@ export default function App() {
           <Route path="/tracking" element={<TrackingForm />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/health" element={<Healthcheck />} />
+          {/* Direct link only; not linked from UI */}
+          <Route path="/ops/schedule" element={<ConstructionSchedule />} />
         </Routes>
       </div>
     </Router>
