@@ -24,9 +24,11 @@ function renderOfferTemplate(offer) {
     throw new Error(`Template not found for project_id=${projectId} at ${templatePath}`);
   }
   let html = fs.readFileSync(templatePath, "utf8");
+  // Replace placeholders like {{key}} or {{ key }} using a function to avoid $-sequence issues
   for (const [key, val] of Object.entries(offer || {})) {
     const safeVal = val == null ? "" : String(val);
-    html = html.replace(new RegExp(`{{${key}}}`, "g"), safeVal);
+    const re = new RegExp(`{{\\s*${key}\\s*}}`, "g");
+    html = html.replace(re, () => safeVal);
   }
   return html;
 }
