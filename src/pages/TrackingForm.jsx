@@ -70,8 +70,44 @@ export default function TrackingForm() {
   };
   // --- Form change handler ---
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const { name } = e.target;
+    const raw = e.target.value;
+
+    // Numeric fields to coerce into numbers (empty -> "")
+    const numericFields = new Set([
+      "final_price",
+      "list_price",
+      "initial_deposit_amount",
+      "seller_credit",
+      "upgrade_credit",
+      "total_upgrades_solar",
+      "hoa_credit",
+      "total_credits",
+    ]);
+    const creditFields = [
+      "seller_credit",
+      "upgrade_credit",
+      "total_upgrades_solar",
+      "hoa_credit",
+    ];
+
+    setForm((prev) => {
+      const next = { ...prev };
+      // Coerce numeric inputs
+      if (numericFields.has(name)) {
+        const num = raw === "" ? "" : Number(raw);
+        next[name] = Number.isFinite(num) ? num : "";
+      } else {
+        next[name] = raw;
+      }
+
+      // Keep total_credits as the sum of individual credits
+      const sum = creditFields.reduce((acc, key) => acc + (Number(next[key]) || 0), 0);
+      const anyFilled = creditFields.some((key) => next[key] !== undefined && next[key] !== "" && Number.isFinite(Number(next[key])));
+      next.total_credits = anyFilled ? sum : "";
+
+      return next;
+    });
   };
 
 
