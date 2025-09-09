@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+# Guardrail: only allow pushing to 'main'. Blocks branch pushes.
+# To bypass intentionally (e.g., hotfix), run: git push --no-verify
+
+protected_branch="main"
+
+remote="$1"
+url="$2"
+
+# Read ref updates from stdin: <local_ref> <local_sha> <remote_ref> <remote_sha>
+while read local_ref local_sha remote_ref remote_sha
+do
+  # Only consider branch refs (ignore tags and others)
+  case "$remote_ref" in
+    refs/heads/*)
+      branch="${remote_ref#refs/heads/}"
+      if [ "$branch" != "$protected_branch" ]; then
+        echo "Push blocked: only '$protected_branch' is allowed (attempted '$branch' to $remote)." >&2
+        echo "If this is intentional, re-run with --no-verify." >&2
+        exit 1
+      fi
+    ;;
+  esac
+done
+
+exit 0
