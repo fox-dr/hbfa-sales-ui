@@ -10,9 +10,20 @@ export default function LandingPage() {
   const auth = useAuth();
   const navigate = useNavigate();
 
-  // Groups come from Cognito claims in the ID token
-  const groups = auth?.user?.profile?.["cognito:groups"] || [];
-  console.log("User groups:", groups);
+  // Groups/roles may be present under different claim keys depending on IdP mapping
+  const prof = auth?.user?.profile || {};
+  const rawCandidates = [
+    prof?.["cognito:groups"],
+    prof?.groups,
+    prof?.roles,
+    prof?.permissions,
+  ].filter(Boolean);
+  let groups = [];
+  for (const c of rawCandidates) {
+    if (Array.isArray(c)) { groups = c; break; }
+    if (typeof c === "string") { groups = c.split(/[\s,]+/).filter(Boolean); break; }
+  }
+  console.log("User groups (detected):", groups);
 
   // Backward compatible role checks:
   // - Legacy: sales_user, sales_sudo, admin
@@ -30,6 +41,8 @@ export default function LandingPage() {
   const canSales = isAdmin || inGroup("sales_user") || inGroup("SA") || inGroup("EC");
   const canApprove = isAdmin || inGroup("sales_sudo") || inGroup("VP");
   const canReports = isAdmin || inGroup("VP");
+  const opsEnabled = import.meta.env.VITE_ENABLE_OPS === "true";
+  const canOps = opsEnabled && (isAdmin || inGroup("OP"));
 
 
 
@@ -114,6 +127,14 @@ export default function LandingPage() {
           >
             Health (Admin)
           </button>
+          {opsEnabled && (
+            <button
+              className="block bg-slate-700 text-white px-4 py-2 rounded mb-2"
+              onClick={() => navigate("/ops/schedule")}
+            >
+              Construction Schedule (OPS)
+            </button>
+          )}
         </>
       )}
 
@@ -122,6 +143,16 @@ export default function LandingPage() {
         <p className="text-gray-600">
           No groups detected. Contact admin.
         </p>
+      )}
+
+      {/* OPS access: OP or ADMIN via separate button when not admin */}
+      {!isAdmin && canOps && (
+        <button
+          className="block bg-slate-700 text-white px-4 py-2 rounded mt-4"
+          onClick={() => navigate("/ops/schedule")}
+        >
+          Construction Schedule (OPS)
+        </button>
       )}
     </div>
   );

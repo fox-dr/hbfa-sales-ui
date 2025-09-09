@@ -7,6 +7,8 @@ import OfferForm from "./pages/OfferForm.jsx";
 import ApprovalsPage from "./pages/ApprovalsPage.jsx"; // stub
 import ReportsPage from "./pages/ReportsPage.jsx";
 import Healthcheck from "./pages/Healthcheck.jsx";
+import ConstructionSchedule from "./pages/ops/ConstructionSchedule.jsx";
+const ENABLE_OPS = import.meta.env.VITE_ENABLE_OPS === "true";
 
 
 export default function App() {
@@ -53,6 +55,9 @@ export default function App() {
           <Route path="/tracking" element={<TrackingForm />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/health" element={<Healthcheck />} />
+          {ENABLE_OPS && (
+            <Route path="/ops/schedule" element={<ConstructionSchedule />} />
+          )}
         </Routes>
       </div>
     </Router>
