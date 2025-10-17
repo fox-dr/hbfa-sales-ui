@@ -10,7 +10,12 @@ import AppHeader from "../components/AppHeader";
 import hbfaLogo from "../assets/hbfa-logo.png";
 import FormSection from "../components/FormSection";
 import "../styles/form.css";
-import { searchOffers, getOfferDetails as apiGetOfferDetails, saveOfferTracking } from "../api/client";
+import {
+  searchOffers,
+  getOfferDetails as apiGetOfferDetails,
+  saveOfferTracking,
+  getOfferRead,
+} from "../api/client";
 
 function parseJwt(token) {
   try {
@@ -18,6 +23,119 @@ function parseJwt(token) {
   } catch {
     return {};
   }
+}
+
+const DATE_FIELDS = [
+  "contract_sent_date",
+  "fully_executed_date",
+  "projected_closing_date",
+  "initial_deposit_receipt_date",
+  "financing_contingency_date",
+  "loan_app_complete",
+  "loan_approved",
+  "loan_lock",
+  "appraisal_ordered",
+  "appraiser_visit_date",
+  "appraisal_complete",
+  "walk_through_date",
+  "adjusted_coe",
+  "notice_to_close",
+  "loan_docs_ordered",
+  "loan_docs_signed",
+  "loan_fund",
+  "coe_date",
+  "buyer_complete",
+  "envelope_sent_date",
+  "buyer_sign_date",
+];
+
+const NUMERIC_FIELDS = [
+  "final_price",
+  "list_price",
+  "initial_deposit_amount",
+  "seller_credit",
+  "upgrade_credit",
+  "total_upgrades_solar",
+  "hoa_credit",
+  "total_credits",
+];
+
+const CREDIT_FIELDS = [
+  "seller_credit",
+  "upgrade_credit",
+  "total_upgrades_solar",
+  "hoa_credit",
+];
+
+const NUMERIC_FIELDS_SET = new Set(NUMERIC_FIELDS);
+
+function formatDateForInput(value) {
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().split("T")[0];
+}
+
+function normalizeNumeric(value) {
+  if (value === null || value === undefined || value === "") return "";
+  const num = Number(value);
+  return Number.isFinite(num) ? num : "";
+}
+
+function calculateTotalCredits(data) {
+  const anyFilled = CREDIT_FIELDS.some((key) => {
+    const val = data[key];
+    return val !== undefined && val !== "" && Number.isFinite(Number(val));
+  });
+  if (!anyFilled) return "";
+  return CREDIT_FIELDS.reduce((acc, key) => acc + (Number(data[key]) || 0), 0);
+}
+
+function normalizeOfferData(offer = {}, fallback = {}) {
+  const src = offer || {};
+  const fb = fallback || {};
+  const next = {};
+
+  const resolveValue = (key) => {
+    const primary = src[key];
+    if (primary !== undefined && primary !== null && primary !== "") return primary;
+    const secondary = fb[key];
+    if (secondary !== undefined && secondary !== null && secondary !== "") return secondary;
+    return "";
+  };
+
+  next.offerId = resolveValue("offerId") || fb.offerId || "";
+  next.buyer_name = resolveValue("buyer_name") || fb.buyer_name || "";
+  next.unit_number = resolveValue("unit_number") || fb.unit_number || "";
+  const statusVal = resolveValue("status");
+  if (statusVal !== "") next.status = statusVal;
+  const envelopeVal = resolveValue("docusign_envelope");
+  if (envelopeVal !== "") next.docusign_envelope = envelopeVal;
+  const notesVal = resolveValue("add_notes");
+  if (notesVal !== "") next.add_notes = notesVal;
+
+  DATE_FIELDS.forEach((field) => {
+    const formatted = formatDateForInput(resolveValue(field));
+    if (formatted) {
+      next[field] = formatted;
+    }
+  });
+
+  NUMERIC_FIELDS.forEach((field) => {
+    const numeric = normalizeNumeric(resolveValue(field));
+    if (field === "total_credits") return;
+    if (numeric !== "") {
+      next[field] = numeric;
+    }
+  });
+
+  const credits = calculateTotalCredits(next);
+  if (credits !== "") {
+    next.total_credits = credits;
+  }
+
+  return next;
 }
 
 
@@ -28,7 +146,6 @@ export default function TrackingForm() {
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [hasSearched, setHasSearched] = useState(false);
   const [pii, setPii] = useState(null);
 
   // --- Single handleSearch (proxy + JWT) ---
@@ -39,7 +156,6 @@ export default function TrackingForm() {
 
     setIsLoading(true);
     setError("");
-    setHasSearched(true);
 
     try {
       const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
@@ -57,14 +173,28 @@ export default function TrackingForm() {
 
     // --- When a result is clicked, fill form ---
   const selectResult = (item) => {
-    setForm((prev) => ({
-      ...prev,
-      offerId: item.offerId,
-      buyer_name: item.buyer_name,
-      unit_number: item.unit_number,
-      status: item.status,
-    }));
+    hydrateSelection(item);
+  };
+
+  const hydrateSelection = async (item) => {
     setSearchResults([]);
+    setError("");
+    const base = normalizeOfferData({}, item);
+    setForm(base);
+    setPii(null);
+
+    try {
+      const jwt = auth?.user?.access_token || auth?.user?.id_token || null;
+      if (!jwt) throw new Error("No JWT token available");
+      const record = await getOfferRead(jwt, item.offerId);
+      const hydrated = normalizeOfferData(record, item);
+      setForm(hydrated);
+    } catch (err) {
+      console.error("Failed to load offer record:", err);
+      setError(err.message || "Failed to load offer details");
+      setForm(normalizeOfferData({}, item));
+    }
+
     // Optionally fetch PII details for contact (phone, emails) for authorized roles
     fetchOfferDetails(item.offerId);
   };
@@ -73,39 +203,15 @@ export default function TrackingForm() {
     const { name } = e.target;
     const raw = e.target.value;
 
-    // Numeric fields to coerce into numbers (empty -> "")
-    const numericFields = new Set([
-      "final_price",
-      "list_price",
-      "initial_deposit_amount",
-      "seller_credit",
-      "upgrade_credit",
-      "total_upgrades_solar",
-      "hoa_credit",
-      "total_credits",
-    ]);
-    const creditFields = [
-      "seller_credit",
-      "upgrade_credit",
-      "total_upgrades_solar",
-      "hoa_credit",
-    ];
-
     setForm((prev) => {
       const next = { ...prev };
-      // Coerce numeric inputs
-      if (numericFields.has(name)) {
+      if (NUMERIC_FIELDS_SET.has(name)) {
         const num = raw === "" ? "" : Number(raw);
         next[name] = Number.isFinite(num) ? num : "";
       } else {
         next[name] = raw;
       }
-
-      // Keep total_credits as the sum of individual credits
-      const sum = creditFields.reduce((acc, key) => acc + (Number(next[key]) || 0), 0);
-      const anyFilled = creditFields.some((key) => next[key] !== undefined && next[key] !== "" && Number.isFinite(Number(next[key])));
-      next.total_credits = anyFilled ? sum : "";
-
+      next.total_credits = calculateTotalCredits(next);
       return next;
     });
   };
@@ -196,7 +302,7 @@ export default function TrackingForm() {
         </div>
       )}
        {/*--comment out for debugging--*/}
-      {/* --- {!isLoading && !error && hasSearched && searchResults.length === 0 && (
+      {/* --- {!isLoading && !error && searchResults.length === 0 && (
         <p>No results found for "{searchQuery}".</p>
       )} --*/}
 
@@ -222,33 +328,15 @@ export default function TrackingForm() {
 
         <FormSection>
           <h3>Key Dates</h3>
-          {[
-            "contract_sent_date",
-            "fully_executed_date",
-            "projected_closing_date",
-            "initial_deposit_receipt_date",
-            "financing_contingency_date",
-            "loan_app_complete",
-            "loan_approved",
-            "loan_lock",
-            "appraisal_ordered",
-            "appraiser_visit_date",
-            "appraisal_complete",
-            "walk_through_date",
-            "adjusted_coe",
-            "notice_to_close",
-            "loan_docs_ordered",
-            "loan_docs_signed",
-            "loan_fund",
-            "coe_date",
-            "buyer_complete",
-            // Handoff mode tracking
-            "envelope_sent_date",
-            "buyer_sign_date",
-          ].map((field) => (
+          {DATE_FIELDS.map((field) => (
             <label key={field}>
               {field.replace(/_/g, " ")}
-              <input type="date" name={field} onChange={handleChange} />
+              <input
+                type="date"
+                name={field}
+                value={form[field] || ""}
+                onChange={handleChange}
+              />
             </label>
           ))}
         </FormSection>
@@ -270,7 +358,7 @@ export default function TrackingForm() {
               <input
                 type="number"
                 name={field}
-                value={form[field] || ""}
+                value={form[field] ?? ""}
                 onChange={handleChange}
                 step="1"
                 min="0"
@@ -294,7 +382,11 @@ export default function TrackingForm() {
         <FormSection>
           <label>
             Add Notes
-            <textarea name="add_notes" onChange={handleChange} />
+            <textarea
+              name="add_notes"
+              value={form.add_notes || ""}
+              onChange={handleChange}
+            />
           </label>
         </FormSection>
 

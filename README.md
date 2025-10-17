@@ -22,6 +22,16 @@ The status/COE report download now mirrors the on-screen table when the API retu
 
 The "Last 30 days CSV" shortcut also injects explicit `from`/`to` dates to avoid stale filter states when exporting.
 
+## Tracking Form Hydration
+
+Selecting a buyer/unit from the tracking search immediately hydrates the full form:
+
+- Pulls the non-PII offer record via `offer-read` and normalizes dates/numbers into input-safe formats.
+- Auto-fills all milestone dates, financial figures, DocuSign IDs, and notes so edits start from the current state.
+- Keeps the live total credits in sync as individual credit fields change.
+
+This keeps the tracking view consistent with what has already been recorded and prevents starting from a blank slate.
+
 ## Development Notes
 
 - Install dependencies with `npm install`, then run `npm run dev` for local development.
