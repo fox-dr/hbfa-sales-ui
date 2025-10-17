@@ -39,6 +39,27 @@ function formatUSD(val) {
   });
 }
 
+function formatPhone(value) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.length === 11 && digits.startsWith("1")) {
+    const local = digits.slice(1);
+    return `(${local.slice(0, 3)}) ${local.slice(3, 6)}-${local.slice(6)}`;
+  }
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  if (digits.length === 7) {
+    return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  }
+  return String(value || "").trim();
+}
+
+function handlePhoneBlur(event) {
+  const formatted = formatPhone(event.target.value);
+  event.target.value = formatted;
+}
+
 
 
 export default function OfferForm() {
@@ -134,8 +155,29 @@ export default function OfferForm() {
     const formData = new FormData(e.currentTarget);
     const v = Object.fromEntries(formData.entries());
     v.project_id = PROJECT_ID;
-    v.price = unformatUSD(price || v.price);
+    const rawPrice = unformatUSD(price || v.price);
+    v.price = rawPrice;
+    v.priceFmt = rawPrice ? formatUSD(rawPrice) : "";
     v.offer_id = uuidv4(); // add a unique offer ID
+
+    const phoneFields = [
+      "phone_number_1",
+      "phone_number_2",
+      "phone_number_3",
+      "loan_officer_phone",
+      "broker_phone",
+    ];
+    phoneFields.forEach((key) => {
+      if (key in v) {
+        v[key] = formatPhone(v[key]);
+      }
+    });
+
+    const lenderNotes = (v.lender_notes || "").trim();
+    v.lender_notes = lenderNotes;
+    const offerNotes = (v.offer_notes_1 || "").trim();
+    v.offer_notes_1 = offerNotes || lenderNotes;
+    if (v.offer_notes_1 && !v["off er_notes_1"]) v["off er_notes_1"] = v.offer_notes_1;
     
     // add SA sender email from auth
     v.sa_email = saEmail;
@@ -284,15 +326,15 @@ export default function OfferForm() {
             <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr" }}>
               <label style={styles.col}>
                 Phone Number 1
-                <input name="phone_number_1" maxLength={20} style={styles.input} />
+                <input name="phone_number_1" maxLength={20} style={styles.input} onBlur={handlePhoneBlur} />
               </label>
               <label style={styles.col}>
                 Phone Number 2
-                <input name="phone_number_2" maxLength={20} style={styles.input} />
+                <input name="phone_number_2" maxLength={20} style={styles.input} onBlur={handlePhoneBlur} />
               </label>
               <label style={styles.col}>
                 Phone Number 3
-                <input name="phone_number_3" maxLength={20} style={styles.input} />
+                <input name="phone_number_3" maxLength={20} style={styles.input} onBlur={handlePhoneBlur} />
               </label>
             </div>
 
@@ -329,14 +371,14 @@ export default function OfferForm() {
               <label style={styles.col}>Lender Institution<input name="lender" style={styles.input} /></label>
               <label style={styles.col}>Loan Officer<input name="loan_officer" style={styles.input} /></label>
               <label style={styles.col}>Loan Officer Email<input type="email" name="loan_officer_email" maxLength={40} style={styles.input} /></label>
-              <label style={styles.col}>Loan Officer Phone<input type="tel" name="loan_officer_phone" maxLength={20} style={styles.input} /></label>
+              <label style={styles.col}>Loan Officer Phone<input type="tel" name="loan_officer_phone" maxLength={20} style={styles.input} onBlur={handlePhoneBlur} /></label>
             </div>
 
             <div style={{ ...styles.row, gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
               <label style={styles.col}>Broker Name<input name="broker_name" style={styles.input} /></label>
               <label style={styles.col}>Brokerage<input name="brokerage" style={styles.input} /></label>
               <label style={styles.col}>Broker Email<input type="email" name="broker_email" maxLength={40} style={styles.input} /></label>
-              <label style={styles.col}>Broker Phone<input type="tel" name="broker_phone" maxLength={20} style={styles.input} /></label>
+              <label style={styles.col}>Broker Phone<input type="tel" name="broker_phone" maxLength={20} style={styles.input} onBlur={handlePhoneBlur} /></label>
             </div>
 
             <div style={{ ...styles.row, gridTemplateColumns: "auto 1fr 1fr" }}>

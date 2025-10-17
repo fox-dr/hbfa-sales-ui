@@ -1,20 +1,27 @@
-# React + Vite
+# HBFA Sales UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is the front-end for the HBFA sales tools. It is built with React and Vite and provides internal teams with a streamlined workflow for preparing preliminary offer packets, previewing inventory, and pushing documentation to prospects.
 
-Currently, two official plugins are available:
+## Offer Form Enhancements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The preliminary offer form now provides friendlier output for lender review and PDF delivery:
 
-## Expanding the ESLint configuration
+- **Lender notes** are mirrored into the template's `offer_notes_1` field so the PDF shows the plain text headline instead of the raw merge key.
+- **Price formatting** preserves the unformatted numeric value for storage while supplying a `priceFmt` string to the PDF generator that includes comma separators (for example, `$1,250,000.00`).
+- **Phone numbers** are normalized on blur to `(###) ###-####` (or `###-####` for 7-digit entries) across buyer, lender, and broker contact fields to avoid raw string output.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+These updates keep all other form behavior intact while improving readability for both the browser view and generated PDFs.
+
+## Development Notes
+
+- Install dependencies with `npm install`, then run `npm run dev` for local development.
+- Netlify functions in `netlify/functions/` handle persistence, PDF generation, and proxy requests.
+- Build the production bundle with `npm run build`; preview it locally with `npm run preview`.
 
 ## Main-only Push Guard (training wheels)
 To avoid accidental branch deploys, this repo is configured to allow pushes only to `main` via a Git pre-push hook.
 
-What’s in place
+What's in place
 - Hook path: `.githooks/pre-push`
 - Behavior: blocks `git push` to any branch except `main`.
 - Override (if truly intended): `git push --no-verify`
