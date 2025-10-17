@@ -12,6 +12,16 @@ The preliminary offer form now provides friendlier output for lender review and 
 
 These updates keep all other form behavior intact while improving readability for both the browser view and generated PDFs.
 
+## Reports CSV Safeguards
+
+The status/COE report download now mirrors the on-screen table when the API returns an unexpected empty CSV. If you run a report and fetch the CSV with the same filters, the UI will:
+
+1. Request the CSV from the Netlify function with the active filters.
+2. Detect header-only responses.
+3. Fall back to the locally rendered dataset so the downloaded file matches what was shown (e.g., the expected three rows).
+
+The "Last 30 days CSV" shortcut also injects explicit `from`/`to` dates to avoid stale filter states when exporting.
+
 ## Development Notes
 
 - Install dependencies with `npm install`, then run `npm run dev` for local development.

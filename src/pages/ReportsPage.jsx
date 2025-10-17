@@ -6,6 +6,50 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
 
+const CSV_HEADERS = [
+  { key: "offerId", label: "offerId" },
+  { key: "project_id", label: "project_id" },
+  { key: "unit_number", label: "unit_number" },
+  { key: "buyer_name", label: "buyer_name" },
+  { key: "status", label: "status" },
+  { key: "status_date", label: "status_date" },
+  { key: "coe_date", label: "coe_date" },
+  { key: "projected_closing_date", label: "projected_closing_date" },
+  { key: "final_price", label: "final_price" },
+  { key: "total_credits", label: "total_credits" },
+];
+
+function rowsToCsv(rows = []) {
+  const esc = (value) => {
+    if (value == null) return "";
+    const s = String(value);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const headerLine = CSV_HEADERS.map((col) => col.label).join(",");
+  const dataLines = rows.map((row) =>
+    CSV_HEADERS.map((col) => esc(row?.[col.key])).join(",")
+  );
+  return [headerLine, ...dataLines].join("\n");
+}
+
+function csvHasRecords(csvText) {
+  if (!csvText) return false;
+  const lines = csvText.split(/\r?\n/).slice(1);
+  return lines.some((line) => line && line.replace(/"/g, "").replace(/,/g, "").trim().length > 0);
+}
+
+function triggerCsvDownload(csvText, filename = "report.csv") {
+  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
+
 export default function ReportsPage() {
   const auth = useAuth();
   const [project, setProject] = useState("");
@@ -16,14 +60,25 @@ export default function ReportsPage() {
   const [items, setItems] = useState([]);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lastFiltersKey, setLastFiltersKey] = useState("");
 
-  function buildQuery(format = "json") {
+  function getFilters(overrides = {}) {
+    return {
+      project: overrides.project ?? project,
+      status: overrides.status ?? status,
+      from: overrides.from ?? from,
+      to: overrides.to ?? to,
+    };
+  }
+
+  function buildQuery(format = "json", overrides = {}) {
+    const filters = getFilters(overrides);
     const p = new URLSearchParams();
-    if (project) p.set("project_id", project);
-    if (status) p.set("status", status);
-    if (from) p.set("from", from);
-    if (to) p.set("to", to);
-    p.set("format", format);
+    if (filters.project) p.set("project_id", filters.project);
+    if (filters.status) p.set("status", filters.status);
+    if (filters.from) p.set("from", filters.from);
+    if (filters.to) p.set("to", filters.to);
+    if (format) p.set("format", format);
     return p.toString();
   }
 
@@ -51,35 +106,42 @@ export default function ReportsPage() {
     try {
       const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
       if (!jwt) throw new Error("No JWT token available");
+      const filtersKey = JSON.stringify(getFilters());
       const url = `/.netlify/functions/report-status-coe?${buildQuery("json")}`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${jwt}` } });
       if (res.status === 403) throw new Error("User Action Not Authorized");
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
       setItems(data.items || []);
+      setLastFiltersKey(filtersKey);
     } catch (e) {
       setMsg(e.message || "Report failed");
       setItems([]);
+      setLastFiltersKey("");
     } finally {
       setLoading(false);
     }
   }
 
-  async function downloadCsv() {
+  async function downloadCsv(options = {}) {
+    const { overrides = {}, forceFetch = false } = options;
+    const filters = getFilters(overrides);
+    const filtersKey = JSON.stringify(filters);
     try {
       const jwt = auth?.user?.id_token || auth?.user?.access_token || null;
       if (!jwt) throw new Error("No JWT token available");
-      const url = `/.netlify/functions/report-status-coe?${buildQuery("csv")}`;
+      const url = `/.netlify/functions/report-status-coe?${buildQuery("csv", overrides)}`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${jwt}` } });
       if (res.status === 403) throw new Error("User Action Not Authorized");
       const text = await res.text();
       if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
-      const blob = new Blob([text], { type: "text/csv;charset=utf-8;" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "report.csv";
-      a.click();
-      URL.revokeObjectURL(a.href);
+      const shouldFallback = !forceFetch && filtersKey === lastFiltersKey && items.length > 0 && !csvHasRecords(text);
+      if (shouldFallback) {
+        const csvFromState = rowsToCsv(items);
+        triggerCsvDownload(csvFromState);
+        return;
+      }
+      triggerCsvDownload(text);
     } catch (e) {
       setMsg(e.message || "Download failed");
     }
@@ -90,9 +152,11 @@ export default function ReportsPage() {
     const prior = new Date(today);
     prior.setDate(today.getDate() - 30);
     const fmt = (d) => d.toISOString().split("T")[0];
-    setFrom(fmt(prior));
-    setTo(fmt(today));
-    await downloadCsv();
+    const fromVal = fmt(prior);
+    const toVal = fmt(today);
+    setFrom(fromVal);
+    setTo(toVal);
+    await downloadCsv({ forceFetch: true, overrides: { from: fromVal, to: toVal } });
   }
 
   return (
@@ -123,7 +187,7 @@ export default function ReportsPage() {
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
         </label>
         <button type="submit">Run</button>
-        <button type="button" onClick={downloadCsv}>Download CSV</button>
+        <button type="button" onClick={() => downloadCsv()}>Download CSV</button>
         <button type="button" onClick={downloadLast30Csv}>Last 30 days CSV</button>
       </form>
       {loading && <div>Loading.</div>}
