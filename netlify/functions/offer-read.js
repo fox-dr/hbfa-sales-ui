@@ -6,7 +6,7 @@
 // Env: DDB_TABLE, DDB_REGION
 // IAM: dynamodb:GetItem on the offers table
 const { DynamoDBClient, GetItemCommand } = require("@aws-sdk/client-dynamodb");
-const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
+const { marshall, unmarshall: awsUnmarshall } = require("@aws-sdk/util-dynamodb");
 const { awsClientConfig } = require("./utils/awsClients.js");
 const { requireAuth } = require("./utils/auth.js");
 const { audit } = require("./utils/audit.js");
@@ -53,7 +53,7 @@ async function handler(event, context) {
       })
     );
 
-    const raw = Item ? unmarshall(Item) : null;
+    const raw = Item ? awsUnmarshall(Item) : null;
     const body = shapeOffer(raw);
     audit(event, { fn: "offer-read", stage: "success", claims: auth.claims });
     return json(200, body);
@@ -71,12 +71,6 @@ function json(statusCode, body) {
     headers: { ...CORS, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   };
-}
-
-function unmarshall(item) {
-  return Object.fromEntries(
-    Object.entries(item).map(([k, v]) => [k, Object.values(v)[0]])
-  );
 }
 
 // Stable, non-PII schema for UI/report hydration
