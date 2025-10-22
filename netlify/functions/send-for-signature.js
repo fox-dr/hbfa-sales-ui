@@ -6,8 +6,11 @@
 // Env: DDB_REGION, DocuSign env vars; reads template from `netlify/pdf-templates/${project_id}`
 // IAM: dynamodb:UpdateItem if writing status, filesystem read for templates
 import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { marshall } from "@aws-sdk/util-dynamodb";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
+import { decodeOfferId } from "../../lib/offer-key.js";
+import { asString } from "../../lib/normalized-offer.js";
 import fs from "fs";
 import path from "path";
 import jwt from "jsonwebtoken";
@@ -42,6 +45,10 @@ function renderOfferTemplate(offer) {
 }
 
 const ddb = new DynamoDBClient(awsClientConfig());
+const TABLE =
+  process.env.HBFA_SALES_OFFERS_TABLE ||
+  process.env.DDB_TABLE ||
+  "hbfa_sales_offers";
 
 
 // const ddb = new DynamoDBClient({ region: process.env.DDB_REGION || "us-west-1" });
@@ -209,22 +216,44 @@ export async function handler(event) {
     const envelopeId = result.envelopeId;
 
     // === Save envelopeId into DynamoDB
-    if (offer.offer_id) {
-      const TABLE = process.env.OFFERS_TABLE || "offers";
-      const updateCmd = new UpdateItemCommand({
-        TableName: TABLE,
-        Key: { offerId: { S: offer.offer_id } },
-        UpdateExpression:
-          "SET docusign_envelope_id = :e, offer_status = :s, sa_email = :se, sa_name = :sn, sent_at = :t",
-        ExpressionAttributeValues: {
-          ":e": { S: envelopeId },
-          ":s": { S: "sent" },
-          ":se": { S: sa_email || "unknown" },
-          ":sn": { S: sa_name || "unknown" },
-          ":t": { S: new Date().toISOString() },
-        },
-      });
-      await ddb.send(updateCmd);
+    const key = extractOfferKey(offer);
+    if (key.project_id && key.contract_unit_number) {
+      const nowIso = new Date().toISOString();
+      const updateFields = {
+        docusign_envelope: envelopeId,
+        status: "contract_sent",
+        status_date: nowIso,
+        sa_email: sa_email || "unknown",
+        sa_name: sa_name || "unknown",
+        sent_at: nowIso,
+      };
+      const marshalled = marshall(updateFields, { removeUndefinedValues: true });
+      const exprNames = {};
+      const exprValues = {};
+      const setClauses = [];
+      for (const [attr, value] of Object.entries(marshalled)) {
+        const nameToken = `#${attr}`;
+        const valueToken = `:${attr}`;
+        exprNames[nameToken] = attr;
+        exprValues[valueToken] = value;
+        setClauses.push(`${nameToken} = ${valueToken}`);
+      }
+      if (setClauses.length) {
+        const updateCmd = new UpdateItemCommand({
+          TableName: TABLE,
+          Key: marshall(
+            {
+              project_id: key.project_id,
+              contract_unit_number: key.contract_unit_number,
+            },
+            { removeUndefinedValues: true }
+          ),
+          UpdateExpression: `SET ${setClauses.join(", ")}`,
+          ExpressionAttributeNames: exprNames,
+          ExpressionAttributeValues: exprValues,
+        });
+        await ddb.send(updateCmd);
+      }
     }
 
     return {
@@ -235,4 +264,29 @@ export async function handler(event) {
     console.error("send-for-signature error:", err);
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
+}
+
+function extractOfferKey(offer = {}) {
+  if (!offer) return { project_id: "", contract_unit_number: "" };
+
+  const rawId =
+    offer.offerId || offer.offer_id || offer.offer_id || offer.offerid;
+  if (rawId) {
+    const decoded = decodeOfferId(rawId);
+    if (decoded.projectId && decoded.contractUnitNumber) {
+      return {
+        project_id: decoded.projectId,
+        contract_unit_number: decoded.contractUnitNumber,
+      };
+    }
+  }
+
+  const projectId = asString(offer.project_id || offer.projectId);
+  const contractUnitNumber = asString(
+    offer.contract_unit_number || offer.unit_number || offer.contractUnitNumber
+  );
+  return {
+    project_id: projectId || "",
+    contract_unit_number: contractUnitNumber || "",
+  };
 }

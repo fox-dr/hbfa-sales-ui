@@ -37,6 +37,12 @@ This keeps the tracking view consistent with what has already been recorded and 
 - Install dependencies with `npm install`, then run `npm run dev` for local development.
 - Netlify functions in `netlify/functions/` handle persistence, PDF generation, and proxy requests.
 - Build the production bundle with `npm run build`; preview it locally with `npm run preview`.
+- Data pipeline overview:
+  * `hbfa_sales_offers` is the primary DynamoDB table (PK `project_id`, SK `contract_unit_number`). All Netlify functions and the React app now create/update rows here using the composite key encoded as `offerId = "<project>::<unit>"`.
+  * `polaris_raw_weekly` stores the unmodified weekly Polaris CSV rows for auditing (PK `report_date`, SK `${project_name}#${unit_name}`).
+  * `scripts/backfill-hbfa-sales-offers.mjs` seeds `hbfa_sales_offers` from the legacy `fusion_offers` table. Run with `npm run backfill:sales` if you need to rehydrate historic data.
+  * `scripts/import-polaris-report.mjs` loads raw Polaris rows and upserts non-Fusion units into `hbfa_sales_offers` while respecting `is_immutable` on closed units. Run with `npm run polaris:import -- --file=<csv> --report-date=YYYY-MM-DD`.
+  * Skip Fusion rows in the weekly Polaris import (either by editing the CSV first or letting the script filter them) so in-house data for Fusion stays authoritative. Closed units can be frozen permanently by setting `is_immutable = 1` in `hbfa_sales_offers`.
 
 ## Main-only Push Guard (training wheels)
 To avoid accidental branch deploys, this repo is configured to allow pushes only to `main` via a Git pre-push hook.

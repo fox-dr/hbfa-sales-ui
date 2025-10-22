@@ -7,7 +7,6 @@
 import React, { useState } from "react";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
-import hbfaLogo from "../assets/hbfa-logo.png";
 import FormSection from "../components/FormSection";
 import "../styles/form.css";
 import {
@@ -16,6 +15,7 @@ import {
   saveOfferTracking,
   getOfferRead,
 } from "../api/client";
+import { decodeOfferId } from "../../lib/offer-key.js";
 
 function parseJwt(token) {
   try {
@@ -105,15 +105,36 @@ function normalizeOfferData(offer = {}, fallback = {}) {
     return "";
   };
 
-  next.offerId = resolveValue("offerId") || fb.offerId || "";
-  next.buyer_name = resolveValue("buyer_name") || fb.buyer_name || "";
-  next.unit_number = resolveValue("unit_number") || fb.unit_number || "";
+  const resolvedOfferId = resolveValue("offerId") || fb.offerId || "";
+  next.offerId = resolvedOfferId;
+  if (resolvedOfferId) {
+    const decoded = decodeOfferId(resolvedOfferId);
+    if (decoded.projectId && !src.project_id && !fb.project_id) {
+      next.project_id = decoded.projectId;
+    }
+    if (decoded.contractUnitNumber && !src.contract_unit_number && !fb.contract_unit_number) {
+      next.contract_unit_number = decoded.contractUnitNumber;
+    }
+  }
+
+  next.project_id = next.project_id || resolveValue("project_id") || "";
+  next.contract_unit_number =
+    next.contract_unit_number || resolveValue("contract_unit_number") || resolveValue("unit_number") || "";
+  next.unit_number = resolveValue("unit_number") || next.contract_unit_number || "";
+  next.unit_name = resolveValue("unit_name") || fb.unit_name || "";
+
+  const buyerCombined = resolveValue("buyers_combined") || resolveValue("buyer_name");
+  if (buyerCombined !== "") {
+    next.buyers_combined = buyerCombined;
+    next.buyer_name = buyerCombined;
+  }
+
   const statusVal = resolveValue("status");
   if (statusVal !== "") next.status = statusVal;
   const envelopeVal = resolveValue("docusign_envelope");
   if (envelopeVal !== "") next.docusign_envelope = envelopeVal;
-  const notesVal = resolveValue("add_notes");
-  if (notesVal !== "") next.add_notes = notesVal;
+  const notesVal = resolveValue("notes");
+  if (notesVal !== "") next.notes = notesVal;
 
   DATE_FIELDS.forEach((field) => {
     const formatted = formatDateForInput(resolveValue(field));
@@ -123,14 +144,14 @@ function normalizeOfferData(offer = {}, fallback = {}) {
   });
 
   NUMERIC_FIELDS.forEach((field) => {
-    const numeric = normalizeNumeric(resolveValue(field));
     if (field === "total_credits") return;
+    const numeric = normalizeNumeric(resolveValue(field));
     if (numeric !== "") {
       next[field] = numeric;
     }
   });
 
-  const credits = calculateTotalCredits(next);
+  const credits = calculateTotalCredits({ ...fb, ...src, ...next });
   if (credits !== "") {
     next.total_credits = credits;
   }
@@ -219,7 +240,6 @@ export default function TrackingForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Tracking form submitted:", form);
     saveTracking();
   };
 
@@ -240,6 +260,13 @@ export default function TrackingForm() {
       if (!jwt) throw new Error("No JWT token available");
       if (!form.offerId) throw new Error("Select a record before saving");
       const payload = { ...form };
+      if ((!payload.project_id || !payload.contract_unit_number) && payload.offerId) {
+        const decoded = decodeOfferId(payload.offerId);
+        if (decoded.projectId && !payload.project_id) payload.project_id = decoded.projectId;
+        if (decoded.contractUnitNumber && !payload.contract_unit_number) {
+          payload.contract_unit_number = decoded.contractUnitNumber;
+        }
+      }
       if (payload.status && !payload.status_date) {
         payload.status_date = new Date().toISOString();
       }
@@ -285,7 +312,9 @@ export default function TrackingForm() {
               style={{ cursor: "pointer", padding: "0.5rem 0" }}
               onClick={() => selectResult(item)}
             >
-              <strong>{item.offerId}</strong> - {item.buyer_name} - {item.unit_number} - {(item.status || "").toLowerCase()}
+              <strong>{item.project_id || "?"}</strong> /{" "}
+              {item.contract_unit_number || item.unit_number || "?"} -{" "}
+              {item.buyer_name || "Unknown"} - {(item.status || "").toLowerCase()}
             </li>
           ))}
         </ul>
@@ -306,12 +335,22 @@ export default function TrackingForm() {
         <p>No results found for "{searchQuery}".</p>
       )} --*/}
 
-      <pre>{JSON.stringify(searchResults, null, 2)}</pre>
-
+      {form.project_id && form.contract_unit_number && (
+        <div style={{ marginBottom: "1rem", padding: "0.75rem", backgroundColor: "#f4f4f4", borderRadius: "4px" }}>
+          <div>
+            <strong>Project:</strong> {form.project_id}
+          </div>
+          <div>
+            <strong>Unit:</strong> {form.contract_unit_number || form.unit_number || "-"}
+          </div>
+          <div>
+            <strong>Buyer(s):</strong> {form.buyers_combined || form.buyer_name || "-"}
+          </div>
+        </div>
+      )}
 
       {/* --- Original tracking form --- */}
       <form onSubmit={handleSubmit} className="app-form">
-       {/* ---} <img src={hbfaLogo} alt="HBFA Logo" /> --- */}
         <h3>Sales Tracking Form</h3>
 
         <FormSection>
@@ -383,8 +422,8 @@ export default function TrackingForm() {
           <label>
             Add Notes
             <textarea
-              name="add_notes"
-              value={form.add_notes || ""}
+              name="notes"
+              value={form.notes || ""}
               onChange={handleChange}
             />
           </label>

@@ -5,18 +5,19 @@
 // Consumers: `src/pages/ApprovalsPage.jsx` (Approve/Not Approve buttons)
 // Env: DDB_TABLE, DDB_REGION
 // IAM: dynamodb:UpdateItem on the offers table
-import {
-  DynamoDBClient,
-  UpdateItemCommand,
-  GetItemCommand,
-} from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { marshall } from "@aws-sdk/util-dynamodb";
 import { requireAuth } from "./utils/auth.js";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { audit } from "./utils/audit.js";
+import { decodeOfferId } from "../../lib/offer-key.js";
 
 // Use the same configured credentials as other functions (HBFA keys if provided)
 const ddb = new DynamoDBClient(awsClientConfig());
-const TABLE = process.env.DDB_TABLE || "fusion_offers";
+const TABLE =
+  process.env.HBFA_SALES_OFFERS_TABLE ||
+  process.env.DDB_TABLE ||
+  "hbfa_sales_offers";
 
 export async function handler(event, context) {
   try {
@@ -30,8 +31,15 @@ export async function handler(event, context) {
     if (!auth.ok) return resp(auth.statusCode, { error: auth.message });
     audit(event, { fn: "offers-approve", stage: "invoke", claims: auth.claims });
 
-    const offerId = event.pathParameters?.offerId || event.queryStringParameters?.offerId;
-    if (!offerId) return resp(400, { error: "offerId is required in path" });
+    const rawOfferId =
+      event.pathParameters?.offerId || event.queryStringParameters?.offerId;
+    if (!rawOfferId) {
+      return resp(400, { error: "offerId is required in path" });
+    }
+    const { projectId, contractUnitNumber } = decodeOfferId(rawOfferId);
+    if (!projectId || !contractUnitNumber) {
+      return resp(400, { error: "Invalid offerId" });
+    }
 
     const body = event.body ? JSON.parse(event.body) : {};
     const approved = typeof body.approved === "boolean" ? body.approved : true;
@@ -53,7 +61,13 @@ export async function handler(event, context) {
 
     const cmd = new UpdateItemCommand({
       TableName: TABLE,
-      Key: { offerId: { S: offerId } },
+      Key: marshall(
+        {
+          project_id: projectId,
+          contract_unit_number: contractUnitNumber,
+        },
+        { removeUndefinedValues: true }
+      ),
       UpdateExpression: "SET " + updateExpr.join(", "),
       ExpressionAttributeValues: {
         ":status": { BOOL: approved },
@@ -71,12 +85,17 @@ export async function handler(event, context) {
 
     const bodyOut = {
       message: approved ? "Offer approved" : "Offer not approved",
-      offerId,
+      offerId: rawOfferId,
       vp_id: vpId,
       vp_approval_date: now,
       vp_decision: approved ? "approved" : "denied",
     };
-    audit(event, { fn: "offers-approve", stage: "success", claims: auth.claims, extra: { offerId, decision: bodyOut.vp_decision } });
+    audit(event, {
+      fn: "offers-approve",
+      stage: "success",
+      claims: auth.claims,
+      extra: { offerId: rawOfferId, decision: bodyOut.vp_decision },
+    });
     return resp(200, bodyOut);
   } catch (err) {
     console.error("Error in offers-approve.js:", err);

@@ -7,14 +7,19 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "backfill:sales": "node scripts/backfill-hbfa-sales-offers.mjs",
+    "polaris:import": "node scripts/import-polaris-report.mjs"
   },
   "dependencies": {
-    "jsonwebtoken": "^9.0.2",
+    "@aws-sdk/client-dynamodb": "^3.914.0",
+    "@aws-sdk/util-dynamodb": "^3.914.0",
     "@sparticuz/chromium": "^133.0.0",
-    "puppeteer-core": "^22.15.0",
+    "csv-parse": "^6.1.0",
+    "jsonwebtoken": "^9.0.2",
     "node-fetch": "^3.3.2",
     "oidc-client-ts": "^3.3.0",
+    "puppeteer-core": "^22.15.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-oidc-context": "^3.3.0",

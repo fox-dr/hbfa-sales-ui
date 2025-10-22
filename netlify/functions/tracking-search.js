@@ -7,11 +7,16 @@
 // IAM: dynamodb:Query (if using GSIs) and dynamodb:Scan on the table
 // Notes: Returns condensed result set suitable for selection lists
 import { DynamoDBClient, ScanCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 import { audit } from "./utils/audit.js";
+import { encodeOfferId } from "../../lib/offer-key.js";
 
-const TABLE = process.env.DDB_TABLE || "fusion_offers";
+const TABLE =
+  process.env.HBFA_SALES_OFFERS_TABLE ||
+  process.env.DDB_TABLE ||
+  "hbfa_sales_offers";
 const REGION = process.env.DDB_REGION || "us-east-2";
 
 const ddb = new DynamoDBClient(awsClientConfig());
@@ -86,9 +91,16 @@ export async function handler(event, context) {
       });
     } else {
       filtered = records.filter((r) => {
-        const buyer = String(r.buyer_name || r.buyer_1_full_name || r.buyer_2_full_name || "").toLowerCase();
+        const buyer = String(
+          r.buyers_combined ||
+            r.buyer_name ||
+            r.buyer_1__full_name ||
+            r.buyer_1_full_name ||
+            r.buyer_2_full_name ||
+            ""
+        ).toLowerCase();
         const unit = String(r.unit_number || "").toLowerCase();
-        const id = String(r.offerId || "").toLowerCase();
+        const id = String(encodeOfferId(r.project_id, r.contract_unit_number) || "").toLowerCase();
         return (
           buyer.includes(qLower) || unit.includes(qLower) || id.includes(qLower)
         );
@@ -97,12 +109,21 @@ export async function handler(event, context) {
 
     // Keep only fields needed by the UI; include status if present
     const results = filtered.map((r) => {
+      const offerId = encodeOfferId(r.project_id, r.contract_unit_number);
       let status = String(r.status || "").toLowerCase();
       if (!status) status = String(r.vp_decision || "").toLowerCase();
       if (!status && (r.vp_approval_status === false || r.vp_approval_status == null)) status = "pending";
       return {
-        offerId: r.offerId,
-        buyer_name: r.buyer_name || r.buyer_1_full_name || r.buyer_2_full_name || "",
+        offerId,
+        project_id: r.project_id || "",
+        contract_unit_number: r.contract_unit_number || "",
+        buyer_name:
+          r.buyers_combined ||
+          r.buyer_name ||
+          r.buyer_1__full_name ||
+          r.buyer_1_full_name ||
+          r.buyer_2_full_name ||
+          "",
         unit_number: r.unit_number || "",
         status,
       };
@@ -129,12 +150,6 @@ function cors(statusCode, body) {
     },
     body,
   };
-}
-
-function unmarshall(item) {
-  return Object.fromEntries(
-    Object.entries(item).map(([k, v]) => [k, Object.values(v)[0]])
-  );
 }
 
 async function queryWithGsisFirst(qLower) {

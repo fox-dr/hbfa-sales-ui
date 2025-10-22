@@ -9,6 +9,7 @@ import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 import { audit } from "./utils/audit.js";
+import { encodeOfferId } from "../../lib/offer-key.js";
 
 const s3 = new S3Client(awsClientConfig());
 const S3_BUCKET = process.env.S3_VAULT_BUCKET;
@@ -30,7 +31,7 @@ export async function handler(event, context) {
     if (!auth.ok) return json(auth.statusCode, { error: auth.message });
     audit(event, { fn: "offer-details", stage: "invoke", claims: auth.claims });
 
-    const offerId = event.queryStringParameters?.offerId;
+    const offerId = resolveOfferId(event.queryStringParameters || {});
     if (!offerId) return json(400, { error: "offerId is required" });
     if (!S3_BUCKET) return json(500, { error: "S3_VAULT_BUCKET not configured" });
 
@@ -61,4 +62,22 @@ async function streamToString(stream) {
   const chunks = [];
   for await (const chunk of stream) chunks.push(Buffer.from(chunk));
   return Buffer.concat(chunks).toString("utf8");
+}
+
+function resolveOfferId(qs = {}) {
+  if (qs.offerId) {
+    return String(qs.offerId);
+  }
+  const projectId =
+    qs.project_id || qs.projectId || qs.project || qs.pk || undefined;
+  const contractUnitNumber =
+    qs.contract_unit_number ||
+    qs.contractUnitNumber ||
+    qs.unit_number ||
+    qs.unit ||
+    undefined;
+  if (projectId && contractUnitNumber) {
+    return encodeOfferId(String(projectId), String(contractUnitNumber));
+  }
+  return "";
 }

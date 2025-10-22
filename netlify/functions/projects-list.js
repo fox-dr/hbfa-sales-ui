@@ -6,12 +6,16 @@
 // Env: (none defined here)
 // IAM: (none if static; add notes if calling AWS)
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { requireAuth } from "./utils/auth.js";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 
 const ddb = new DynamoDBClient(awsClientConfig());
-const TABLE = process.env.DDB_TABLE || "fusion_offers";
+const TABLE =
+  process.env.HBFA_SALES_OFFERS_TABLE ||
+  process.env.DDB_TABLE ||
+  "hbfa_sales_offers";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -37,11 +41,13 @@ export async function handler(event) {
       console.log(`whoami projects-list error=${e?.message}`);
     }
 
-    const { Items } = await ddb.send(new ScanCommand({ TableName: TABLE, ProjectionExpression: "project_id" }));
+    const { Items } = await ddb.send(
+      new ScanCommand({ TableName: TABLE, ProjectionExpression: "project_id" })
+    );
     const vals = new Set();
-    for (const it of Items || []) {
-      const v = it.project_id ? Object.values(it.project_id)[0] : null;
-      if (v) vals.add(String(v));
+    for (const raw of Items || []) {
+      const item = unmarshall(raw);
+      if (item.project_id) vals.add(String(item.project_id));
     }
     const projects = Array.from(vals).sort((a, b) => a.localeCompare(b));
     return json(200, { projects });

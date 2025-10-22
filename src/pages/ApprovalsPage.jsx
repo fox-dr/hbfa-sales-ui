@@ -6,7 +6,13 @@
 import React, { useState } from "react";
 import { useAuth } from "react-oidc-context";
 import AppHeader from "../components/AppHeader";
-import { searchOffers, getOfferRead, getOfferDetails, approveOffer } from "../api/client";
+import {
+  searchOffers,
+  getOfferRead,
+  getOfferDetails,
+  approveOffer,
+} from "../api/client";
+import { decodeOfferId } from "../../lib/offer-key.js";
 
 export default function ApprovalsPage() {
   const auth = useAuth();
@@ -18,6 +24,16 @@ export default function ApprovalsPage() {
   const [notes, setNotes] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const decodedSelected = selected ? decodeOfferId(selected.offerId || "") : { projectId: "", contractUnitNumber: "" };
+  const selectedProject =
+    selected?.project_id || offerDdb?.project_id || decodedSelected.projectId || "-";
+  const selectedUnit =
+    selected?.contract_unit_number ||
+    selected?.unit_number ||
+    offerDdb?.contract_unit_number ||
+    decodedSelected.contractUnitNumber ||
+    "-";
 
   async function search(e) {
     e?.preventDefault();
@@ -91,19 +107,31 @@ export default function ApprovalsPage() {
 
       {results.length > 0 && (
         <ul style={{ listStyle: "none", padding: 0, marginBottom: 16 }}>
-          {results.map((r) => (
-            <li key={r.offerId} style={{ padding: "6px 0", cursor: "pointer" }} onClick={() => handleSelect(r)}>
-              <strong>{r.offerId}</strong> - {r.buyer_name} - {r.unit_number} � {(r.status || "").toLowerCase()}
-            </li>
-          ))}
+          {results.map((r) => {
+            const decoded = decodeOfferId(r.offerId);
+            const project = r.project_id || decoded.projectId || "?";
+            const unit = r.contract_unit_number || r.unit_number || decoded.contractUnitNumber || "?";
+            return (
+              <li
+                key={r.offerId}
+                style={{ padding: "6px 0", cursor: "pointer" }}
+                onClick={() => handleSelect(r)}
+              >
+                <strong>{project}</strong> / {unit} - {r.buyer_name || "Unknown"} - {(r.status || "").toLowerCase()}
+              </li>
+            );
+          })}
         </ul>
       )}
 
       {selected && (
         <div style={{ borderTop: "1px solid #ddd", paddingTop: 12 }}>
           <div><strong>OfferId:</strong> {selected.offerId}</div>
-          <div><strong>Buyer:</strong> {selected.buyer_name}</div>
-          <div><strong>Unit:</strong> {selected.unit_number}</div>
+          <div><strong>Project:</strong> {selectedProject}</div>
+          <div><strong>Unit:</strong> {selectedUnit}</div>
+          <div>
+            <strong>Buyer:</strong> {selected.buyer_name || offerDdb?.buyers_combined || "-"}
+          </div>
           {/* Decision badge */}
           {(() => {
             const decision = offerDdb?.vp_decision || (offerDdb?.vp_approval_status === true ? "approved" : offerDdb?.vp_approval_status === false ? "denied" : null);
@@ -180,4 +208,5 @@ export default function ApprovalsPage() {
     </div>
   );
 }
+
 

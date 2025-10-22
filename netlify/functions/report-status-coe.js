@@ -7,12 +7,17 @@
 // IAM: dynamodb:Scan on the offers table
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 import { audit } from "./utils/audit.js";
+import { encodeOfferId } from "../../lib/offer-key.js";
 
 const ddb = new DynamoDBClient(awsClientConfig());
-const TABLE = process.env.DDB_TABLE || "fusion_offers";
+const TABLE =
+  process.env.HBFA_SALES_OFFERS_TABLE ||
+  process.env.DDB_TABLE ||
+  "hbfa_sales_offers";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -47,7 +52,7 @@ export async function handler(event, context) {
 
     // Fallback: scan and filter in-memory for now (GSI upgrade later)
     const { Items } = await ddb.send(new ScanCommand({ TableName: TABLE }));
-    const rows = (Items || []).map(unmarshall);
+    const rows = (Items || []).map((raw) => unmarshall(raw));
 
     const filtered = rows.filter((r) => {
       if (project && String(r.project_id || "").toLowerCase() !== project) return false;
@@ -64,15 +69,20 @@ export async function handler(event, context) {
     });
 
     const data = filtered.map((r) => ({
-      offerId: r.offerId,
+      offerId: encodeOfferId(r.project_id, r.contract_unit_number),
       project_id: r.project_id || null,
       unit_number: r.unit_number || null,
-      buyer_name: r.buyer_name || null,
+      buyer_name:
+        r.buyers_combined ||
+        r.buyer_name ||
+        r.buyer_1__full_name ||
+        r.buyer_1_full_name ||
+        null,
       status: r.status || null,
       status_date: r.status_date || null,
       coe_date: r.coe_date || null,
       projected_closing_date: r.projected_closing_date || null,
-      final_price: r.final_price || r.price || null,
+      final_price: r.final_price || r.base_price || null,
       total_credits: r.total_credits || null,
     }));
 
@@ -99,12 +109,6 @@ export async function handler(event, context) {
 
 function cors(statusCode, body) {
   return { statusCode, headers: { ...CORS, "Content-Type": "application/json" }, body };
-}
-
-function unmarshall(item) {
-  return Object.fromEntries(
-    Object.entries(item).map(([k, v]) => [k, Object.values(v)[0]])
-  );
 }
 
 function parseDate(s) {

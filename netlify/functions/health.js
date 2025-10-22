@@ -7,7 +7,10 @@ import { requireAuth } from "./utils/auth.js";
 
 const ddb = new DynamoDBClient(awsClientConfig());
 const s3 = new S3Client(awsClientConfig());
-const TABLE = process.env.DDB_TABLE || "fusion_offers";
+const TABLE =
+  process.env.HBFA_SALES_OFFERS_TABLE ||
+  process.env.DDB_TABLE ||
+  "hbfa_sales_offers";
 const S3_BUCKET = process.env.S3_VAULT_BUCKET || null;
 const S3_PREFIX = process.env.S3_VAULT_PREFIX || "offers/";
 
