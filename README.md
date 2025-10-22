@@ -19,7 +19,7 @@ Netlify/AWS Lambda continues to execute each handler as CommonJS, even when the 
 - Each handler now uses `require(...)` instead of `import` and exposes the Lambda handler with `module.exports`.
 - Shared helpers under `netlify/functions/utils/` stayed CommonJS and are required via relative paths (for example, `./utils/offerKey.js` and `./utils/normalizedOffer.js`).
 - DocuSign helpers (`docusign-auth`, `send-for-signature`) now rely on the runtime Fetch API so they continue working without the ESM-only `node-fetch` v3 dependency.
-- No changes were required for the React front-end—only the serverless code path was touched, preserving API request/response shapes.
+- No changes were required for the React front end; only the serverless code path was touched, preserving API request/response shapes.
 
 After pulling these updates you must redeploy the Netlify site (or trigger the AWS Lambda deploy) so the CommonJS handlers replace the previously uploaded ESM bundles. This resolves the intermittent “Fail to Load” / `Cannot use import statement outside a module` errors reported by offer detail and tracking views.
 
