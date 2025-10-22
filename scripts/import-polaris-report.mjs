@@ -14,6 +14,7 @@ const REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-e
 const RAW_TABLE = process.env.POLARIS_RAW_TABLE || "polaris_raw_weekly";
 const TARGET_TABLE = process.env.TARGET_TABLE || "hbfa_sales_offers";
 const PHONE_HASH_SALT = process.env.PHONE_HASH_SALT || "";
+const INCLUDE_FUSION = /^1|true|yes$/i.test(process.env.POLARIS_INCLUDE_FUSION || "");
 
 const ddb = new DynamoDBClient({ region: REGION });
 
@@ -189,7 +190,7 @@ async function run() {
     const { skip, reason, mapped } = mapPolarisRowToNormalized(
       normalizedRow,
       args.reportDate,
-      { phoneHashSalt: PHONE_HASH_SALT }
+      { phoneHashSalt: PHONE_HASH_SALT, includeFusion: INCLUDE_FUSION }
     );
     if (skip) {
       skipped += 1;

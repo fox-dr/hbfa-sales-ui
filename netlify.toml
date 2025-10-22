@@ -11,7 +11,9 @@
   external_node_modules = ["node-fetch"]
   included_files = [
     "netlify/pdf-templates/**",
-    "netlify/keys/**"
+    "netlify/keys/**",
+    "lib/**",
+    "package.json"
   ]
 
 [functions."docusign-auth"]
