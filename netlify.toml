@@ -12,8 +12,7 @@
   included_files = [
     "netlify/pdf-templates/**",
     "netlify/keys/**",
-    "lib/**",
-    "package.json"
+    "lib/**"
   ]
 
 [functions."docusign-auth"]
