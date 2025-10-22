@@ -2,9 +2,9 @@
 // Lightweight, structured audit logging for Netlify functions.
 // Logs function name, method, path, query params, user and roles.
 
-import { rolesFromClaims } from "./auth.js";
+const { rolesFromClaims } = require("./auth.js");
 
-export function audit(event, { fn, stage = "invoke", claims, extra } = {}) {
+function audit(event, { fn, stage = "invoke", claims, extra } = {}) {
   try {
     const method = event?.httpMethod || "";
     const path = event?.path || event?.rawUrl || "";
@@ -29,3 +29,4 @@ export function audit(event, { fn, stage = "invoke", claims, extra } = {}) {
   }
 }
 
+module.exports = { audit };

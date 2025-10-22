@@ -5,11 +5,11 @@
 // Consumers: `src/pages/TrackingForm.jsx` (contact panel), `src/pages/ApprovalsPage.jsx` (details pane)
 // Env: S3_VAULT_BUCKET, S3_VAULT_PREFIX
 // IAM: s3:GetObject on the vault prefix (and KMS decrypt if bucket encrypted)
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { awsClientConfig } from "./utils/awsClients.js";
-import { requireAuth } from "./utils/auth.js";
-import { audit } from "./utils/audit.js";
-import { encodeOfferId } from "../../lib/offer-key.mjs";
+const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { awsClientConfig } = require("./utils/awsClients.js");
+const { requireAuth } = require("./utils/auth.js");
+const { audit } = require("./utils/audit.js");
+const { encodeOfferId } = require("./utils/offerKey.js");
 
 const s3 = new S3Client(awsClientConfig());
 const S3_BUCKET = process.env.S3_VAULT_BUCKET;
@@ -21,7 +21,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
 };
 
-export async function handler(event, context) {
+async function handler(event, context) {
   try {
     if (event.httpMethod === "OPTIONS") return json(204, "");
     if (event.httpMethod !== "GET") return json(405, { error: "Method Not Allowed" });
@@ -53,6 +53,7 @@ export async function handler(event, context) {
     return json(status, { error: err.message || String(err) });
   }
 }
+module.exports = { handler };
 
 function json(statusCode, body) {
   return { statusCode, headers: { ...CORS, "Content-Type": "application/json" }, body: typeof body === "string" ? body : JSON.stringify(body) };

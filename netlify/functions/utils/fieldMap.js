@@ -1,5 +1,5 @@
 // fieldMap.js
-export const fieldMap = {
+const fieldMap = {
   // Buyer
   buyer_name: "BOTH",
   buyer_notes: "S3",
@@ -87,3 +87,5 @@ export const fieldMap = {
   envelope_sent_date: "DDB",
   buyer_sign_date: "DDB",
 };
+
+module.exports = { fieldMap };

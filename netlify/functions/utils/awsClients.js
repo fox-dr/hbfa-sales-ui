@@ -6,7 +6,7 @@
 //   const ddb = new DynamoDBClient(awsClientConfig());
 //   const s3 = new S3Client(awsClientConfig());
 
-export function awsClientConfig() {
+function awsClientConfig() {
   const region =
     process.env.S3_REGION ||
     process.env.DDB_REGION ||
@@ -22,3 +22,4 @@ export function awsClientConfig() {
   return { region };
 }
 
+module.exports = { awsClientConfig };

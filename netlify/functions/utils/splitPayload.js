@@ -1,7 +1,7 @@
-import { fieldMap } from "./fieldMap.js";
-import crypto from "crypto";
+const { fieldMap } = require("./fieldMap.js");
+const crypto = require("crypto");
 
-export function splitPayload(offerId, fullPayload) {
+function splitPayload(offerId, fullPayload) {
   const ddbItem = { offerId };     // always PK
   const s3Payload = { offerId };   // keep in vault
 
@@ -80,3 +80,5 @@ function addDerivedPhoneMarkers(src, ddbItem) {
     ddbItem[`phone${i}_hash`] = hash;
   }
 }
+
+module.exports = { splitPayload };

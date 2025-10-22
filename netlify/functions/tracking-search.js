@@ -6,12 +6,12 @@
 // Env: DDB_TABLE, DDB_REGION
 // IAM: dynamodb:Query (if using GSIs) and dynamodb:Scan on the table
 // Notes: Returns condensed result set suitable for selection lists
-import { DynamoDBClient, ScanCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
-import { unmarshall } from "@aws-sdk/util-dynamodb";
-import { awsClientConfig } from "./utils/awsClients.js";
-import { requireAuth } from "./utils/auth.js";
-import { audit } from "./utils/audit.js";
-import { encodeOfferId } from "../../lib/offer-key.mjs";
+const { DynamoDBClient, ScanCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
+const { awsClientConfig } = require("./utils/awsClients.js");
+const { requireAuth } = require("./utils/auth.js");
+const { audit } = require("./utils/audit.js");
+const { encodeOfferId } = require("./utils/offerKey.js");
 
 const TABLE =
   process.env.HBFA_SALES_OFFERS_TABLE ||
@@ -21,7 +21,7 @@ const REGION = process.env.DDB_REGION || "us-east-2";
 
 const ddb = new DynamoDBClient(awsClientConfig());
 
-export async function handler(event, context) {
+async function handler(event, context) {
   try {
     if (event.httpMethod === "OPTIONS") {
       return cors(204, "");
@@ -138,6 +138,7 @@ export async function handler(event, context) {
     return cors(500, JSON.stringify({ error: err.message || "Server error" }));
   }
 }
+module.exports = { handler };
 
 function cors(statusCode, body) {
   return {

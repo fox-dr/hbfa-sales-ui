@@ -5,15 +5,15 @@
 // Consumers: Signature initiation UI/flow
 // Env: DDB_REGION, DocuSign env vars; reads template from `netlify/pdf-templates/${project_id}`
 // IAM: dynamodb:UpdateItem if writing status, filesystem read for templates
-import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { marshall } from "@aws-sdk/util-dynamodb";
-import { awsClientConfig } from "./utils/awsClients.js";
-import { requireAuth } from "./utils/auth.js";
-import { decodeOfferId } from "../../lib/offer-key.mjs";
-import { asString } from "../../lib/normalized-offer.mjs";
-import fs from "fs";
-import path from "path";
-import jwt from "jsonwebtoken";
+const { DynamoDBClient, UpdateItemCommand } = require("@aws-sdk/client-dynamodb");
+const { marshall } = require("@aws-sdk/util-dynamodb");
+const { awsClientConfig } = require("./utils/awsClients.js");
+const { requireAuth } = require("./utils/auth.js");
+const { decodeOfferId } = require("./utils/offerKey.js");
+const { asString } = require("./utils/normalizedOffer.js");
+const fs = require("fs");
+const path = require("path");
+const jwt = require("jsonwebtoken");
 
 function renderOfferTemplate(offer) {
   //pick template folder based on project_id
@@ -63,7 +63,7 @@ const ROUTING_CONFIG = {
 
 
 // ---- Helper: get fresh JWT token from DocuSign
-export async function getAccessToken() {
+async function getAccessToken() {
   const now = Math.floor(Date.now() / 1000);
   const keyPath = path.resolve("./netlify/keys/docusign_private.pem");
 
@@ -107,7 +107,7 @@ export async function getAccessToken() {
 }
 
 
-export async function handler(event) {
+async function handler(event) {
   try {
     if (event.httpMethod !== "POST") {
       return { statusCode: 405, body: "Method Not Allowed" };
@@ -290,3 +290,5 @@ function extractOfferKey(offer = {}) {
     contract_unit_number: contractUnitNumber || "",
   };
 }
+
+module.exports = { getAccessToken, handler };

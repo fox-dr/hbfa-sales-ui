@@ -1,9 +1,9 @@
 // netlify/functions/health.js
-import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
-import { awsClientConfig } from "./utils/awsClients.js";
-import { requireAuth } from "./utils/auth.js";
+const { DynamoDBClient, ScanCommand } = require("@aws-sdk/client-dynamodb");
+const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { STSClient, GetCallerIdentityCommand } = require("@aws-sdk/client-sts");
+const { awsClientConfig } = require("./utils/awsClients.js");
+const { requireAuth } = require("./utils/auth.js");
 
 const ddb = new DynamoDBClient(awsClientConfig());
 const s3 = new S3Client(awsClientConfig());
@@ -20,7 +20,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
 };
 
-export async function handler(event) {
+async function handler(event) {
   try {
     if (event.httpMethod === "OPTIONS") return json(204, "");
     if (event.httpMethod !== "GET") return json(405, { error: "Method Not Allowed" });
@@ -59,6 +59,8 @@ export async function handler(event) {
     return json(500, { ok: false, error: err.message || String(err) });
   }
 }
+
+module.exports = { handler };
 
 function json(statusCode, body) {
   return { statusCode, headers: { ...CORS, "Content-Type": "application/json" }, body: JSON.stringify(body) };

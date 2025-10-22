@@ -12,6 +12,17 @@ The preliminary offer form now provides friendlier output for lender review and 
 
 These updates keep all other form behavior intact while improving readability for both the browser view and generated PDFs.
 
+## Netlify Functions CommonJS Migration
+
+Netlify/AWS Lambda continues to execute each handler as CommonJS, even when the file extension is `.mjs`. To prevent `Cannot use import statement outside a module` runtime errors we converted every Netlify function entry point back to CommonJS:
+
+- Each handler now uses `require(...)` instead of `import` and exposes the Lambda handler with `module.exports`.
+- Shared helpers under `netlify/functions/utils/` stayed CommonJS and are required via relative paths (for example, `./utils/offerKey.js` and `./utils/normalizedOffer.js`).
+- DocuSign helpers (`docusign-auth`, `send-for-signature`) now rely on the runtime Fetch API so they continue working without the ESM-only `node-fetch` v3 dependency.
+- No changes were required for the React front-end—only the serverless code path was touched, preserving API request/response shapes.
+
+After pulling these updates you must redeploy the Netlify site (or trigger the AWS Lambda deploy) so the CommonJS handlers replace the previously uploaded ESM bundles. This resolves the intermittent “Fail to Load” / `Cannot use import statement outside a module` errors reported by offer detail and tracking views.
+
 ## Reports CSV Safeguards
 
 The status/COE report download now mirrors the on-screen table when the API returns an unexpected empty CSV. If you run a report and fetch the CSV with the same filters, the UI will:

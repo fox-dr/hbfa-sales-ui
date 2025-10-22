@@ -5,13 +5,13 @@
 // Consumers: Reports tooling (CSV/JSON export)
 // Env: DDB_TABLE
 // IAM: dynamodb:Scan on the offers table
-import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
-import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
-import { unmarshall } from "@aws-sdk/util-dynamodb";
-import { awsClientConfig } from "./utils/awsClients.js";
-import { requireAuth } from "./utils/auth.js";
-import { audit } from "./utils/audit.js";
-import { encodeOfferId } from "../../lib/offer-key.mjs";
+const { DynamoDBClient, ScanCommand } = require("@aws-sdk/client-dynamodb");
+const { STSClient, GetCallerIdentityCommand } = require("@aws-sdk/client-sts");
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
+const { awsClientConfig } = require("./utils/awsClients.js");
+const { requireAuth } = require("./utils/auth.js");
+const { audit } = require("./utils/audit.js");
+const { encodeOfferId } = require("./utils/offerKey.js");
 
 const ddb = new DynamoDBClient(awsClientConfig());
 const TABLE =
@@ -25,7 +25,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
 };
 
-export async function handler(event, context) {
+async function handler(event, context) {
   try {
     if (event.httpMethod === "OPTIONS") return cors(204, "");
     if (event.httpMethod !== "GET") return cors(405, JSON.stringify({ error: "Method Not Allowed" }));
@@ -141,3 +141,5 @@ function toCsv(rows) {
   }
   return lines.join("\n");
 }
+
+module.exports = { handler };

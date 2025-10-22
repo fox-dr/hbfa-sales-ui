@@ -5,12 +5,12 @@
 // Consumers: `src/pages/ApprovalsPage.jsx` (Approve/Not Approve buttons)
 // Env: DDB_TABLE, DDB_REGION
 // IAM: dynamodb:UpdateItem on the offers table
-import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { marshall } from "@aws-sdk/util-dynamodb";
-import { requireAuth } from "./utils/auth.js";
-import { awsClientConfig } from "./utils/awsClients.js";
-import { audit } from "./utils/audit.js";
-import { decodeOfferId } from "../../lib/offer-key.mjs";
+const { DynamoDBClient, UpdateItemCommand } = require("@aws-sdk/client-dynamodb");
+const { marshall } = require("@aws-sdk/util-dynamodb");
+const { requireAuth } = require("./utils/auth.js");
+const { awsClientConfig } = require("./utils/awsClients.js");
+const { audit } = require("./utils/audit.js");
+const { decodeOfferId } = require("./utils/offerKey.js");
 
 // Use the same configured credentials as other functions (HBFA keys if provided)
 const ddb = new DynamoDBClient(awsClientConfig());
@@ -19,7 +19,7 @@ const TABLE =
   process.env.DDB_TABLE ||
   "hbfa_sales_offers";
 
-export async function handler(event, context) {
+async function handler(event, context) {
   try {
     const method = event.httpMethod;
     if (method !== "POST") {
@@ -111,3 +111,6 @@ function resp(statusCode, body) {
     body: JSON.stringify(body),
   };
 }
+
+module.exports = { handler };
+

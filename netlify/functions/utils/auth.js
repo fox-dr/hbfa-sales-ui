@@ -1,10 +1,10 @@
 // netlify/functions/utils/auth.js
 
-export function getAuthHeader(event) {
+function getAuthHeader(event) {
   return event.headers?.authorization || event.headers?.Authorization || "";
 }
 
-export function decodeJwt(token) {
+function decodeJwt(token) {
   try {
     const [, payload] = token.split(".");
     const json = Buffer.from(
@@ -17,7 +17,7 @@ export function decodeJwt(token) {
   }
 }
 
-export function validateClaims(claims) {
+function validateClaims(claims) {
   if (!claims) return { ok: false, error: "Invalid token" };
   const now = Math.floor(Date.now() / 1000);
   if (claims.exp && now > claims.exp) return { ok: false, error: "Token expired" };
@@ -28,7 +28,7 @@ export function validateClaims(claims) {
   return { ok: true };
 }
 
-export function rolesFromClaims(claims) {
+function rolesFromClaims(claims) {
   const maybeArrays = [
     claims?.roles,
     claims?.groups,
@@ -42,12 +42,12 @@ export function rolesFromClaims(claims) {
   return [];
 }
 
-export function hasAnyRole(claims, allowed) {
+function hasAnyRole(claims, allowed) {
   const have = new Set(rolesFromClaims(claims).map((r) => String(r).toUpperCase()));
   return allowed.some((r) => have.has(String(r).toUpperCase()));
 }
 
-export function requireAuth(event, allowedRoles = []) {
+function requireAuth(event, allowedRoles = []) {
   const hdr = getAuthHeader(event);
   if (!hdr || !/^bearer\s+/i.test(hdr)) {
     return { ok: false, statusCode: 401, message: "Unauthorized" };
@@ -62,3 +62,11 @@ export function requireAuth(event, allowedRoles = []) {
   return { ok: true, claims };
 }
 
+module.exports = {
+  getAuthHeader,
+  decodeJwt,
+  validateClaims,
+  rolesFromClaims,
+  hasAnyRole,
+  requireAuth,
+};

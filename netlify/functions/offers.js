@@ -1,23 +1,18 @@
-import {
+const {
   DynamoDBClient,
   PutItemCommand,
   GetItemCommand,
   ScanCommand,
   UpdateItemCommand,
   DeleteItemCommand,
-} from "@aws-sdk/client-dynamodb";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
-import { awsClientConfig } from "./utils/awsClients.js";
-import { requireAuth } from "./utils/auth.js";
-import { audit } from "./utils/audit.js";
-import {
-  asString,
-  asDate,
-  asNumber,
-  stripEmptyValues,
-} from "../../lib/normalized-offer.mjs";
-import { encodeOfferId, decodeOfferId } from "../../lib/offer-key.mjs";
+} = require("@aws-sdk/client-dynamodb");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
+const { awsClientConfig } = require("./utils/awsClients.js");
+const { requireAuth } = require("./utils/auth.js");
+const { audit } = require("./utils/audit.js");
+const { asString, asDate, asNumber, stripEmptyValues } = require("./utils/normalizedOffer.js");
+const { encodeOfferId, decodeOfferId } = require("./utils/offerKey.js");
 
 const ddb = new DynamoDBClient(awsClientConfig());
 const s3 = new S3Client(awsClientConfig());
@@ -115,7 +110,7 @@ const NUMERIC_FIELDS = new Set([
   "statusnumeric",
 ]);
 
-export async function handler(event, context) {
+async function handler(event, context) {
   try {
     const method = event.httpMethod;
     const rolesAllowed = ["SA", "VP"];
@@ -441,4 +436,6 @@ function json(statusCode, body) {
     body: JSON.stringify(body),
   };
 }
+
+module.exports = { handler };
 

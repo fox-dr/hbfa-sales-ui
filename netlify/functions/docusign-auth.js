@@ -4,8 +4,14 @@
 // Consumers: `netlify/functions/send-for-signature.js`
 // Env: DOCUSIGN_INTEGRATION_KEY, DOCUSIGN_USER_ID, DOCUSIGN_PRIVATE_KEY
 // IAM: none (external HTTP)
-import jwt from "jsonwebtoken";
-import fetch from "node-fetch";
+const jwt = require("jsonwebtoken");
+
+const fetch = (...args) => {
+  if (typeof globalThis.fetch === "function") {
+    return globalThis.fetch(...args);
+  }
+  throw new Error("Fetch API not available in this runtime");
+};
 
 // DocuSign constants (sandbox values)
 // You'll need to set these in Netlify environment variables
@@ -23,7 +29,7 @@ let cachedExpiry = 0;
  * Get a valid DocuSign access token using JWT flow
  * - Reuses cached token until ~5 min before expiry
  */
-export async function getDocuSignToken() {
+async function getDocuSignToken() {
   const now = Math.floor(Date.now() / 1000);
   if (cachedToken && cachedExpiry - 300 > now) {
     console.log("Using cached DocuSign token, expires in", cachedExpiry - now, "seconds.");
@@ -66,7 +72,7 @@ export async function getDocuSignToken() {
 }
 
 // Example Netlify endpoint to test auth
-export async function handler() {
+async function handler() {
   try {
     const token = await getDocuSignToken();
     return {
@@ -78,3 +84,5 @@ export async function handler() {
     return { statusCode: 500, body: `Auth error: ${err.message}` };
   }
 }
+
+module.exports = { getDocuSignToken, handler };

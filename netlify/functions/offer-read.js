@@ -5,12 +5,12 @@
 // Consumers: `src/pages/ApprovalsPage.jsx` (details pane)
 // Env: DDB_TABLE, DDB_REGION
 // IAM: dynamodb:GetItem on the offers table
-import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
-import { awsClientConfig } from "./utils/awsClients.js";
-import { requireAuth } from "./utils/auth.js";
-import { audit } from "./utils/audit.js";
-import { encodeOfferId, decodeOfferId } from "../../lib/offer-key.mjs";
+const { DynamoDBClient, GetItemCommand } = require("@aws-sdk/client-dynamodb");
+const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
+const { awsClientConfig } = require("./utils/awsClients.js");
+const { requireAuth } = require("./utils/auth.js");
+const { audit } = require("./utils/audit.js");
+const { encodeOfferId, decodeOfferId } = require("./utils/offerKey.js");
 
 const ddb = new DynamoDBClient(awsClientConfig());
 const TABLE =
@@ -24,7 +24,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
 };
 
-export async function handler(event, context) {
+async function handler(event, context) {
   try {
     if (event.httpMethod === "OPTIONS") return json(204, "");
     if (event.httpMethod !== "GET") return json(405, { error: "Method Not Allowed" });
@@ -63,6 +63,7 @@ export async function handler(event, context) {
     return json(500, { error: err.message || String(err) });
   }
 }
+module.exports = { handler };
 
 function json(statusCode, body) {
   return {

@@ -6,11 +6,11 @@
 // Env: S3_VAULT_BUCKET, S3_VAULT_PREFIX (will write to `${prefix}docs/${offerId}-YYYYMMDDHHmmss.html`)
 // IAM: s3:PutObject on prefix, s3:GetObject not required here
 
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { awsClientConfig } from "./utils/awsClients.js";
-import { requireAuth } from "./utils/auth.js";
-import fs from "fs";
-import path from "path";
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { awsClientConfig } = require("./utils/awsClients.js");
+const { requireAuth } = require("./utils/auth.js");
+const fs = require("fs");
+const path = require("path");
 
 const s3 = new S3Client(awsClientConfig());
 const S3_BUCKET = process.env.S3_VAULT_BUCKET;
@@ -46,7 +46,7 @@ function ts() {
   );
 }
 
-export async function handler(event) {
+async function handler(event) {
   try {
     if (event.httpMethod !== "POST") return json(405, { error: "Method Not Allowed" });
     const auth = requireAuth(event, ["SA", "VP", "ADMIN"]);
@@ -98,3 +98,5 @@ export async function handler(event) {
 function json(statusCode, body) {
   return { statusCode, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
 }
+
+module.exports = { handler };

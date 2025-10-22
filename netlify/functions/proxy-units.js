@@ -11,10 +11,10 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
 };
 
-import { requireAuth } from "./utils/auth.js";
-import { audit } from "./utils/audit.js";
+const { requireAuth } = require("./utils/auth.js");
+const { audit } = require("./utils/audit.js");
 
-export async function handler(event, context) {
+async function handler(event, context) {
   try {
     if (event.httpMethod === "OPTIONS") {
       return { statusCode: 204, headers: CORS, body: "" };
@@ -122,3 +122,5 @@ function json(statusCode, obj) {
     body: JSON.stringify(obj),
   };
 }
+
+module.exports = { handler };

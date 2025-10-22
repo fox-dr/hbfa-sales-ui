@@ -5,11 +5,11 @@
 // Consumers: Unit/offer creation UIs (if present)
 // Env: (none defined here)
 // IAM: (none if static; add notes if calling AWS)
-import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
-import { unmarshall } from "@aws-sdk/util-dynamodb";
-import { requireAuth } from "./utils/auth.js";
-import { awsClientConfig } from "./utils/awsClients.js";
-import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
+const { DynamoDBClient, ScanCommand } = require("@aws-sdk/client-dynamodb");
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
+const { requireAuth } = require("./utils/auth.js");
+const { awsClientConfig } = require("./utils/awsClients.js");
+const { STSClient, GetCallerIdentityCommand } = require("@aws-sdk/client-sts");
 
 const ddb = new DynamoDBClient(awsClientConfig());
 const TABLE =
@@ -23,7 +23,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
 };
 
-export async function handler(event) {
+async function handler(event) {
   try {
     if (event.httpMethod === "OPTIONS") return json(204, "");
     if (event.httpMethod !== "GET") return json(405, { error: "Method Not Allowed" });
@@ -59,4 +59,6 @@ export async function handler(event) {
 function json(statusCode, body) {
   return { statusCode, headers: { ...CORS, "Content-Type": "application/json" }, body: JSON.stringify(body) };
 }
+
+module.exports = { handler };
 

@@ -5,13 +5,13 @@
 // Env: S3_VAULT_BUCKET, S3_VAULT_PREFIX, S3_VAULT_KMS_KEY_ARN (optional)
 // IAM: s3:PutObject on `${prefix}/docs/*`; kms:Encrypt/GenerateDataKey (and Decrypt if reading)
 
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { awsClientConfig } from "./utils/awsClients.js";
-import { requireAuth } from "./utils/auth.js";
-import fs from "fs";
-import path from "path";
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { awsClientConfig } = require("./utils/awsClients.js");
+const { requireAuth } = require("./utils/auth.js");
+const fs = require("fs");
+const path = require("path");
+const chromium = require("@sparticuz/chromium");
+const puppeteer = require("puppeteer-core");
 
 const s3 = new S3Client(awsClientConfig());
 const S3_BUCKET = process.env.S3_VAULT_BUCKET;
@@ -50,7 +50,7 @@ function ts() {
 // Note: Do not append our own footer/signature blocks here —
 // the project HTML template already includes branding and signatures.
 
-export async function handler(event) {
+async function handler(event) {
   let browser = null;
   try {
     if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
@@ -129,3 +129,5 @@ export async function handler(event) {
     try { await browser?.close(); } catch {}
   }
 }
+
+module.exports = { handler };
