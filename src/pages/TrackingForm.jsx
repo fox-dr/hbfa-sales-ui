@@ -15,7 +15,7 @@ import {
   saveOfferTracking,
   getOfferRead,
 } from "../api/client";
-import { decodeOfferId } from "../../lib/offer-key.js";
+import { decodeOfferId } from "../../lib/offer-key.mjs";
 
 function parseJwt(token) {
   try {

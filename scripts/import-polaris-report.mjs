@@ -8,7 +8,7 @@ import {
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
-import { mapPolarisRowToNormalized, asString } from "../lib/normalized-offer.js";
+import { mapPolarisRowToNormalized, asString } from "../lib/normalized-offer.mjs";
 
 const REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-east-2";
 const RAW_TABLE = process.env.POLARIS_RAW_TABLE || "polaris_raw_weekly";

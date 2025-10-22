@@ -10,7 +10,7 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 import { audit } from "./utils/audit.js";
-import { encodeOfferId, decodeOfferId } from "../../lib/offer-key.js";
+import { encodeOfferId, decodeOfferId } from "../../lib/offer-key.mjs";
 
 const ddb = new DynamoDBClient(awsClientConfig());
 const TABLE =

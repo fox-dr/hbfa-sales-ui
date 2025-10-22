@@ -1,6 +1,6 @@
 import { DynamoDBClient, ScanCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
-import { mapFusionOfferToNormalized } from "../lib/normalized-offer.js";
+import { mapFusionOfferToNormalized } from "../lib/normalized-offer.mjs";
 
 const REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-east-2";
 const SOURCE_TABLE = process.env.SOURCE_TABLE || "fusion_offers";

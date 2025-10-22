@@ -10,7 +10,7 @@ import { marshall } from "@aws-sdk/util-dynamodb";
 import { requireAuth } from "./utils/auth.js";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { audit } from "./utils/audit.js";
-import { decodeOfferId } from "../../lib/offer-key.js";
+import { decodeOfferId } from "../../lib/offer-key.mjs";
 
 // Use the same configured credentials as other functions (HBFA keys if provided)
 const ddb = new DynamoDBClient(awsClientConfig());

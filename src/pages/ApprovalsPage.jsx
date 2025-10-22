@@ -12,7 +12,7 @@ import {
   getOfferDetails,
   approveOffer,
 } from "../api/client";
-import { decodeOfferId } from "../../lib/offer-key.js";
+import { decodeOfferId } from "../../lib/offer-key.mjs";
 
 export default function ApprovalsPage() {
   const auth = useAuth();

@@ -9,7 +9,7 @@ import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { awsClientConfig } from "./utils/awsClients.js";
 import { requireAuth } from "./utils/auth.js";
 import { audit } from "./utils/audit.js";
-import { encodeOfferId } from "../../lib/offer-key.js";
+import { encodeOfferId } from "../../lib/offer-key.mjs";
 
 const s3 = new S3Client(awsClientConfig());
 const S3_BUCKET = process.env.S3_VAULT_BUCKET;

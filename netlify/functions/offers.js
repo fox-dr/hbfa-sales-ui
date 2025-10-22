@@ -16,8 +16,8 @@ import {
   asDate,
   asNumber,
   stripEmptyValues,
-} from "../../lib/normalized-offer.js";
-import { encodeOfferId, decodeOfferId } from "../../lib/offer-key.js";
+} from "../../lib/normalized-offer.mjs";
+import { encodeOfferId, decodeOfferId } from "../../lib/offer-key.mjs";
 
 const ddb = new DynamoDBClient(awsClientConfig());
 const s3 = new S3Client(awsClientConfig());
