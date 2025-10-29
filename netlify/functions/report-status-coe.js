@@ -71,7 +71,13 @@ async function handler(event, context) {
     const data = filtered.map((r) => ({
       offerId: encodeOfferId(r.project_id, r.contract_unit_number),
       project_id: r.project_id || null,
+      legacy_project_id: r.legacy_project_id || null,
+      contract_unit_number: r.contract_unit_number || null,
       unit_number: r.unit_number || null,
+      unit_number_numeric: r.unit_number_numeric ?? null,
+      unit_name: r.unit_name || null,
+      unit_collection: r.unit_collection || null,
+      unit_building_code: r.unit_building_code || null,
       buyer_name:
         r.buyers_combined ||
         r.buyer_name ||
@@ -121,7 +127,13 @@ function toCsv(rows) {
   const headers = [
     "offerId",
     "project_id",
+    "legacy_project_id",
+    "contract_unit_number",
     "unit_number",
+    "unit_number_numeric",
+    "unit_name",
+    "unit_collection",
+    "unit_building_code",
     "buyer_name",
     "status",
     "status_date",

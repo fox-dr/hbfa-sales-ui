@@ -54,6 +54,40 @@ This keeps the tracking view consistent with what has already been recorded and 
   * `scripts/backfill-hbfa-sales-offers.mjs` seeds `hbfa_sales_offers` from the legacy `fusion_offers` table. Run with `npm run backfill:sales` if you need to rehydrate historic data.
   * `scripts/import-polaris-report.mjs` loads raw Polaris rows and upserts non-Fusion units into `hbfa_sales_offers` while respecting `is_immutable` on closed units. Run with `npm run polaris:import -- --file=<csv> --report-date=YYYY-MM-DD`.
   * Skip Fusion rows in the weekly Polaris import (either by editing the CSV first or letting the script filter them) so in-house data for Fusion stays authoritative. Closed units can be frozen permanently by setting `is_immutable = 1` in `hbfa_sales_offers`.
+  * SoMi Hayward inventory now lands under distinct project IDs: townhomes (`SoMi Towns`), Building A condos (`SoMi A` / `HayView-###`), and Building B condos (`SoMi B`). The importer keeps `legacy_project_id = "SoMi Hayward"` for traceability and persists extra metadata (`unit_collection`, `unit_building_code`, `unit_number_numeric`) so downstream reports and charts can separate them cleanly.
+    - After pulling the latest code, re-run the weekly Polaris import to backfill the new project keys. Once verified, the old `project_id === "SoMi Hayward"` rows can be retired.
+
+### Oct 23 2025 – Integrated Polaris → Mylar pipeline
+As of **2025-10-23 00:20 PT** the Polaris importer and the homegrown Mylar generator are fully wired together:
+- Weekly Polaris CSV → `npm run polaris:import` populates DynamoDB with the condo/town split (`SoMi Towns`, `SoMi A`, `SoMi B`).
+- `tools/polaris/report_pdf_hso.py` (or the Netlify functions) renders the Mylar directly from `hbfa_sales_offers`, so the PDF now mirrors the cleaned data without Access in the loop.
+- COE report CSV/UI exposes both the new project identifiers and the legacy project name, eliminating double counts.
+- Watch list: the Mylar table is truncating `HayView-###` to `HayView-##`. Next pass, widen the `Unit` column by 2–3 characters, trim the `COE Date` column to compensate, and leave space on the right for upcoming Ops fields (`Ops Status 1-6`, `Cut 1`, `Cut 2`, `Cut 3`).
+PS command for mylar:
+PS D:\downloads> Set-Location .\hbfa-ops-erp
+
+python -m tools.polaris.report_pdf_hso `
+  --profile hbfa-secure-uploader `
+  --hso-table hbfa_sales_offers `
+  --hso-region us-east-2 `
+  --ops-table ops_milestones `
+  --ops-region us-west-1 `
+  --logo tools/polaris/assets/bfa-logo.png
+
+
+
+To Create the csv:
+PS D:\downloads\hbfa-ops-erp> npm run polaris:import -- --file="D:\Documents\HBFA\HBFA_ERP\polaris\polaris-weekly.csv" --report-date="2025-10-22"
+
+### Next-session jump start
+When you pick this work back up, read the latest two or three entries in this section, sanity-check the condo split, and then build the one-click automation:
+1. Confirm DynamoDB rows look like `SoMi A::HayView-###` and the latest Mylar PDF reflects the separation (fix the unit truncation/column widths while you are in there).
+2. Update the Tk Polaris processor to:
+   - select the raw XLSX,
+   - run `npm run polaris:import -- --file <csv> --report-date <date>`,
+   - invoke `python -m tools.polaris.report_pdf_hso --profile hbfa-secure-uploader --output <pdf>`,
+   - send the PDF to the Outlook “Mylar” group.
+3. Test the automated flow side-by-side with the current manual steps and remove the old Access dependency once it’s stable.
 
 ## Main-only Push Guard (training wheels)
 To avoid accidental branch deploys, this repo is configured to allow pushes only to `main` via a Git pre-push hook.

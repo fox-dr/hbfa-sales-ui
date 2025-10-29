@@ -9,7 +9,13 @@ import AppHeader from "../components/AppHeader";
 const CSV_HEADERS = [
   { key: "offerId", label: "offerId" },
   { key: "project_id", label: "project_id" },
+  { key: "legacy_project_id", label: "legacy_project_id" },
+  { key: "contract_unit_number", label: "contract_unit_number" },
   { key: "unit_number", label: "unit_number" },
+  { key: "unit_number_numeric", label: "unit_number_numeric" },
+  { key: "unit_name", label: "unit_name" },
+  { key: "unit_collection", label: "unit_collection" },
+  { key: "unit_building_code", label: "unit_building_code" },
   { key: "buyer_name", label: "buyer_name" },
   { key: "status", label: "status" },
   { key: "status_date", label: "status_date" },
@@ -198,7 +204,10 @@ export default function ReportsPage() {
             <tr>
               <th align="left">OfferId</th>
               <th align="left">Project</th>
+              <th align="left">Legacy Project</th>
               <th align="left">Unit</th>
+              <th align="left">Unit Key</th>
+              <th align="left">Collection</th>
               <th align="left">Buyer</th>
               <th align="left">Status</th>
               <th align="left">COE</th>
@@ -208,19 +217,27 @@ export default function ReportsPage() {
             </tr>
           </thead>
           <tbody>
-            {items.map((r) => (
-              <tr key={r.offerId}>
-                <td>{r.offerId}</td>
-                <td>{r.project_id || ""}</td>
-                <td>{r.unit_number || ""}</td>
-                <td>{r.buyer_name || ""}</td>
-                <td>{r.status || ""}</td>
-                <td>{r.coe_date || ""}</td>
-                <td>{r.projected_closing_date || ""}</td>
-                <td>{r.final_price || ""}</td>
-                <td>{r.total_credits || ""}</td>
-              </tr>
-            ))}
+            {items.map((r) => {
+              const unitDisplay = r.unit_name || r.contract_unit_number || r.unit_number || "";
+              const unitKey = r.contract_unit_number || "";
+              const collection = r.unit_collection || "";
+              return (
+                <tr key={r.offerId}>
+                  <td>{r.offerId}</td>
+                  <td>{r.project_id || ""}</td>
+                  <td>{r.legacy_project_id || ""}</td>
+                  <td>{unitDisplay}</td>
+                  <td>{unitKey}</td>
+                  <td>{collection}</td>
+                  <td>{r.buyer_name || ""}</td>
+                  <td>{r.status || ""}</td>
+                  <td>{r.coe_date || ""}</td>
+                  <td>{r.projected_closing_date || ""}</td>
+                  <td>{r.final_price || ""}</td>
+                  <td>{r.total_credits || ""}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}

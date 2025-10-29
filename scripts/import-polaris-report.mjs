@@ -139,7 +139,13 @@ async function run() {
     csvText = csvText.slice(1);
   }
 
-  const records = parse(csvText, {
+  const lines = csvText.split(/\r?\n/);
+  const headerIndex = lines.findIndex((line) =>
+    /(^|,)Project Name(,|$)/i.test(line)
+  );
+  const effectiveCsv = headerIndex > -1 ? lines.slice(headerIndex).join("\n") : csvText;
+
+  const records = parse(effectiveCsv, {
     columns: true,
     skip_empty_lines: true,
     trim: true,
@@ -149,20 +155,33 @@ async function run() {
   let rawWritten = 0;
   let normalizedUpserts = 0;
   let skipped = 0;
+  const skipReasons = new Map();
+  const upsertReasons = new Map();
 
   for (const rawRow of records) {
+    const sanitizedEntries = [];
+    for (const [rawKey, rawValue] of Object.entries(rawRow)) {
+      const trimmedKey = typeof rawKey === "string" ? rawKey.trim() : rawKey;
+      if (!trimmedKey) continue;
+      sanitizedEntries.push([rawKey, rawValue]);
+    }
+
+    const sanitizedRawRow = {};
     const normalizedRow = {};
-    for (const [key, value] of Object.entries(rawRow)) {
-      normalizedRow[normalizeKey(key)] = value;
+    for (const [key, value] of sanitizedEntries) {
+      sanitizedRawRow[key] = value;
+      const normalizedKey = normalizeKey(key);
+      if (!normalizedKey) continue;
+      normalizedRow[normalizedKey] = value;
     }
 
     const projectName =
-      asString(rawRow["Project Name"]) ||
-      asString(rawRow["project_name"]) ||
+      asString(sanitizedRawRow["Project Name"]) ||
+      asString(sanitizedRawRow["project_name"]) ||
       asString(normalizedRow.project_name);
     const unitName =
-      asString(rawRow["Unit Name"]) ||
-      asString(rawRow["Buyer Contract: Unit Name"]) ||
+      asString(sanitizedRawRow["Unit Name"]) ||
+      asString(sanitizedRawRow["Buyer Contract: Unit Name"]) ||
       asString(normalizedRow.unit_name) ||
       asString(normalizedRow.buyer_contract_unit_name);
 
@@ -174,13 +193,13 @@ async function run() {
     await putRawRow(
       args.reportDate,
       rowId,
-      rawRow,
+      sanitizedRawRow,
       {
         project_name: projectName,
         unit_name: unitName,
         status:
-          rawRow["Buyer Contract: Status"] ||
-          rawRow["Status"] ||
+          sanitizedRawRow["Buyer Contract: Status"] ||
+          sanitizedRawRow["Status"] ||
           normalizedRow.status,
       },
       args.dryRun
@@ -194,12 +213,15 @@ async function run() {
     );
     if (skip) {
       skipped += 1;
+      if (reason) skipReasons.set(reason, (skipReasons.get(reason) || 0) + 1);
       continue;
     }
 
     const result = await upsertNormalized({ ...mapped }, args.dryRun);
     if (result.skipped) {
       skipped += 1;
+      const why = result.reason || "upsert_skipped";
+      upsertReasons.set(why, (upsertReasons.get(why) || 0) + 1);
     } else {
       normalizedUpserts += 1;
     }
@@ -208,6 +230,22 @@ async function run() {
   console.log(
     `Polaris import complete. Raw rows stored: ${rawWritten}. Normalized upserts: ${normalizedUpserts}. Skipped: ${skipped}.`
   );
+  if (skipReasons.size) {
+    console.log(
+      "Skip reasons:",
+      Array.from(skipReasons.entries())
+        .map(([r, count]) => `${r}:${count}`)
+        .join(", ")
+    );
+  }
+  if (upsertReasons.size) {
+    console.log(
+      "Upsert skip reasons:",
+      Array.from(upsertReasons.entries())
+        .map(([r, count]) => `${r}:${count}`)
+        .join(", ")
+    );
+  }
 }
 
 run().catch((err) => {
