@@ -291,14 +291,26 @@ export default function TrackingForm() {
         <AppHeader />
         
         {/* --- Search UI --- */}
-        <form onSubmit={handleSearch} className="app-form" style={{ marginBottom: "1rem" }}>
+        <form
+          onSubmit={handleSearch}
+          className="app-form"
+          style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}
+        >
             <input
             type="text"
             placeholder="Search by buyer or unit"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ flex: "1 1 240px" }}
             />
             <button type="submit">Lookup</button>
+            <button
+              type="button"
+              onClick={saveTracking}
+              disabled={!form.offerId}
+            >
+              Save Tracking
+            </button>
         </form>
 
       {isLoading && <p>Searching…</p>}
@@ -354,18 +366,6 @@ export default function TrackingForm() {
         <h3>Sales Tracking Form</h3>
 
         <FormSection>
-          <label>
-            Status
-            <select name="status" value={form.status || ""} onChange={handleChange}>
-              <option value="">--Select--</option>
-              <option value="pending">Pending Approval</option>
-              <option value="approved">Approved</option>
-              <option value="contract_sent">Sales Contract Sent</option>
-            </select>
-          </label>
-        </FormSection>
-
-        <FormSection>
           <h3>Key Dates</h3>
           {DATE_FIELDS.map((field) => (
             <label key={field}>
@@ -379,6 +379,12 @@ export default function TrackingForm() {
             </label>
           ))}
         </FormSection>
+
+        <div style={{ display: "flex", justifyContent: "flex-end", margin: "0 0 1rem" }}>
+          <button type="button" onClick={saveTracking} disabled={!form.offerId}>
+            Save Tracking
+          </button>
+        </div>
 
         <FormSection>
           <h3>Financials</h3>
