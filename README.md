@@ -9,9 +9,19 @@ The preliminary offer form now provides friendlier output for lender review and 
 - **Lender notes** are mirrored into the template's `offer_notes_1` field so the PDF shows the plain text headline instead of the raw merge key.
 - **Price formatting** preserves the unformatted numeric value for storage while supplying a `priceFmt` string to the PDF generator that includes comma separators (for example, `$1,250,000.00`).
 - **Phone numbers** are normalized on blur to `(###) ###-####` (or `###-####` for 7-digit entries) across buyer, lender, and broker contact fields to avoid raw string output.
-- **Submit button** now reads “Save and generate PDF” with a tooltip reminding the agent that the PDF downloads directly to their device.
+- **Submit button** now reads "Save and generate PDF" with a tooltip reminding the agent that the PDF downloads directly to their device.
+- **Submit payload** always includes `project_id: "Fusion"` and mirrors the selected unit into both `unit_number` and `contract_unit_number` to satisfy Netlify/DynamoDB requirements.
 
 These updates keep all other form behavior intact while improving readability for both the browser view and generated PDFs.
+
+## Tracking Form Tweaks
+
+- Removed the unused **Status** dropdown to keep edits focused on actionable fields.
+- Added **Save Tracking** buttons both next to the Lookup control and just above the Financials section so agents can commit changes without scrolling.
+
+## Authentication UX
+
+- Logout now clears the local OIDC session and explicitly redirects to the Cognito `/logout` endpoint with the required `client_id` and `logout_uri`, eliminating the previous missing-parameter error page.
 
 ## Netlify Functions CommonJS Migration
 
