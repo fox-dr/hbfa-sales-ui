@@ -4,17 +4,21 @@ import logoUrl from "../assets/hbfa-logo.png";
 
 export default function AppHeader({ title = "HBFA Sales Portal", logo = logoUrl }) {
   const auth = useAuth();
-  const signOutRedirect = () => {
+  const signOutRedirect = async () => {
+    const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
+    const logoutUri = window.location.origin;
+    const cognitoDomain = import.meta.env.VITE_COGNITO_DOMAIN;
     try {
-      auth?.signoutRedirect?.({ post_logout_redirect_uri: window.location.origin });
-    } catch {
-      const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
-      const logoutUri = window.location.origin;
-      const cognitoDomain = import.meta.env.VITE_COGNITO_DOMAIN;
+      await auth?.signoutRedirect?.({
+        post_logout_redirect_uri: logoutUri,
+        extraQueryParams: clientId ? { client_id: clientId } : undefined,
+      });
+    } catch (err) {
+      await auth?.removeUser?.();
       if (clientId && cognitoDomain) {
-        window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(
-          logoutUri
-        )}`;
+        window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
+      } else {
+        window.location.assign("/");
       }
     }
   };
