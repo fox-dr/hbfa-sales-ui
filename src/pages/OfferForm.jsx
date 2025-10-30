@@ -457,8 +457,8 @@ export default function OfferForm() {
 
           {/* Replace PDF & Submit buttons with a single button: */}
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
-            <button type="submit">
-              Send for Signature
+            <button type="submit" title="This will download the PDF to your device.">
+              Save and generate PDF
             </button>
           </div>
 

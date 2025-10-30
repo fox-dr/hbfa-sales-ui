@@ -9,6 +9,7 @@ The preliminary offer form now provides friendlier output for lender review and 
 - **Lender notes** are mirrored into the template's `offer_notes_1` field so the PDF shows the plain text headline instead of the raw merge key.
 - **Price formatting** preserves the unformatted numeric value for storage while supplying a `priceFmt` string to the PDF generator that includes comma separators (for example, `$1,250,000.00`).
 - **Phone numbers** are normalized on blur to `(###) ###-####` (or `###-####` for 7-digit entries) across buyer, lender, and broker contact fields to avoid raw string output.
+- **Submit button** now reads “Save and generate PDF” with a tooltip reminding the agent that the PDF downloads directly to their device.
 
 These updates keep all other form behavior intact while improving readability for both the browser view and generated PDFs.
 
