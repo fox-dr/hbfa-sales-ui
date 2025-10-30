@@ -18,7 +18,7 @@ function parseJwt(token) {
 }
 
 // const PROXY_BASE = "/.netlify/functions/proxy-units";
-const PROJECT_ID = import.meta.env.VITE_DEFAULT_PROJECT_ID || "Fusion";
+const PROJECT_ID = "Fusion"; // single-project deployment requirement
 const PROXY_BASE = import.meta.env.VITE_PROXY_BASE || "/.netlify/functions/proxy-units";
 
 
@@ -155,6 +155,12 @@ export default function OfferForm() {
     const formData = new FormData(e.currentTarget);
     const v = Object.fromEntries(formData.entries());
     v.project_id = PROJECT_ID;
+    const unit = String(v.unit_number || unitNumber || "").trim();
+    if (!unit) {
+      throw new Error("Unit number required before sending for signature.");
+    }
+    v.unit_number = unit;
+    v.contract_unit_number = unit;
     const rawPrice = unformatUSD(price || v.price);
     v.price = rawPrice;
     v.priceFmt = rawPrice ? formatUSD(rawPrice) : "";
