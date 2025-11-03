@@ -51,7 +51,7 @@ const DATE_FIELDS = [
 ];
 
 const DATE_FIELD_LABELS = {
-  week_ratified_date: "Buyer Contract: Week Ratified Date",
+  week_ratified_date: "ratified date",
 };
 
 const DATE_FIELDS_UI = DATE_FIELDS.filter((field) => field !== "fully_executed_date");
