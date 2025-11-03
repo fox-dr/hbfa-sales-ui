@@ -28,6 +28,7 @@ function parseJwt(token) {
 const DATE_FIELDS = [
   "contract_sent_date",
   "fully_executed_date",
+  "week_ratified_date",
   "projected_closing_date",
   "initial_deposit_receipt_date",
   "financing_contingency_date",
@@ -49,6 +50,12 @@ const DATE_FIELDS = [
   "buyer_sign_date",
 ];
 
+const DATE_FIELD_LABELS = {
+  week_ratified_date: "Buyer Contract: Week Ratified Date",
+};
+
+const DATE_FIELDS_UI = DATE_FIELDS.filter((field) => field !== "fully_executed_date");
+
 const NUMERIC_FIELDS = [
   "final_price",
   "list_price",
@@ -68,6 +75,10 @@ const CREDIT_FIELDS = [
 ];
 
 const NUMERIC_FIELDS_SET = new Set(NUMERIC_FIELDS);
+const FIELD_ALIASES = {
+  week_ratified_date: ["fully_executed_date"],
+  fully_executed_date: ["week_ratified_date"],
+};
 
 function formatDateForInput(value) {
   if (!value) return "";
@@ -105,6 +116,18 @@ function normalizeOfferData(offer = {}, fallback = {}) {
     return "";
   };
 
+  const resolveWithAliases = (key) => {
+    const value = resolveValue(key);
+    if (value !== "") return value;
+    const aliases = FIELD_ALIASES[key];
+    if (!aliases) return "";
+    for (const alias of aliases) {
+      const aliasValue = resolveValue(alias);
+      if (aliasValue !== "") return aliasValue;
+    }
+    return "";
+  };
+
   const resolvedOfferId = resolveValue("offerId") || fb.offerId || "";
   next.offerId = resolvedOfferId;
   if (resolvedOfferId) {
@@ -137,7 +160,7 @@ function normalizeOfferData(offer = {}, fallback = {}) {
   if (notesVal !== "") next.notes = notesVal;
 
   DATE_FIELDS.forEach((field) => {
-    const formatted = formatDateForInput(resolveValue(field));
+    const formatted = formatDateForInput(resolveWithAliases(field));
     if (formatted) {
       next[field] = formatted;
     }
@@ -232,6 +255,11 @@ export default function TrackingForm() {
       } else {
         next[name] = raw;
       }
+      if (name === "week_ratified_date") {
+        next.fully_executed_date = raw;
+      } else if (name === "fully_executed_date") {
+        next.week_ratified_date = raw;
+      }
       next.total_credits = calculateTotalCredits(next);
       return next;
     });
@@ -269,6 +297,11 @@ export default function TrackingForm() {
       }
       if (payload.status && !payload.status_date) {
         payload.status_date = new Date().toISOString();
+      }
+      if (payload.week_ratified_date && !payload.fully_executed_date) {
+        payload.fully_executed_date = payload.week_ratified_date;
+      } else if (payload.fully_executed_date && !payload.week_ratified_date) {
+        payload.week_ratified_date = payload.fully_executed_date;
       }
       await saveOfferTracking(jwt, payload);
       alert("Tracking saved");
@@ -367,9 +400,9 @@ export default function TrackingForm() {
 
         <FormSection>
           <h3>Key Dates</h3>
-          {DATE_FIELDS.map((field) => (
+          {DATE_FIELDS_UI.map((field) => (
             <label key={field}>
-              {field.replace(/_/g, " ")}
+              {DATE_FIELD_LABELS[field] || field.replace(/_/g, " ")}
               <input
                 type="date"
                 name={field}

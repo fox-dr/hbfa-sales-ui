@@ -51,6 +51,7 @@ Selecting a buyer/unit from the tracking search immediately hydrates the full fo
 - Pulls the non-PII offer record via `offer-read` and normalizes dates/numbers into input-safe formats.
 - Auto-fills all milestone dates, financial figures, DocuSign IDs, and notes so edits start from the current state.
 - Keeps the live total credits in sync as individual credit fields change.
+- Persists the tracking entries (including “Buyer Contract: Week Ratified Date” / `fully_executed_date`) directly into the shared `hbfa_sales_offers` DynamoDB table so Mylar reports and Polaris imports stay in sync.
 
 This keeps the tracking view consistent with what has already been recorded and prevents starting from a blank slate.
 
